@@ -140,13 +140,22 @@ void visualhoming_periodic(void) {
 	}
 	pthread_mutex_unlock(&snapshot_mutex);
 
-	// Send homing vector correction to guidance
-	vx = position_gain * environment_radius * vec.x;
-	vy = -position_gain * environment_radius * vec.y;
-	dh = -0.1 * vec.sigma;
-	printf("Guidance: %+.2f\t%+.2f\t%+.2f\n", vx, vy, dh);
-	guidance_h_set_guided_body_vel(vx, vy);
-	guidance_h_set_guided_heading_rate(dh);
+	// Set guided mode position reference
+	float x_ref, y_ref;
+	struct NedCoor_f *current_pos = stateGetPositionNed_f();
+	struct FloatEulers * current_eulers = stateGetNedToBodyEulers_f();
+	float heading = current_eulers->psi;
+	printf("Pos = %+.1f, %+.1f\n", current_pos->x, current_pos->y);
+	printf("Heading = %+.2f\n", heading);
+	x_ref = current_pos->x
+			+ environment_radius
+					* (vec.x * cos(heading) + vec.y * sin(heading));
+	y_ref = current_pos->y
+			+ environment_radius
+					* (vec.x * sin(heading) - vec.y * cos(heading));
+	printf("Pos_ref = %+.1f, %+.1f\n", x_ref, y_ref);
+
+	guidance_h_set_guided_pos(x_ref, y_ref);
 	guidance_v_from_nav(true);
 
 	// Save homing vector for telemetry
