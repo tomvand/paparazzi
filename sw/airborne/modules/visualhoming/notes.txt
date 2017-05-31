@@ -1,0 +1,32 @@
+TODO:
+
+- Make settings persistent
+
+- Move homing vector estimation to navigation thread (i.e. run at 10 Hz instead
+  of video framerate).
+
+- Guidance. See firmware/rotorcraft/guidance_h, functions _guided_pos and 
+  _heading. Target position is in world NED coordinates in m.
+  
+  Note that the current homing vector estimation is performed on the video
+  thread. Use a mutex to safely get the homing vector to the module/navigation
+  thread.
+
+- Add telemetry messages.
+
+
+
+
+================================================================================
+
+- See sw/pprz_mutex.h for mutexes. Maar die is dummy als geen ChibiOS. Moet ipv
+  daarvan pthread gebruikt worden? Vraag Freek ofzo.
+
+- Use SS_AK, SS_BK in core
+
+- Create simple .py script to generate horizon extraction LUT including image 
+  size macros?
+
+- Try to perform own Fourier transform, as the calculation of only the first K 
+  frequencies might be faster with a straightforward implementation with sin
+  LUT than an FFT? 

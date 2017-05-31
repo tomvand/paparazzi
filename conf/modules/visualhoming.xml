@@ -1,0 +1,39 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="visualhoming">
+  <doc>
+    <description>Fourier-based local visual homing.</description>
+    <define name="VISUALHOMING_CAMERA" value="front_camera|bottom_camera" description="Camera to use as input for visual homing"/>
+  </doc>
+  <settings>
+  	<dl_settings>
+      <dl_settings name="visual_homing">
+        <dl_setting shortname="center_x" param="CENTER_X" var="calibration.center_x" min="0" step="0.01" max="1"/>
+        <dl_setting shortname="center_y" param="CENTER_Y" var="calibration.center_y" min="0" step="0.01" max="1"/>
+        <dl_setting shortname="radius_top" param="RADIUS_TOP" var="calibration.radius_top" min="0" step="0.01" max="0.5"/>
+        <dl_setting shortname="radius_bottom" param="RADIUS_BOTTOM" var="calibration.radius_bottom" min="0" step="0.01" max="0.5"/>
+        <dl_setting shortname="env_radius" param="ENV_RADIUS" var="environment_radius" min="0.5" step="0.5" max="20"/>
+        <dl_setting shortname="derotate_gain" param="DEROTATE_GAIN" var="derotate_gain" min="-0.15" step="0.01" max="0.15"/>
+        <dl_setting shortname="position_gain" param="POSITION_GAIN" var="position_gain" min="0" step="0.1" max="2.0"/>
+        <dl_setting shortname="take_snapshot" var="take_snapshot" min="0" step="1" max="1">
+          <strip_button name="Snapshot" icon="digital-camera.png" value="1" group="video"/>
+        </dl_setting>
+        <dl_setting shortname="drop_snapshot" var="drop_snapshot" min="0" step="1" max="1">
+          <strip_button name="Drop snapshot" icon="dcstop.png" value="1" group="video"/>
+        </dl_setting>
+      </dl_settings>
+    </dl_settings>
+  </settings>
+  <header>
+    <file name="visualhoming.h"/>
+  </header>
+  <init fun="visualhoming_init()"/>
+  <periodic fun="visualhoming_periodic()" freq="10" start="visualhoming_start()" stop="visualhoming_stop()" autorun="TRUE"/>
+  <makefile target="ap">
+  	<define name="PFFFT_SIMD_DISABLE"/>
+    <file name="visualhoming.c"/>
+    <file name="visualhoming_core.c"/>
+    <file name="pffft.c" dir="modules/visualhoming/ext/pffft"/>
+  </makefile>
+</module>
+

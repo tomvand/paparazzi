@@ -1,0 +1,332 @@
+/*
+ * Copyright (C) Tom van Dijk
+ *
+ * This file is part of paparazzi
+ *
+ * paparazzi is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2, or (at your option)
+ * any later version.
+ *
+ * paparazzi is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with paparazzi; see the file COPYING.  If not, see
+ * <http://www.gnu.org/licenses/>.
+ */
+/**
+ * @file "modules/visualhoming/visualhoming.c"
+ * @author Tom van Dijk
+ * Fourier-based local visual homing.
+ */
+
+#include <stdio.h>
+#include <sys/fcntl.h>
+#include <math.h>
+#include <unistd.h>
+#include <inttypes.h>
+#include "state.h"
+#include "math/pprz_algebra_float.h"
+#include "math/pprz_geodetic_int.h"
+#include "subsystems/datalink/telemetry.h"
+
+#include "visualhoming.h"
+#include "visualhoming_core.h"
+
+#include <assert.h>
+#include "modules/computer_vision/cv.h"
+#include "modules/computer_vision/lib/vision/image.h"
+
+#include "state.h"
+#include "firmwares/rotorcraft/guidance/guidance_h.h"
+#include <pthread.h>
+
+#include "subsystems/datalink/telemetry.h"
+
+// Configuration
+#ifndef VISUALHOMING_CAMERA
+#define VISUALHOMING_CAMERA bottom_camera
+#endif
+#ifndef RADIUS_SAMPLING_NPOINTS
+#define RADIUS_SAMPLING_NPOINTS 5
+#endif
+
+// Settings
+int take_snapshot = 0;
+int drop_snapshot = 0;
+struct calibration_t calibration = {
+		.center_x = 0.56,
+		.center_y = 0.46,
+		.radius_top = 0.24,
+		.radius_bottom = 0.28 };
+float environment_radius = 3.0;
+float derotate_gain = 0.08;
+float position_gain = 0.5;
+
+// Macro functions
+#define PIXEL_UV(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 2*(y)*(img)->w] )
+#define PIXEL_Y(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 1 + 2*(y)*(img)->w] )
+
+// Cross-thread variables
+static pthread_mutex_t snapshot_mutex;
+static struct snapshot_t *current_snapshot = NULL;
+static struct snapshot_t *target_snapshot = NULL;
+static struct snapshot_t *current_warped_snapshot = NULL;
+static struct snapshot_t *target_rotated_snapshot = NULL;
+static struct FloatRMat attitude;
+
+// Telemetry data
+struct homingvector_t homingvector_telemetry;
+
+// Function declarations
+// Telemetry callback
+static void send_visualhoming(
+		struct transport_tx *trans,
+		struct link_device *dev);
+// Camera callback
+static struct image_t* camera_callback(struct image_t *img);
+// Helper functions
+static void draw_calibration(struct image_t *img);
+static void draw_snapshots(struct image_t *img, const float hor[]);
+static void extract_horizon(float hor[], const struct image_t *img);
+static struct point_t derotated_point(
+		const struct image_t *img,
+		float bearing,
+		float elevation);
+
+// Function definitions
+// Module functions
+void visualhoming_init(void) {
+	printf("visualhoming_init\n");
+	// Initialize attitude
+	float_rmat_identity(&attitude);
+	// Initialize visual homing core
+	visualhoming_core_init();
+	// Add callback to camera
+	cv_add_to_device(&VISUALHOMING_CAMERA, camera_callback);
+	// Register telemetry message
+	homingvector_telemetry.x = 0.0;
+	homingvector_telemetry.y = 0.0;
+	homingvector_telemetry.sigma = 0.0;
+	register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_VISUALHOMING,
+			send_visualhoming);
+}
+
+void visualhoming_periodic(void) {
+	struct FloatRMat *current_att;
+	struct homingvector_t vec = { 0, 0, 0 };
+	float vx, vy, dh;
+
+	// Communicate current attitude to video thread.
+	current_att = stateGetNedToBodyRMat_f();
+	pthread_mutex_lock(&snapshot_mutex);
+	MAT33_COPY(attitude, *current_att);
+	pthread_mutex_unlock(&snapshot_mutex);
+
+	// Calculate homing vector if req'd
+	pthread_mutex_lock(&snapshot_mutex);
+	if (target_snapshot != NULL) {
+		vec = homing_vector(current_snapshot, target_snapshot,
+				&current_warped_snapshot, &target_rotated_snapshot);
+		snapshot_free(current_snapshot);
+		current_snapshot = NULL; // Signal to video thread to update current observation.
+		printf("dX = %+.2f\tdY = %+.2f\tsigma = %+4.0f\n", vec.x, vec.y,
+				vec.sigma / M_PI * 180.0);
+
+	}
+	pthread_mutex_unlock(&snapshot_mutex);
+
+	// Send homing vector correction to guidance
+	vx = position_gain * environment_radius * vec.x;
+	vy = -position_gain * environment_radius * vec.y;
+	dh = -0.1 * vec.sigma;
+	guidance_h_set_guided_body_vel(vx, vy);
+	guidance_h_set_guided_heading_rate(dh);
+
+	// Save homing vector for telemetry
+	homingvector_telemetry = vec;
+}
+
+void visualhoming_start(void) {
+	printf("visualhoming_start\n");
+}
+
+void visualhoming_stop(void) {
+}
+
+// Telemetry callback
+static void send_visualhoming(
+		struct transport_tx *trans,
+		struct link_device *dev) {
+	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &homingvector_telemetry.x,
+			&homingvector_telemetry.y,
+			&homingvector_telemetry.sigma);
+}
+
+// Camera callback
+
+/**
+ * Camera callback function. Unwrap panoramic image as test
+ * @param img camera image
+ * @return pointer to unwrapped horizon image
+ */
+static struct image_t* camera_callback(struct image_t *img) {
+	pthread_mutex_lock(&snapshot_mutex);
+	if (target_snapshot == NULL && !take_snapshot) {
+		// No homing target, draw calibration image.uint8_t
+		draw_calibration(img);
+	} else {
+		float horizon[HORIZON_WIDTH];
+		// Update current snapshot if required.
+		// 'current_snapshot' will be freed and  set to NULL by the navigation
+		// thread when the image needs to be updated.
+		if (current_snapshot == NULL) {
+			extract_horizon(horizon, img);
+			current_snapshot = snapshot_create(horizon);
+			// Store current snapshot as target if req'd.
+			if (take_snapshot) {
+				if (target_snapshot != NULL) snapshot_free(target_snapshot);
+				target_snapshot = snapshot_create(horizon); // TODO Double work, make more efficient.
+				take_snapshot = 0;
+			}
+			// Drop target snapshot if req'd
+			if (drop_snapshot && target_snapshot != NULL) {
+				snapshot_free(target_snapshot);
+				target_snapshot = NULL;
+				snapshot_free(current_snapshot);
+				current_snapshot = NULL;
+				drop_snapshot = 0;
+			}
+		}
+		// Draw all snapshots
+		draw_snapshots(img, horizon);
+	}
+	pthread_mutex_unlock(&snapshot_mutex);
+	return NULL;
+}
+
+// Helper functions
+static void draw_calibration(struct image_t *img) {
+	for (int i = 0; i < 360; i++) {
+		struct point_t pt;
+		pt = derotated_point(img, i / 180.0 * M_PI, -1.0);
+		PIXEL_Y(img, pt.x, pt.y) = 0;
+		pt = derotated_point(img, i / 180.0 * M_PI, 1.0);
+		PIXEL_Y(img, pt.x, pt.y) = 0;
+		pt.x = calibration.center_x * img->w
+				+ 0.1 * img->h * cos(i / 180.0 * M_PI);
+		pt.y = calibration.center_y * img->h
+				+ 0.1 * img->h * sin(i / 180.0 * M_PI);
+		PIXEL_Y(img, pt.x, pt.y) = 255;
+	}
+}
+
+static void draw_snapshots(struct image_t *img, const float horizon[]) {
+	float hor[HORIZON_WIDTH];
+	// CAUTION: This function is called from the video thread.
+
+	// Draw current horizon
+	for (int y = 0; y < img->h / 5 * 1; y++) {
+		for (int x = 0; x < HORIZON_WIDTH; x++) {
+			PIXEL_UV(img, x, y) = 127;
+			PIXEL_Y(img, x, y) = horizon[x];
+		}
+	}
+	// Draw current snapshot
+	if (current_snapshot != NULL) {
+		snapshot_to_horizon(hor, current_snapshot);
+		for (int y = img->h / 5 * 1; y < img->h / 5 * 2; y++) {
+			for (int x = 0; x < HORIZON_WIDTH; x++) {
+				PIXEL_UV(img, x, y) = 127;
+				PIXEL_Y(img, x, y) = hor[x];
+			}
+		}
+	}
+	// Draw warped current snapshot
+	if (current_warped_snapshot != NULL) {
+		snapshot_to_horizon(hor, current_warped_snapshot);
+		for (int y = img->h / 5 * 2; y < img->h / 5 * 3; y++) {
+			for (int x = 0; x < HORIZON_WIDTH; x++) {
+				PIXEL_UV(img, x, y) = 127;
+				PIXEL_Y(img, x, y) = hor[x];
+			}
+		}
+	}
+	// Draw rotated target snapshot
+	if (target_rotated_snapshot != NULL) {
+		snapshot_to_horizon(hor, target_rotated_snapshot);
+		for (int y = img->h / 5 * 3; y < img->h / 5 * 4; y++) {
+			for (int x = 0; x < HORIZON_WIDTH; x++) {
+				PIXEL_UV(img, x, y) = 127;
+				PIXEL_Y(img, x, y) = hor[x];
+			}
+		}
+	}
+	// Draw target snapshot
+	if (target_snapshot != NULL) {
+		snapshot_to_horizon(hor, target_snapshot);
+		for (int y = img->h / 5 * 4; y < img->h / 5 * 5; y++) {
+			for (int x = 0; x < HORIZON_WIDTH; x++) {
+				PIXEL_UV(img, x, y) = 127;
+				PIXEL_Y(img, x, y) = hor[x];
+			}
+		}
+	}
+}
+
+/**
+ * extract_horizon: Extract one-dimensional horizon from 'img'.
+ * @param[out] hor Array that holds horizon pixel values
+ * @param hor_size Size of 'hor'
+ * @param img Image from which the horizon is sampled
+ * @param center Center of the panoramic image
+ * @param radii Radii over which to average the horizon value
+ * @param radii_size Size of 'radii'
+ */
+static void extract_horizon(float hor[], const struct image_t *img) {
+	for (int b = 0; b < HORIZON_WIDTH; ++b) {
+		float bearing;
+		bearing = b / (float)HORIZON_WIDTH * 2 * M_PI;
+		hor[b] = 0;
+		for (int e = 0; e < RADIUS_SAMPLING_NPOINTS; ++e) {
+			struct point_t p;
+			float elevation;
+			elevation = -1.0 + 2.0 * (e / (float)(RADIUS_SAMPLING_NPOINTS - 1));
+			p = derotated_point(img, bearing, elevation);
+			hor[b] += PIXEL_Y(img, p.x, p.y) / (float)RADIUS_SAMPLING_NPOINTS;
+		}
+	}
+}
+
+static struct point_t derotated_point(
+		const struct image_t *img,
+		float bearing,
+		float elevation) {
+	// ARDrone2 camera:		+x bottom, 	+y right
+	// ARDrone2 attitude:	+x +R13,	+y -R23
+	struct point_t out;
+	float radius;
+
+	// Calculate sampling radius
+	radius = (calibration.radius_top + calibration.radius_bottom) / 2.0
+			+ elevation * (calibration.radius_top - calibration.radius_bottom)
+					/ 2.0;
+	radius += derotate_gain
+			* (cos(bearing) * MAT33_ELMT(attitude, 0, 2)
+					- sin(bearing) * MAT33_ELMT(attitude, 1, 2));
+
+	// Calculate pixel coordinates
+	out.x = img->w * calibration.center_x + radius * img->h * sin(bearing);
+	out.y = img->h * calibration.center_y + radius * img->h * cos(bearing);
+
+	// Check bounds
+	if (out.x < 0) out.x = 0;
+	if (out.x >= img->w) out.x = img->w - 1;
+	if (out.y < 0) out.y = 0;
+	if (out.y >= img->h) out.y = img->h - 1;
+
+	return out;
+}
