@@ -29,7 +29,7 @@
   </header>
   <init fun="visualhoming_init()"/>
   <periodic fun="visualhoming_periodic()" freq="10" start="visualhoming_start()" stop="visualhoming_stop()" autorun="TRUE"/>
-  <makefile target="ap">
+  <makefile>
   	<define name="PFFFT_SIMD_DISABLE"/>
     <file name="visualhoming.c"/>
     <file name="visualhoming_core.c"/>

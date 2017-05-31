@@ -35,8 +35,8 @@
     <module name="video_thread"/>
     <module name="visualhoming"/>
     <module name="video_rtp_stream">
-      <define name="VIEWVIDEO_CAMERA" value="front_camera"/>
-      <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="4"/>
+      <define name="VIEWVIDEO_CAMERA" value="bottom_camera"/>
+      <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="1"/>
       <define name="VIEWVIDEO_QUALITY_FACTOR" value="60"/>
     </module>
   </modules>
@@ -179,6 +179,7 @@
   </section>
 
   <section name="SIMULATOR" prefix="NPS_">
+    <define name="GAZEBO_WORLD" value='"ardrone_omni.world"'/>
     <define name="ACTUATOR_NAMES" value="nw_motor, ne_motor, se_motor, sw_motor" type="string[]"/>
     <define name="ACTUATOR_THRUSTS" value="1.55, 1.55, 1.55, 1.55" type="double[]"/>
     <define name="ACTUATOR_TORQUES" value="0.155, -0.155, 0.155, -0.155" type="double[]"/>

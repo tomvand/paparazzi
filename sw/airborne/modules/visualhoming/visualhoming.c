@@ -42,6 +42,7 @@
 
 #include "state.h"
 #include "firmwares/rotorcraft/guidance/guidance_h.h"
+#include "firmwares/rotorcraft/guidance/guidance_v.h"
 #include <pthread.h>
 
 #include "subsystems/datalink/telemetry.h"
@@ -58,11 +59,11 @@
 int take_snapshot = 0;
 int drop_snapshot = 0;
 struct calibration_t calibration = {
-		.center_x = 0.56,
-		.center_y = 0.46,
-		.radius_top = 0.24,
-		.radius_bottom = 0.28 };
-float environment_radius = 3.0;
+		.center_x = 0.50,
+		.center_y = 0.50,
+		.radius_top = 0.23,
+		.radius_bottom = 0.27 };
+float environment_radius = 5.0;
 float derotate_gain = 0.08;
 float position_gain = 0.5;
 
@@ -143,8 +144,10 @@ void visualhoming_periodic(void) {
 	vx = position_gain * environment_radius * vec.x;
 	vy = -position_gain * environment_radius * vec.y;
 	dh = -0.1 * vec.sigma;
+	printf("Guidance: %+.2f\t%+.2f\t%+.2f\n", vx, vy, dh);
 	guidance_h_set_guided_body_vel(vx, vy);
 	guidance_h_set_guided_heading_rate(dh);
+	guidance_v_from_nav(true);
 
 	// Save homing vector for telemetry
 	homingvector_telemetry = vec;
