@@ -1,5 +1,8 @@
 TODO:
 
+- Fix 'ownership' of snapshot structures. They are now allocated by _core, but
+  it might be simpler to have them as variables in the module.
+
 - Make settings persistent
 
 - Move homing vector estimation to navigation thread (i.e. run at 10 Hz instead

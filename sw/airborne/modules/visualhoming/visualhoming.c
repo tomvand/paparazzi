@@ -72,7 +72,8 @@ float position_gain = 0.5;
 #define PIXEL_Y(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 1 + 2*(y)*(img)->w] )
 
 // Cross-thread variables
-static pthread_mutex_t snapshot_mutex;
+static pthread_mutex_t video_mutex;
+static struct snapshot_t *previous_snapshot = NULL;
 static struct snapshot_t *current_snapshot = NULL;
 static struct snapshot_t *target_snapshot = NULL;
 static struct snapshot_t *current_warped_snapshot = NULL;
@@ -118,29 +119,44 @@ void visualhoming_init(void) {
 
 void visualhoming_periodic(void) {
 	struct FloatRMat *current_att;
+	struct homingvector_t vel_vec = { 0, 0, 0 };
 	struct homingvector_t vec = { 0, 0, 0 };
-	float vx, vy, dh;
 
 	// Communicate current attitude to video thread.
 	current_att = stateGetNedToBodyRMat_f();
-	pthread_mutex_lock(&snapshot_mutex);
+	pthread_mutex_lock(&video_mutex);
 	MAT33_COPY(attitude, *current_att);
-	pthread_mutex_unlock(&snapshot_mutex);
+	pthread_mutex_unlock(&video_mutex);
 
 	// Calculate homing vector if req'd
-	pthread_mutex_lock(&snapshot_mutex);
+	pthread_mutex_lock(&video_mutex);
+	// Estimate current velocity
+	if (previous_snapshot != NULL) {
+		// Estimate velocity
+		vel_vec = homing_vector(previous_snapshot, current_snapshot, NULL,
+		NULL);
+		printf("VELOCITY: vx = %+.1f, vy = %+.1f\n",
+				VISUALHOMING_PERIODIC_FREQ * environment_radius * vel_vec.x,
+				VISUALHOMING_PERIODIC_FREQ * environment_radius * vel_vec.y);
+		// Update previous snapshot
+		snapshot_copy(previous_snapshot, current_snapshot);
+	}
+	// Estimate homing vector if req'd
 	if (target_snapshot != NULL) {
 		vec = homing_vector(current_snapshot, target_snapshot,
 				&current_warped_snapshot, &target_rotated_snapshot);
-		snapshot_free(current_snapshot);
-		current_snapshot = NULL; // Signal to video thread to update current observation.
-		printf("dX = %+.2f\tdY = %+.2f\tsigma = %+4.0f\n", vec.x, vec.y,
+		printf("dX = %+.2f\tdY = %+.2f\tsigma = %+4.0f\n",
+				environment_radius * vec.x, environment_radius * vec.y,
 				vec.sigma / M_PI * 180.0);
 
 	}
-	pthread_mutex_unlock(&snapshot_mutex);
+	// Free current snapshot
+	snapshot_free(current_snapshot);
+	current_snapshot = NULL; // Signal to video thread to update current observation.
+	pthread_mutex_unlock(&video_mutex);
 
 	// Set guided mode position reference
+	// Note: vec = {0, 0, 0} without snapshot.
 	float x_ref, y_ref;
 	struct NedCoor_f *current_pos = stateGetPositionNed_f();
 	struct FloatEulers * current_eulers = stateGetNedToBodyEulers_f();
@@ -174,8 +190,7 @@ static void send_visualhoming(
 		struct transport_tx *trans,
 		struct link_device *dev) {
 	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &homingvector_telemetry.x,
-			&homingvector_telemetry.y,
-			&homingvector_telemetry.sigma);
+			&homingvector_telemetry.y, &homingvector_telemetry.sigma);
 }
 
 // Camera callback
@@ -186,37 +201,40 @@ static void send_visualhoming(
  * @return pointer to unwrapped horizon image
  */
 static struct image_t* camera_callback(struct image_t *img) {
-	pthread_mutex_lock(&snapshot_mutex);
-	if (target_snapshot == NULL && !take_snapshot) {
-		// No homing target, draw calibration image.uint8_t
-		draw_calibration(img);
-	} else {
-		float horizon[HORIZON_WIDTH];
-		// Update current snapshot if required.
-		// 'current_snapshot' will be freed and  set to NULL by the navigation
-		// thread when the image needs to be updated.
-		if (current_snapshot == NULL) {
-			extract_horizon(horizon, img);
-			current_snapshot = snapshot_create(horizon);
-			// Store current snapshot as target if req'd.
-			if (take_snapshot) {
-				if (target_snapshot != NULL) snapshot_free(target_snapshot);
-				target_snapshot = snapshot_create(horizon); // TODO Double work, make more efficient.
-				take_snapshot = 0;
-			}
-			// Drop target snapshot if req'd
-			if (drop_snapshot && target_snapshot != NULL) {
-				snapshot_free(target_snapshot);
-				target_snapshot = NULL;
-				snapshot_free(current_snapshot);
-				current_snapshot = NULL;
-				drop_snapshot = 0;
-			}
+	static float horizon[HORIZON_WIDTH];
+
+	pthread_mutex_lock(&video_mutex);
+	// Update current snapshot if required.
+	// 'current_snapshot' will be freed and set to NULL by the navigation
+	// thread when the image needs to be updated.
+	if (current_snapshot == NULL) {
+		extract_horizon(horizon, img);
+		current_snapshot = snapshot_create(horizon);
+		// Instantiate previous snapshot if req'd
+		if (previous_snapshot == NULL) {
+			previous_snapshot = snapshot_create(horizon);
 		}
-		// Draw all snapshots
-		draw_snapshots(img, horizon);
 	}
-	pthread_mutex_unlock(&snapshot_mutex);
+	// Take or drop target snapshot
+	if (take_snapshot) {
+		if (target_snapshot != NULL) snapshot_free(target_snapshot);
+		target_snapshot = snapshot_create(horizon); // TODO Double work, make more efficient.
+		take_snapshot = 0;
+	}
+	if (drop_snapshot && target_snapshot != NULL) {
+		snapshot_free(target_snapshot);
+		target_snapshot = NULL;
+		drop_snapshot = 0;
+	}
+	pthread_mutex_unlock(&video_mutex);
+
+	// Draw snapshots or calibration pattern
+	if (target_snapshot != NULL) {
+		draw_snapshots(img, horizon);
+	} else {
+		draw_calibration(img);
+	}
+
 	return NULL;
 }
 
@@ -319,6 +337,7 @@ static struct point_t derotated_point(
 		float elevation) {
 	// ARDrone2 camera:		+x bottom, 	+y right
 	// ARDrone2 attitude:	+x +R13,	+y -R23
+	int x, y;
 	struct point_t out;
 	float radius;
 
@@ -331,14 +350,16 @@ static struct point_t derotated_point(
 					- sin(bearing) * MAT33_ELMT(attitude, 1, 2));
 
 	// Calculate pixel coordinates
-	out.x = img->w * calibration.center_x + radius * img->h * sin(bearing);
-	out.y = img->h * calibration.center_y + radius * img->h * cos(bearing);
+	x = img->w * calibration.center_x + radius * img->h * sin(bearing);
+	y = img->h * calibration.center_y + radius * img->h * cos(bearing);
 
 	// Check bounds
-	if (out.x < 0) out.x = 0;
-	if (out.x >= img->w) out.x = img->w - 1;
-	if (out.y < 0) out.y = 0;
-	if (out.y >= img->h) out.y = img->h - 1;
+	if (x < 0) x = 0;
+	if (x >= img->w) x = img->w - 1;
+	if (y < 0) y = 0;
+	if (y >= img->h) y = img->h - 1;
 
+	out.x = x;
+	out.y = y;
 	return out;
 }
