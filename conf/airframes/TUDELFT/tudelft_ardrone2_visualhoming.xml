@@ -10,6 +10,7 @@
     </target>
 
     <define name="USE_SONAR" value="TRUE"/>
+    <define name="INS_INT_GPS_ID" value="ABI_DISABLE"/>
 
 	<!-- Subsystem section -->
     <module name="telemetry" type="transparent_udp"/>
@@ -186,7 +187,6 @@
     <define name="JSBSIM_MODEL" value="simple_ardrone2" type="string"/>
     <define name="SENSORS_PARAMS" value="nps_sensors_params_ardrone2.h" type="string"/>
     <define name="BYPASS_AHRS" value="1"/>
-    <define name="BYPASS_INS" value="1"/>
     <define name="SIMULATE_VIDEO" value="1"/>
   </section>
 

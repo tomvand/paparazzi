@@ -143,6 +143,9 @@ void visualhoming_periodic(void) {
 	/*
 	 * Navigation
 	 */
+	if (current_snapshot == NULL) {
+		return; // Nothing to do without video input :(.
+	}
 	pthread_mutex_lock(&video_mutex);
 	// Estimate current velocity
 	if (previous_snapshot != NULL) {
@@ -178,7 +181,7 @@ void visualhoming_periodic(void) {
 	// Broadcast VELOCITY_ESTIMATE ABI message
 	uint32_t now_ts = get_sys_time_usec();
 	AbiSendMsgVELOCITY_ESTIMATE(VISUALHOMING_SEND_ABI_ID, now_ts, vel_vec.x,
-			vel_vec.y, 0.0f, 0.0f);
+			-vel_vec.y, 0.0f, 0.0f);
 //	// Calculate desired velocity
 //	float vx_d, vy_d;
 //	vx_d = guidance_h.gains.p * vec.x - guidance_h.gains.d * vel_vec.x;
