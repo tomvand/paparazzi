@@ -23,29 +23,37 @@
  * Fourier-based local visual homing.
  */
 
+// Standard headers
 #include <stdio.h>
 #include <sys/fcntl.h>
 #include <math.h>
 #include <unistd.h>
 #include <inttypes.h>
-#include "state.h"
+#include <pthread.h>
+#include <assert.h>
+
+// Paparazzi headers
 #include "math/pprz_algebra_float.h"
 #include "math/pprz_geodetic_int.h"
+#include "state.h"
 #include "subsystems/datalink/telemetry.h"
 
+// Own headers
 #include "visualhoming.h"
 #include "visualhoming_core.h"
 
-#include <assert.h>
+// Image formats
 #include "modules/computer_vision/cv.h"
 #include "modules/computer_vision/lib/vision/image.h"
 
-#include "state.h"
+// Guidance in MODULE mode
+#include "subsystems/abi.h"
+//#include "modules/guidance_opticflow/guidance_opticflow_hover.h"
+//#include "firmwares/rotorcraft/guidance/guidance_h.h"
+
+// Guidance in GUIDED mode
 #include "firmwares/rotorcraft/guidance/guidance_h.h"
 #include "firmwares/rotorcraft/guidance/guidance_v.h"
-#include <pthread.h>
-
-#include "subsystems/datalink/telemetry.h"
 
 // Configuration
 #ifndef VISUALHOMING_CAMERA
@@ -54,6 +62,10 @@
 #ifndef RADIUS_SAMPLING_NPOINTS
 #define RADIUS_SAMPLING_NPOINTS 5
 #endif
+#ifndef VISUALHOMING_SEND_ABI_ID
+#define VISUALHOMING_SEND_ABI_ID 1       ///< Default ID to send abi messages
+#endif
+PRINT_CONFIG_VAR(OPTICFLOW_SEND_ABI_ID)
 
 // Settings
 int take_snapshot = 0;
@@ -128,16 +140,18 @@ void visualhoming_periodic(void) {
 	MAT33_COPY(attitude, *current_att);
 	pthread_mutex_unlock(&video_mutex);
 
-	// Calculate homing vector if req'd
+	/*
+	 * Navigation
+	 */
 	pthread_mutex_lock(&video_mutex);
 	// Estimate current velocity
 	if (previous_snapshot != NULL) {
 		// Estimate velocity
 		vel_vec = homing_vector(previous_snapshot, current_snapshot, NULL,
 		NULL);
-		printf("VELOCITY: vx = %+.1f, vy = %+.1f\n",
-				VISUALHOMING_PERIODIC_FREQ * environment_radius * vel_vec.x,
-				VISUALHOMING_PERIODIC_FREQ * environment_radius * vel_vec.y);
+		vel_vec.x *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
+		vel_vec.y *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
+		printf("VELOCITY: vx = %+.1f, vy = %+.1f\n", vel_vec.x, vel_vec.y);
 		// Update previous snapshot
 		snapshot_copy(previous_snapshot, current_snapshot);
 	}
@@ -145,8 +159,9 @@ void visualhoming_periodic(void) {
 	if (target_snapshot != NULL) {
 		vec = homing_vector(current_snapshot, target_snapshot,
 				&current_warped_snapshot, &target_rotated_snapshot);
-		printf("dX = %+.2f\tdY = %+.2f\tsigma = %+4.0f\n",
-				environment_radius * vec.x, environment_radius * vec.y,
+		vec.x *= environment_radius;
+		vec.y *= environment_radius;
+		printf("dX = %+.2f\tdY = %+.2f\tsigma = %+4.0f\n", vec.x, vec.y,
 				vec.sigma / M_PI * 180.0);
 
 	}
@@ -155,7 +170,28 @@ void visualhoming_periodic(void) {
 	current_snapshot = NULL; // Signal to video thread to update current observation.
 	pthread_mutex_unlock(&video_mutex);
 
-	// Set guided mode position reference
+	/*
+	 * GPS-less guidance in MODULE mode.
+	 * Uses the opticflow_hover module for inner loop control.
+	 * TODO remove as this module is apparently outdated.
+	 */
+	// Broadcast VELOCITY_ESTIMATE ABI message
+	uint32_t now_ts = get_sys_time_usec();
+	AbiSendMsgVELOCITY_ESTIMATE(VISUALHOMING_SEND_ABI_ID, now_ts, vel_vec.x,
+			vel_vec.y, 0.0f, 0.0f);
+//	// Calculate desired velocity
+//	float vx_d, vy_d;
+//	vx_d = guidance_h.gains.p * vec.x - guidance_h.gains.d * vel_vec.x;
+//	vy_d = -(guidance_h.gains.p * vec.y - guidance_h.gains.d * vel_vec.y);
+//	// TODO integrator
+//	// Set guidance_opticflow_hover desired_vx, _vy.
+//	opticflow_stab.desired_vx = vx_d;
+//	opticflow_stab.desired_vy = vx_y;
+
+	/*
+	 * Guidance in GUIDED mode.
+	 */
+	// Set position reference for guided mode.
 	// Note: vec = {0, 0, 0} without snapshot.
 	float x_ref, y_ref;
 	struct NedCoor_f *current_pos = stateGetPositionNed_f();
@@ -163,17 +199,16 @@ void visualhoming_periodic(void) {
 	float heading = current_eulers->psi;
 	printf("Pos = %+.1f, %+.1f\n", current_pos->x, current_pos->y);
 	printf("Heading = %+.2f\n", heading);
-	x_ref = current_pos->x
-			+ environment_radius
-					* (vec.x * cos(heading) + vec.y * sin(heading));
-	y_ref = current_pos->y
-			+ environment_radius
-					* (vec.x * sin(heading) - vec.y * cos(heading));
+	x_ref = current_pos->x + (vec.x * cos(heading) + vec.y * sin(heading));
+	y_ref = current_pos->y + (vec.x * sin(heading) - vec.y * cos(heading));
 	printf("Pos_ref = %+.1f, %+.1f\n", x_ref, y_ref);
 
 	guidance_h_set_guided_pos(x_ref, y_ref);
 	guidance_v_from_nav(true);
 
+	/*
+	 * Telemetry
+	 */
 	// Save homing vector for telemetry
 	homingvector_telemetry = vec;
 }
