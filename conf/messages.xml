@@ -1733,6 +1733,8 @@
       <field name="delta_x" type="float"/>
       <field name="delta_y" type="float"/>
       <field name="sigma" type="float" unit="rad"/> 
+      <field name="vx" type="float"/>
+      <field name="vy" type="float"/>
 	</message>
 
     <message name="ROTORCRAFT_STATUS" id="231">

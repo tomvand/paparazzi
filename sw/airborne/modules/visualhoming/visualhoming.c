@@ -71,10 +71,10 @@ PRINT_CONFIG_VAR(OPTICFLOW_SEND_ABI_ID)
 int take_snapshot = 0;
 int drop_snapshot = 0;
 struct calibration_t calibration = {
-		.center_x = 0.50,
-		.center_y = 0.50,
-		.radius_top = 0.23,
-		.radius_bottom = 0.27 };
+		.center_x = 0.56,
+		.center_y = 0.46,
+		.radius_top = 0.26,
+		.radius_bottom = 0.29 };
 float environment_radius = 5.0;
 float derotate_gain = 0.08;
 float position_gain = 0.5;
@@ -94,6 +94,7 @@ static struct FloatRMat attitude;
 
 // Telemetry data
 struct homingvector_t homingvector_telemetry;
+struct homingvector_t velocity_telemetry;
 
 // Function declarations
 // Telemetry callback
@@ -143,6 +144,9 @@ void visualhoming_periodic(void) {
 	/*
 	 * Navigation
 	 */
+	if (current_snapshot == NULL) {
+		return; // Nothing to do without video input :(.
+	}
 	pthread_mutex_lock(&video_mutex);
 	// Estimate current velocity
 	if (previous_snapshot != NULL) {
@@ -178,7 +182,7 @@ void visualhoming_periodic(void) {
 	// Broadcast VELOCITY_ESTIMATE ABI message
 	uint32_t now_ts = get_sys_time_usec();
 	AbiSendMsgVELOCITY_ESTIMATE(VISUALHOMING_SEND_ABI_ID, now_ts, vel_vec.x,
-			vel_vec.y, 0.0f, 0.0f);
+			-vel_vec.y, 0.0f, 0.0f);
 //	// Calculate desired velocity
 //	float vx_d, vy_d;
 //	vx_d = guidance_h.gains.p * vec.x - guidance_h.gains.d * vel_vec.x;
@@ -204,13 +208,14 @@ void visualhoming_periodic(void) {
 	printf("Pos_ref = %+.1f, %+.1f\n", x_ref, y_ref);
 
 	guidance_h_set_guided_pos(x_ref, y_ref);
-	guidance_v_from_nav(true);
+//	guidance_v_from_nav(true);
 
 	/*
 	 * Telemetry
 	 */
 	// Save homing vector for telemetry
 	homingvector_telemetry = vec;
+	velocity_telemetry = vel_vec;
 }
 
 void visualhoming_start(void) {
@@ -225,7 +230,8 @@ static void send_visualhoming(
 		struct transport_tx *trans,
 		struct link_device *dev) {
 	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &homingvector_telemetry.x,
-			&homingvector_telemetry.y, &homingvector_telemetry.sigma);
+			&homingvector_telemetry.y, &homingvector_telemetry.sigma,
+			&velocity_telemetry.x, &velocity_telemetry.y);
 }
 
 // Camera callback
