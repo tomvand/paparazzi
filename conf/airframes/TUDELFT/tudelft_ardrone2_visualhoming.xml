@@ -10,7 +10,7 @@
       <module name="fdm" type="gazebo"/>
     </target>
 
-    <define name="USE_SONAR" value="TRUE"/>
+    <define name="USE_SONAR" value="FALSE"/>
     <define name="INS_INT_GPS_ID" value="ABI_DISABLE"/>
 
 	<!-- Subsystem section -->
@@ -172,7 +172,7 @@
 
   <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
     <!-- Good weather -->
-    <define name="MAX_BANK" value="20" unit="deg"/>
+    <define name="MAX_BANK" value="15" unit="deg"/><!-- Omni-lens limit -->
     <!-- Bad weather -->
     <!-- define name="MAX_BANK" value="32" unit="deg"/ -->
     <define name="PGAIN" value="79"/>
