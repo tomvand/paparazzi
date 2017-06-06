@@ -132,8 +132,10 @@ void visualhoming_init(void) {
 
 void visualhoming_periodic(void) {
 	struct FloatRMat *current_att;
-	struct homingvector_t vel_vec = { 0, 0, 0 };
+	static struct homingvector_t vel_vec = { 0, 0, 0 };
 	struct homingvector_t vec = { 0, 0, 0 };
+	static struct homingvector_t previous_vec = { 0, 0, 0 };
+	struct homingvector_t measured_vel = { 0, 0, 0 };
 
 	// Communicate current attitude to video thread.
 	current_att = stateGetNedToBodyRMat_f();
@@ -148,17 +150,17 @@ void visualhoming_periodic(void) {
 		return; // Nothing to do without video input :(.
 	}
 	pthread_mutex_lock(&video_mutex);
-	// Estimate current velocity
-	if (previous_snapshot != NULL) {
-		// Estimate velocity
-		vel_vec = homing_vector(previous_snapshot, current_snapshot, NULL,
-		NULL);
-		vel_vec.x *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
-		vel_vec.y *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
-		printf("VELOCITY: vx = %+.1f, vy = %+.1f\n", vel_vec.x, vel_vec.y);
-		// Update previous snapshot
-		snapshot_copy(previous_snapshot, current_snapshot);
-	}
+//	// Estimate current velocity
+//	if (previous_snapshot != NULL) {
+//		// Estimate velocity
+//		vel_vec = homing_vector(previous_snapshot, current_snapshot, NULL,
+//		NULL);
+//		vel_vec.x *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
+//		vel_vec.y *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
+//		printf("VELOCITY: vx = %+.1f, vy = %+.1f\n", vel_vec.x, vel_vec.y);
+//		// Update previous snapshot
+//		snapshot_copy(previous_snapshot, current_snapshot);
+//	}
 	// Estimate homing vector if req'd
 	if (target_snapshot != NULL) {
 		vec = homing_vector(current_snapshot, target_snapshot,
@@ -169,6 +171,13 @@ void visualhoming_periodic(void) {
 				vec.sigma / M_PI * 180.0);
 
 	}
+	// Estimate velocity from difference in homing vectors
+	const static float GAIN = 0.20;
+	measured_vel.x = (previous_vec.x - vec.x) / VISUALHOMING_PERIODIC_PERIOD;
+	measured_vel.y = (previous_vec.y - vec.y) / VISUALHOMING_PERIODIC_PERIOD;
+	previous_vec = vec;
+	vel_vec.x = GAIN * measured_vel.x + (1 - GAIN) * vel_vec.x;
+	vel_vec.y = GAIN * measured_vel.y + (1 - GAIN) * vel_vec.y;
 	// Free current snapshot
 	snapshot_free(current_snapshot);
 	current_snapshot = NULL; // Signal to video thread to update current observation.
