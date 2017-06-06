@@ -10,8 +10,8 @@
       <module name="fdm" type="gazebo"/>
     </target>
 
-    <define name="USE_SONAR" value="FALSE"/>
-    <define name="INS_INT_GPS_ID" value="ABI_DISABLE"/>
+    <define name="USE_SONAR" value="TRUE"/>
+    <!-- <define name="INS_INT_GPS_ID" value="ABI_DISABLE"/> -->
 
 	<!-- Subsystem section -->
     <module name="telemetry" type="transparent_udp"/>
@@ -166,18 +166,18 @@
     <define name="HOVER_KP" value="283"/>
     <define name="HOVER_KD" value="82"/>
     <define name="HOVER_KI" value="13"/>
-    <define name="NOMINAL_HOVER_THROTTLE" value="0.75"/>
+    <define name="NOMINAL_HOVER_THROTTLE" value="0.655"/>
     <define name="ADAPT_THROTTLE_ENABLED" value="FALSE"/>
   </section>
 
   <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
     <!-- Good weather -->
-    <define name="MAX_BANK" value="15" unit="deg"/><!-- Omni-lens limit -->
+    <define name="MAX_BANK" value="20" unit="deg"/><!-- Omni-lens limit -->
     <!-- Bad weather -->
     <!-- define name="MAX_BANK" value="32" unit="deg"/ -->
     <define name="PGAIN" value="79"/>
-    <define name="DGAIN" value="20"/>
-    <define name="IGAIN" value="0"/>
+    <define name="DGAIN" value="100"/>
+    <define name="IGAIN" value="30"/>
   </section>
 
   <section name="SIMULATOR" prefix="NPS_">
@@ -192,7 +192,7 @@
   </section>
 
   <section name="AUTOPILOT">
-    <define name="MODE_STARTUP" value="AP_MODE_ATTITUDE_DIRECT"/>
+    <define name="MODE_STARTUP" value="AP_MODE_NAV"/>
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
     <define name="MODE_AUTO1" value="AP_MODE_ATTITUDE_Z_HOLD"/>
     <define name="MODE_AUTO2" value="AP_MODE_GUIDED"/>

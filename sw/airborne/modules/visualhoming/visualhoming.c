@@ -48,6 +48,7 @@
 
 // Guidance in MODULE mode
 #include "subsystems/abi.h"
+#include "modules/visualhoming/visualhoming_guidance_h.h"
 //#include "modules/guidance_opticflow/guidance_opticflow_hover.h"
 //#include "firmwares/rotorcraft/guidance/guidance_h.h"
 
@@ -71,10 +72,10 @@ PRINT_CONFIG_VAR(OPTICFLOW_SEND_ABI_ID)
 int take_snapshot = 0;
 int drop_snapshot = 0;
 struct calibration_t calibration = {
-		.center_x = 0.56,
-		.center_y = 0.46,
-		.radius_top = 0.26,
-		.radius_bottom = 0.29 };
+		.center_x = 0.50,
+		.center_y = 0.50,
+		.radius_top = 0.23,
+		.radius_bottom = 0.27 };
 float environment_radius = 5.0;
 float derotate_gain = 0.08;
 float position_gain = 0.5;
@@ -183,13 +184,15 @@ void visualhoming_periodic(void) {
 
 	/*
 	 * GPS-less guidance in MODULE mode.
-	 * Uses the opticflow_hover module for inner loop control.
-	 * TODO remove as this module is apparently outdated.
 	 */
+	visualhoming_guidance_set_pos_error(vec.x, -vec.y);
+	visualhoming_guidance_set_heading_error(vec.sigma);
+
 	// Broadcast VELOCITY_ESTIMATE ABI message
 	uint32_t now_ts = get_sys_time_usec();
-	AbiSendMsgVELOCITY_ESTIMATE(VISUALHOMING_SEND_ABI_ID, now_ts, vel_vec.x,
-			-vel_vec.y, 0.0f, 0.0f);
+//	AbiSendMsgVELOCITY_ESTIMATE(VISUALHOMING_SEND_ABI_ID, now_ts, vel_vec.x,
+//			-vel_vec.y, 0.0f, 0.0f);
+
 //	// Calculate desired velocity
 //	float vx_d, vy_d;
 //	vx_d = guidance_h.gains.p * vec.x - guidance_h.gains.d * vel_vec.x;
