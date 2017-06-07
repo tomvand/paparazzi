@@ -10,7 +10,7 @@
       <module name="fdm" type="gazebo"/>
     </target>
 
-    <define name="USE_SONAR" value="TRUE"/>
+    <define name="USE_SONAR" value="FALSE"/>
     <!-- <define name="INS_INT_GPS_ID" value="ABI_DISABLE"/> -->
 
 	<!-- Subsystem section -->
@@ -93,8 +93,8 @@
     <define name="MAG_Y_CURRENT_COEF" value="0.0"/>
     <define name="MAG_Z_CURRENT_COEF" value="0.0"/>
 
-    <define name="BODY_TO_IMU_PHI" value="-2.73" unit="deg"/>
-    <define name="BODY_TO_IMU_THETA" value="-1.62" unit="deg"/>
+    <define name="BODY_TO_IMU_PHI" value="-2.70" unit="deg"/>
+    <define name="BODY_TO_IMU_THETA" value="-3.05" unit="deg"/>
     <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
   </section>
 
@@ -166,7 +166,7 @@
     <define name="HOVER_KP" value="283"/>
     <define name="HOVER_KD" value="82"/>
     <define name="HOVER_KI" value="13"/>
-    <define name="NOMINAL_HOVER_THROTTLE" value="0.655"/>
+    <define name="NOMINAL_HOVER_THROTTLE" value="0.75"/>
     <define name="ADAPT_THROTTLE_ENABLED" value="FALSE"/>
   </section>
 
@@ -192,10 +192,10 @@
   </section>
 
   <section name="AUTOPILOT">
-    <define name="MODE_STARTUP" value="AP_MODE_NAV"/>
+    <define name="MODE_STARTUP" value="AP_MODE_ATTITUDE_DIRECT"/>
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
     <define name="MODE_AUTO1" value="AP_MODE_ATTITUDE_Z_HOLD"/>
-    <define name="MODE_AUTO2" value="AP_MODE_GUIDED"/>
+    <define name="MODE_AUTO2" value="AP_MODE_MODULE"/>
   </section>
 
   <section name="BAT">

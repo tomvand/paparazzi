@@ -72,9 +72,9 @@ PRINT_CONFIG_VAR(OPTICFLOW_SEND_ABI_ID)
 int take_snapshot = 0;
 int drop_snapshot = 0;
 struct calibration_t calibration = {
-		.center_x = 0.50,
-		.center_y = 0.50,
-		.radius_top = 0.23,
+		.center_x = 0.55,
+		.center_y = 0.47,
+		.radius_top = 0.25,
 		.radius_bottom = 0.27 };
 float environment_radius = 5.0;
 float derotate_gain = 0.08;

@@ -64,8 +64,8 @@ void visualhoming_guidance_set_pos_error(float dx, float dy) {
 //	data.cmd_phi = 0.10 * dy;
 
 	static const float GAIN = 0.20;
-	static const float KP = 0.02;
-	static const float KD = 0.10;
+	static const float KP = 0.10;
+	static const float KD = 0.20;
 	data.vx = GAIN * (10 * (data.dx - dx)) + (1 - GAIN) * data.vx;
 	data.vy = GAIN * (10 * (data.dy - dy)) + (1 - GAIN) * data.vy;
 	data.cmd_theta = -(KP * dx - KD * data.vx);
