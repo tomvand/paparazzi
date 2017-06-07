@@ -20,70 +20,81 @@
 
 #include "visualhoming_guidance_h.h"
 
+#include "mcu_periph/sys_time.h"
+
 #include <stdio.h>
 
-#ifndef VISUALHOMING_MAX_BANK
-#define VISUALHOMING_MAX_BANK 0.18 // rad
-#endif
+struct vh_guidance_tuning_t vh_guidance_tuning = {
+		.Kp = VISUALHOMING_GUIDANCE_P,
+		.Kd = VISUALHOMING_GUIDANCE_D,
+		.Kf = VISUALHOMING_GUIDANCE_FILTER_GAIN };
 
-struct vh_guidance_data_t {
-	float cmd_phi;
-	float cmd_theta;
-	float cmd_psi;
-	float dx;
-	float dy;
-	float vx;
-	float vy;
-	float a_1;
-	float b_0;
-	float b_1;
-};
-
-// Found through MATLAB.
-// TODO calculate here or explain
-static struct vh_guidance_data_t data = {
-	.a_1 = 0.2, .b_0 = 3.983, .b_1 = 3.616
-};
+static struct vh_guidance_cmd_t {
+	float cmd_phi;		// Roll [rad]
+	float cmd_theta;	// Pitch [rad]
+	float cmd_psi;		// Yaw [rad]
+	float vx; // Last estimated velocity [m/s]
+	float vy; // Last estimated velocity [m/s]
+} vh_cmd;
 
 /**
  * Set new position error.
- * Should be called at 10 Hz!
  *
- * This function accepts new position error measurements and
- * calculates new attitude setpoints.
- * @param dx
- * @param dy
+ * This function estimates the current velocity using the change in position
+ * error and updates the PD controller accordingly.
+ * @param dx Position error [m]
+ * @param dy Position error [m]
  */
 void visualhoming_guidance_set_pos_error(float dx, float dy) {
-	// Calculate new setpoints
-//	data.cmd_theta = data.b_0 * (-dx) - data.b_1 * (-data.dx)
-//			- data.a_1 * data.cmd_theta;
-//	data.cmd_phi = data.b_0 * dy - data.b_1 * data.dy - data.a_1 * data.cmd_phi;
+	static uint32_t prev_ts = 0;
+	static float prev_dx = 0;
+	static float prev_dy = 0;
 
-//	data.cmd_theta = -0.10 * dx;
-//	data.cmd_phi = 0.10 * dy;
+	// Estimate current velocity
+	uint32_t now_ts = get_sys_time_usec();
+	float dt = (now_ts - prev_ts) / 1.0e6;
+	if (dt > 0.01 && prev_ts != 0) { // Prevent too small timesteps.
+		vh_cmd.vx = vh_guidance_tuning.Kf * (10 * (prev_dx - dx))
+				+ (1 - vh_guidance_tuning.Kf) * vh_cmd.vx;
+		vh_cmd.vy = vh_guidance_tuning.Kf * (10 * (prev_dy - dy))
+				+ (1 - vh_guidance_tuning.Kf) * vh_cmd.vy;
+		prev_dx = dx;
+		prev_dy = dy;
+	}
 
-	static const float GAIN = 0.20;
-	static const float KP = 0.10;
-	static const float KD = 0.20;
-	data.vx = GAIN * (10 * (data.dx - dx)) + (1 - GAIN) * data.vx;
-	data.vy = GAIN * (10 * (data.dy - dy)) + (1 - GAIN) * data.vy;
-	data.cmd_theta = -(KP * dx - KD * data.vx);
-	data.cmd_phi = KP * dy - KD * data.vy;
-
-	BoundAbs(data.cmd_phi, VISUALHOMING_MAX_BANK);
-	BoundAbs(data.cmd_theta, VISUALHOMING_MAX_BANK);
-	printf("\n");
-	printf("PITCH: %.1f\n", data.cmd_theta / M_PI * 180.0);
-	printf("ROLL:  %.1f\n", data.cmd_phi / M_PI * 180.0);
-	printf("\n");
-	// Keep track of last error
-	data.dx = dx;
-	data.dy = dy;
+	// Update PD controller
+	visualhoming_guidance_set_PD(dx, dy, vh_cmd.vx, vh_cmd.vy);
 }
 
-void visualhoming_guidance_set_heading_error(float dpsi) {
-//	data.cmd_psi = stateGetNedToBodyEulers_f()->psi + dpsi;
+/**
+ * Set new position error and update PD controller. Unlike _set_pos_error(),
+ * this function accepts external velocity estimates.
+ * @param dx Position error [m]
+ * @param dy Position error [m]
+ * @param vx Current velocity [m/s]
+ * @param vy Current velocity [m/s]
+ */
+void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
+	// Simple PD controller for attitude from position and velocity
+	vh_cmd.cmd_theta =
+			-(vh_guidance_tuning.Kp * dx - vh_guidance_tuning.Kd * vx);
+	vh_cmd.cmd_phi = vh_guidance_tuning.Kp * dy - vh_guidance_tuning.Kd * vy;
+	BoundAbs(vh_cmd.cmd_phi, VISUALHOMING_GUIDANCE_MAX_BANK);
+	BoundAbs(vh_cmd.cmd_theta, VISUALHOMING_GUIDANCE_MAX_BANK);
+	printf("\n");
+	printf("PITCH: %.1f\n", vh_cmd.cmd_theta / M_PI * 180.0);
+	printf("ROLL:  %.1f\n", vh_cmd.cmd_phi / M_PI * 180.0);
+	printf("\n");
+}
+
+void visualhoming_guidance_set_heading_error(float dpsi __attribute__((unused))) {
+	// XXX Fix strange rotation bug
+//	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi + dpsi;
+//	// Normalize heading
+//	while (vh_cmd.cmd_psi > 2 * M_PI)
+//		vh_cmd.cmd_psi -= 2. * M_PI;
+//	while (vh_cmd.cmd_psi < 0)
+//		vh_cmd.cmd_psi += 2. * M_PI;
 }
 
 void guidance_h_module_init(void) {
@@ -92,14 +103,9 @@ void guidance_h_module_init(void) {
 
 void guidance_h_module_enter(void) {
 	// Set setpoints to zero
-	data.cmd_theta = 0;
-	data.cmd_phi = 0;
-	data.cmd_psi = stateGetNedToBodyEulers_f()->psi;
-	// Set previous error to zero
-	data.dx = 0;
-	data.dy = 0;
-	data.vx = 0;
-	data.vy = 0;
+	vh_cmd.cmd_theta = 0;
+	vh_cmd.cmd_phi = 0;
+	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi;
 }
 
 void guidance_h_module_read_rc(void) {
@@ -108,9 +114,9 @@ void guidance_h_module_read_rc(void) {
 
 void guidance_h_module_run(bool in_flight) {
 	struct Int32Eulers rpy = {
-			.theta = ANGLE_BFP_OF_REAL(data.cmd_theta),
-			.phi = ANGLE_BFP_OF_REAL(data.cmd_phi),
-			.psi = ANGLE_BFP_OF_REAL(data.cmd_psi) };
+			.theta = ANGLE_BFP_OF_REAL(vh_cmd.cmd_theta),
+			.phi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_phi),
+			.psi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_psi) };
 	stabilization_attitude_set_rpy_setpoint_i(&rpy);
 	stabilization_attitude_run(in_flight);
 }

@@ -23,7 +23,29 @@
 #include "state.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude.h"
 
+// PD tuning
+#ifndef VISUALHOMING_GUIDANCE_P
+#define VISUALHOMING_GUIDANCE_P 0.10
+#endif
+#ifndef VISUALHOMING_GUIDANCE_D
+#define VISUALHOMING_GUIDANCE_D 0.20
+#endif
+#ifndef VISUALHOMING_GUIDANCE_FILTER_GAIN
+#define VISUALHOMING_GUIDANCE_FILTER_GAIN 0.20
+#endif
+#ifndef VISUALHOMING_GUIDANCE_MAX_BANK
+#define VISUALHOMING_GUIDANCE_MAX_BANK 0.18 // rad
+#endif
+
+struct vh_guidance_tuning_t {
+	float Kp; // P-gain [rad/m]
+	float Kd; // D-gain [rad/(m/s)]
+	float Kf; // Filter gain [0..1], where 1 does not use old estimates
+};
+extern struct vh_guidance_tuning_t vh_guidance_tuning;
+
 void visualhoming_guidance_set_pos_error(float dx, float dy);
+void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy);
 void visualhoming_guidance_set_heading_error(float dpsi);
 
 void guidance_h_module_init(void);

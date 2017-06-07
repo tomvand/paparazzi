@@ -38,7 +38,7 @@ extern int drop_snapshot;
 extern struct calibration_t calibration;
 extern float environment_radius;
 extern float derotate_gain;
-extern float position_gain;
+extern int use_frame_to_frame_velocity;
 
 extern void visualhoming_init(void);
 extern void visualhoming_periodic(void);

@@ -68,17 +68,40 @@
 #endif
 PRINT_CONFIG_VAR(OPTICFLOW_SEND_ABI_ID)
 
+// Default settings
+#ifndef VISUALHOMING_CENTER_X
+#define VISUALHOMING_CENTER_X 0.50
+#endif
+#ifndef VISUALHOMING_CENTER_Y
+#define VISUALHOMING_CENTER_Y 0.50
+#endif
+#ifndef VISUALHOMING_RADIUS_TOP
+#define VISUALHOMING_RADIUS_TOP 0.23
+#endif
+#ifndef VISUALHOMING_RADIUS_BOTTOM
+#define VISUALHOMING_RADIUS_BOTTOM 0.27
+#endif
+#ifndef VISUALHOMING_ENV_RADIUS
+#define VISUALHOMING_ENV_RADIUS 5.0
+#endif
+#ifndef VISUALHOMING_DEROTATE_GAIN
+#define VISUALHOMING_DEROTATE_GAIN 0.08
+#endif
+#ifndef VISUALHOMING_USE_FRAME_TO_FRAME_VELOCITY
+#define VISUALHOMING_USE_FRAME_TO_FRAME_VELOCITY 0
+#endif
+
 // Settings
 int take_snapshot = 0;
 int drop_snapshot = 0;
 struct calibration_t calibration = {
-		.center_x = 0.55,
-		.center_y = 0.47,
-		.radius_top = 0.25,
-		.radius_bottom = 0.27 };
-float environment_radius = 5.0;
-float derotate_gain = 0.08;
-float position_gain = 0.5;
+		.center_x = VISUALHOMING_CENTER_X,
+		.center_y = VISUALHOMING_CENTER_Y,
+		.radius_top = VISUALHOMING_RADIUS_TOP,
+		.radius_bottom = VISUALHOMING_RADIUS_BOTTOM };
+float environment_radius = VISUALHOMING_ENV_RADIUS;
+float derotate_gain = VISUALHOMING_DEROTATE_GAIN;
+int use_frame_to_frame_velocity = VISUALHOMING_USE_FRAME_TO_FRAME_VELOCITY;
 
 // Macro functions
 #define PIXEL_UV(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 2*(y)*(img)->w] )
@@ -135,7 +158,7 @@ void visualhoming_periodic(void) {
 	struct FloatRMat *current_att;
 	static struct homingvector_t vel_vec = { 0, 0, 0 };
 	struct homingvector_t vec = { 0, 0, 0 };
-	static struct homingvector_t previous_vec = { 0, 0, 0 };
+//	static struct homingvector_t previous_vec = { 0, 0, 0 };
 	struct homingvector_t measured_vel = { 0, 0, 0 };
 
 	// Communicate current attitude to video thread.
@@ -154,7 +177,7 @@ void visualhoming_periodic(void) {
 	// Estimate current velocity
 	if (previous_snapshot != NULL) {
 		// Estimate velocity
-		const static float GAIN = 0.20;
+		const float GAIN = 0.20;
 		measured_vel = homing_vector(previous_snapshot, current_snapshot, NULL,
 		NULL);
 		measured_vel.x *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
@@ -185,11 +208,15 @@ void visualhoming_periodic(void) {
 	/*
 	 * GPS-less guidance in MODULE mode.
 	 */
-	visualhoming_guidance_set_pos_error(vec.x, -vec.y);
+	if (use_frame_to_frame_velocity) {
+		visualhoming_guidance_set_PD(vec.x, -vec.y, vel_vec.x, -vel_vec.y);
+	} else {
+		visualhoming_guidance_set_pos_error(vec.x, -vec.y);
+	}
 	visualhoming_guidance_set_heading_error(vec.sigma);
 
 	// Broadcast VELOCITY_ESTIMATE ABI message
-	uint32_t now_ts = get_sys_time_usec();
+//	uint32_t now_ts = get_sys_time_usec();
 //	AbiSendMsgVELOCITY_ESTIMATE(VISUALHOMING_SEND_ABI_ID, now_ts, vel_vec.x,
 //			-vel_vec.y, 0.0f, 0.0f);
 
@@ -308,6 +335,9 @@ static void draw_calibration(struct image_t *img) {
 static void draw_snapshots(struct image_t *img, const float horizon[]) {
 	float hor[HORIZON_WIDTH];
 	// CAUTION: This function is called from the video thread.
+
+	// Draw calibration
+	draw_calibration(img);
 
 	// Draw current horizon
 	for (int y = 0; y < img->h / 5 * 1; y++) {
