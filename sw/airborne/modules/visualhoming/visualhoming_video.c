@@ -20,9 +20,6 @@
 
 #include "visualhoming_video.h"
 
-#include "modules/computer_vision/cv.h"
-#include "modules/computer_vision/lib/vision/image.h"
-
 #include "math/pprz_algebra_float.h"
 
 #include <pthread.h>
@@ -65,6 +62,9 @@ float derotate_gain = VISUALHOMING_DEROTATE_GAIN;
 #define PIXEL_UV(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 2*(y)*(img)->w] )
 #define PIXEL_Y(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 1 + 2*(y)*(img)->w] )
 
+// Static variables
+static video_callback_t callback = 0;
+
 // Cross-thread variables
 static pthread_mutex_t video_mutex;
 static horizon_t current_horizon;
@@ -96,6 +96,10 @@ void vh_get_current_horizon(horizon_t hor) {
 	pthread_mutex_unlock(&video_mutex);
 }
 
+void vh_video_set_callback(video_callback_t cb) {
+	callback = cb;
+}
+
 // Static functions
 static struct image_t* camera_callback(struct image_t *img) {
 	// Caution: runs on video thread
@@ -104,6 +108,7 @@ static struct image_t* camera_callback(struct image_t *img) {
 	pthread_mutex_unlock(&video_mutex);
 
 	draw_calibration(img);
+	if (callback) callback(img);
 	return img;
 }
 

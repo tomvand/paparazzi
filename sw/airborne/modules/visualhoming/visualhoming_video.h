@@ -21,6 +21,9 @@
 #ifndef VISUALHOMING_VIDEO_H
 #define VISUALHOMING_VIDEO_H
 
+#include "modules/computer_vision/cv.h"
+#include "modules/computer_vision/lib/vision/image.h"
+
 #ifndef VISUALHOMING_HORIZON_RESOLUTION
 #define VISUALHOMING_HORIZON_RESOLUTION 64
 #endif
@@ -29,5 +32,8 @@ typedef uint8_t horizon_t[VISUALHOMING_HORIZON_RESOLUTION];
 
 void vh_video_init(void);
 void vh_get_current_horizon(horizon_t hor);
+
+typedef void (*video_callback_t)(struct image_t img);
+void vh_video_set_callback(video_callback_t cb);
 
 #endif
