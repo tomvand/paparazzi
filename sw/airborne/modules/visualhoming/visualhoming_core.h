@@ -41,7 +41,10 @@
 #define SNAPSHOT_N_IT 1 /**< Number of iterations for homing vector estimation */
 #endif
 
-struct snapshot_t;
+struct snapshot_t {
+	float dc[2]; /**< For now includes the DC and Nyquist value! */
+	float data[2 * SNAPSHOT_K];
+};
 
 struct homingvector_t {
 	float x;

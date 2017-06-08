@@ -57,11 +57,6 @@
     _det = MAT33_ELMT((_m),0,0)*m00 - MAT33_ELMT((_m),1,0)*m10 + MAT33_ELMT((_m),2,0)*m20; \
   }
 
-struct snapshot_t {
-	float dc[2]; /**< For now includes the DC and Nyquist value! */
-	float data[2 * SNAPSHOT_K];
-};
-
 struct spatial_gradient_t {
 	float akx;
 	float aky;
