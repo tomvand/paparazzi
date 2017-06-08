@@ -215,22 +215,8 @@ void visualhoming_periodic(void) {
 	}
 	visualhoming_guidance_set_heading_error(vec.sigma);
 
-	// Broadcast VELOCITY_ESTIMATE ABI message
-//	uint32_t now_ts = get_sys_time_usec();
-//	AbiSendMsgVELOCITY_ESTIMATE(VISUALHOMING_SEND_ABI_ID, now_ts, vel_vec.x,
-//			-vel_vec.y, 0.0f, 0.0f);
-
-//	// Calculate desired velocity
-//	float vx_d, vy_d;
-//	vx_d = guidance_h.gains.p * vec.x - guidance_h.gains.d * vel_vec.x;
-//	vy_d = -(guidance_h.gains.p * vec.y - guidance_h.gains.d * vel_vec.y);
-//	// TODO integrator
-//	// Set guidance_opticflow_hover desired_vx, _vy.
-//	opticflow_stab.desired_vx = vx_d;
-//	opticflow_stab.desired_vy = vx_y;
-
 	/*
-	 * Guidance in GUIDED mode.
+	 * GPS-assisted guidance in GUIDED mode.
 	 */
 	// Set position reference for guided mode.
 	// Note: vec = {0, 0, 0} without snapshot.
@@ -243,9 +229,7 @@ void visualhoming_periodic(void) {
 	x_ref = current_pos->x + (vec.x * cos(heading) + vec.y * sin(heading));
 	y_ref = current_pos->y + (vec.x * sin(heading) - vec.y * cos(heading));
 	printf("Pos_ref = %+.1f, %+.1f\n", x_ref, y_ref);
-
 	guidance_h_set_guided_pos(x_ref, y_ref);
-//	guidance_v_from_nav(true);
 
 	/*
 	 * Telemetry

@@ -37,13 +37,10 @@ void odometry_update(
 		float delta_x,
 		float delta_y,
 		float delta_psi) {
-	// Pre-rotate by half delta_psi
-	odo->x = cos(delta_psi / 2) * odo->x + sin(delta_psi / 2) * odo->y;
-	odo->y = -sin(delta_psi / 2) * odo->x + cos(delta_psi / 2) * odo->y;
+	// Rotate by delta_psi
+	odo->x = cos(delta_psi) * odo->x + sin(delta_psi) * odo->y;
+	odo->y = -sin(delta_psi) * odo->x + cos(delta_psi) * odo->y;
 	// Apply translation
 	odo->x -= delta_x;
 	odo->y -= delta_y;
-	// Post-rotate by half delta_psi
-	odo->x = cos(delta_psi / 2) * odo->x + sin(delta_psi / 2) * odo->y;
-	odo->y = -sin(delta_psi / 2) * odo->x + cos(delta_psi / 2) * odo->y;
 }
