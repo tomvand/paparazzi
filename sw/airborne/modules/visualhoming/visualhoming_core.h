@@ -29,10 +29,6 @@
 #include <stdint.h>
 
 // Configuration
-#ifndef HORIZON_WIDTH
-#define HORIZON_WIDTH 128 /**< Number of pixels in horizon image */
-#endif
-
 #ifndef SNAPSHOT_K
 #define SNAPSHOT_K 10 /**< Number of complex coefficients to store in snapshot */
 #endif

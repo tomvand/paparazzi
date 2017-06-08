@@ -21,6 +21,7 @@
 #include "visualhoming_video.h"
 
 #include "math/pprz_algebra_float.h"
+#include "state.h"
 
 #include <pthread.h>
 #include <string.h>
@@ -57,10 +58,6 @@ struct calibration_t calibration = {
 		.radius_top = VISUALHOMING_RADIUS_TOP,
 		.radius_bottom = VISUALHOMING_RADIUS_BOTTOM };
 float derotate_gain = VISUALHOMING_DEROTATE_GAIN;
-
-// Macro functions
-#define PIXEL_UV(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 2*(y)*(img)->w] )
-#define PIXEL_Y(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 1 + 2*(y)*(img)->w] )
 
 // Static variables
 static video_callback_t callback = 0;
@@ -116,16 +113,17 @@ static void extract_horizon(const struct image_t *img, horizon_t hor) {
 	for (int b = 0; b < VISUALHOMING_HORIZON_RESOLUTION; ++b) {
 		float bearing;
 		bearing = b / (float)VISUALHOMING_HORIZON_RESOLUTION * 2 * M_PI;
-		hor[b] = 0;
+		float pixel_y = 0.0;
 		for (int e = 0; e < VISUALHOMING_RADIAL_SAMPLES; ++e) {
 			struct point_t p;
 			float elevation;
 			elevation = -1.0
 					+ 2.0 * (e / (float)(VISUALHOMING_RADIAL_SAMPLES - 1));
 			p = derotated_point(img, bearing, elevation);
-			hor[b] += PIXEL_Y(img, p.x,
+			pixel_y += PIXEL_Y(img, p.x,
 					p.y) / (float)VISUALHOMING_RADIAL_SAMPLES;
 		}
+		hor[b] = pixel_y;
 	}
 }
 

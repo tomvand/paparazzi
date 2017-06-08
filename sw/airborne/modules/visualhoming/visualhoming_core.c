@@ -29,6 +29,7 @@
 #include <assert.h>
 
 #include "visualhoming_core.h"
+#include "visualhoming_video.h"
 
 #include "math/pprz_algebra_float.h" /**< Replace with suitable header outside Paparazzi */
 
@@ -97,7 +98,7 @@ static void get_zk(
 		int k);
 
 void visualhoming_core_init(void) {
-	pffft_setup = pffft_new_setup(HORIZON_WIDTH, PFFFT_REAL);
+	pffft_setup = pffft_new_setup(VISUALHOMING_HORIZON_RESOLUTION, PFFFT_REAL);
 }
 
 void visualhoming_core_close(void) {
@@ -105,7 +106,7 @@ void visualhoming_core_close(void) {
 }
 
 struct snapshot_t *snapshot_create(const float hor[]) {
-	float fourier_coeffs[HORIZON_WIDTH];
+	float fourier_coeffs[VISUALHOMING_HORIZON_RESOLUTION];
 	struct snapshot_t *ss = NULL;
 
 	// Get (real) Fourier transform of horizon image.
@@ -113,11 +114,12 @@ struct snapshot_t *snapshot_create(const float hor[]) {
 			PFFFT_FORWARD);
 	// Store first SNAPSHOT_K components.
 	ss = (struct snapshot_t*)malloc(sizeof(struct snapshot_t));
-	ss->dc[0] = fourier_coeffs[0] / HORIZON_WIDTH;
-	ss->dc[1] = fourier_coeffs[1] / HORIZON_WIDTH;
+	ss->dc[0] = fourier_coeffs[0] / VISUALHOMING_HORIZON_RESOLUTION;
+	ss->dc[1] = fourier_coeffs[1] / VISUALHOMING_HORIZON_RESOLUTION;
 	for (int k = 1; k <= SNAPSHOT_K; k++) {
-		SS_AK(ss,k) = fourier_coeffs[2 * k] / HORIZON_WIDTH;
-		SS_BK(ss,k) = -fourier_coeffs[2 * k + 1] / HORIZON_WIDTH; // Minus sign following definition in Sturzl and Mallot (2006)
+		SS_AK(ss,k) = fourier_coeffs[2 * k] / VISUALHOMING_HORIZON_RESOLUTION;
+		SS_BK(ss,k) = -fourier_coeffs[2 * k + 1]
+				/ VISUALHOMING_HORIZON_RESOLUTION; // Minus sign following definition in Sturzl and Mallot (2006)
 	}
 
 	// XXX show debug info
@@ -185,7 +187,7 @@ struct homingvector_t homing_vector(
 }
 
 void snapshot_to_horizon(float hor[], const struct snapshot_t * ss) {
-	float fourier_coeffs[HORIZON_WIDTH];
+	float fourier_coeffs[VISUALHOMING_HORIZON_RESOLUTION];
 
 	// Read Fourier coefficients from snapshot
 	memset(fourier_coeffs, 0, sizeof(fourier_coeffs));
@@ -199,7 +201,7 @@ void snapshot_to_horizon(float hor[], const struct snapshot_t * ss) {
 	pffft_transform_ordered(pffft_setup, fourier_coeffs, hor, NULL,
 			PFFFT_BACKWARD);
 	// Fix under-/overflows
-	for (int x = 0; x < HORIZON_WIDTH; x++) {
+	for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
 		if (hor[x] < 0) hor[x] = 0;
 		if (hor[x] > 255) hor[x] = 255;
 	}

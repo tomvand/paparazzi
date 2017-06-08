@@ -28,12 +28,24 @@
 #define VISUALHOMING_HORIZON_RESOLUTION 64
 #endif
 
-typedef uint8_t horizon_t[VISUALHOMING_HORIZON_RESOLUTION];
+#define PIXEL_UV(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 2*(y)*(img)->w] )
+#define PIXEL_Y(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 1 + 2*(y)*(img)->w] )
+
+struct calibration_t {
+	float center_x;
+	float center_y;
+	float radius_top;
+	float radius_bottom;
+};
+extern struct calibration_t calibration;
+extern float derotate_gain;
+
+typedef float horizon_t[VISUALHOMING_HORIZON_RESOLUTION]; // TODO make uint8_t
 
 void vh_video_init(void);
 void vh_get_current_horizon(horizon_t hor);
 
-typedef void (*video_callback_t)(struct image_t img);
+typedef void (*video_callback_t)(struct image_t *img);
 void vh_video_set_callback(video_callback_t cb);
 
 #endif

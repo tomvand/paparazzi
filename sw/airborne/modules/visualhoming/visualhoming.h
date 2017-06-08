@@ -26,18 +26,10 @@
 #ifndef VISUALHOMING_H
 #define VISUALHOMING_H
 
-struct calibration_t {
-	float center_x;
-	float center_y;
-	float radius_top;
-	float radius_bottom;
-};
-
 extern int take_snapshot;
 extern int drop_snapshot;
-extern struct calibration_t calibration;
+
 extern float environment_radius;
-extern float derotate_gain;
 extern int use_frame_to_frame_velocity;
 
 extern void visualhoming_init(void);
