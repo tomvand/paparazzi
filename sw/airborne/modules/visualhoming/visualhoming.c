@@ -40,8 +40,8 @@
 
 // Own headers
 #include "visualhoming.h"
-#include "visualhoming_core.h"
 #include "visualhoming_video.h"
+#include "visualhoming_snapshot.h"
 
 // Image formats
 #include "modules/computer_vision/cv.h"
@@ -71,14 +71,15 @@ int drop_snapshot = 0;
 float environment_radius = VISUALHOMING_ENV_RADIUS;
 int use_frame_to_frame_velocity = VISUALHOMING_USE_FRAME_TO_FRAME_VELOCITY;
 
-// Cross-thread variables
-//static pthread_mutex_t video_mutex;
-static struct snapshot_t *previous_snapshot = NULL;
-static struct snapshot_t *current_snapshot = NULL;
-static struct snapshot_t *target_snapshot = NULL;
+// Snapshots
+static int first_run = 1;
+static struct snapshot_t current_snapshot;
+static struct snapshot_t previous_snapshot;
+
+static int use_target = 0;
+static struct snapshot_t target_snapshot;
 static struct snapshot_t *current_warped_snapshot = NULL;
 static struct snapshot_t *target_rotated_snapshot = NULL;
-//static struct FloatRMat attitude;
 
 // Telemetry data
 struct homingvector_t homingvector_telemetry;
@@ -96,11 +97,11 @@ static void draw_snapshots(struct image_t *img);
 // Module functions
 void visualhoming_init(void) {
 	printf("visualhoming_init\n");
-	// Initialize visual homing core
-	visualhoming_core_init();
 	// Initialize video handling
 	vh_video_init();
 	vh_video_set_callback(draw_snapshots);
+	// Initialize snapshots
+	vh_snapshot_init();
 	// Register telemetry message
 	homingvector_telemetry.x = 0.0;
 	homingvector_telemetry.y = 0.0;
@@ -117,29 +118,23 @@ void visualhoming_periodic(void) {
 	// Get current horizon
 	horizon_t horizon;
 	vh_get_current_horizon(horizon);
-
 	// Transform into snapshot
-	if (current_snapshot != NULL) {
-		snapshot_free(current_snapshot);
-	}
-	current_snapshot = snapshot_create(horizon);
-	if (previous_snapshot == NULL) {
-		previous_snapshot = snapshot_create(horizon);
+	vh_snapshot_from_horizon(&current_snapshot, horizon);
+	if (first_run) {
+		vh_snapshot_from_horizon(&previous_snapshot, horizon);
+		first_run = 0;
 	}
 
 	// Store or drop target snapshot
 	if (take_snapshot) {
-		if (target_snapshot) snapshot_free(target_snapshot);
-		target_snapshot = snapshot_create(horizon);
+		vh_snapshot_copy(&target_snapshot, &current_snapshot);
+		use_target = 1;
 		take_snapshot = 0;
 	}
 	if (drop_snapshot) {
-		if (target_snapshot) {
-			snapshot_free(target_snapshot);
-			target_snapshot = NULL;
-			target_rotated_snapshot = NULL; // Not freed, static variable in _video.c!
-			current_warped_snapshot = NULL; // Not freed, static variable in _video.c!
-		}
+		use_target = 0;
+		target_rotated_snapshot = NULL;
+		current_warped_snapshot = NULL;
 		drop_snapshot = 0;
 	}
 
@@ -148,8 +143,8 @@ void visualhoming_periodic(void) {
 	 */
 	// Estimate current velocity
 	const float GAIN = 0.20;
-	measured_vel = homing_vector(previous_snapshot, current_snapshot, NULL,
-	NULL);
+	measured_vel = vh_snapshot_homingvector(&previous_snapshot,
+			&current_snapshot, NULL, NULL);
 	measured_vel.x *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
 	measured_vel.y *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
 	if (!isnan(measured_vel.x) && !isnan(measured_vel.y)) {
@@ -158,11 +153,11 @@ void visualhoming_periodic(void) {
 	}
 	printf("VELOCITY: vx = %+.1f, vy = %+.1f\n", vel_vec.x, vel_vec.y);
 	// Update previous snapshot
-	snapshot_copy(previous_snapshot, current_snapshot);
+	vh_snapshot_copy(&previous_snapshot, &current_snapshot);
 
 	// Estimate homing vector if req'd
-	if (target_snapshot != NULL) {
-		vec = homing_vector(current_snapshot, target_snapshot,
+	if (use_target) {
+		vec = vh_snapshot_homingvector(&current_snapshot, &target_snapshot,
 				&current_warped_snapshot, &target_rotated_snapshot);
 		vec.x *= environment_radius;
 		vec.y *= environment_radius;
@@ -205,7 +200,6 @@ void visualhoming_periodic(void) {
 }
 
 void visualhoming_start(void) {
-	printf("visualhoming_start\n");
 }
 
 void visualhoming_stop(void) {
@@ -236,18 +230,16 @@ static void draw_snapshots(struct image_t *img) {
 		}
 	}
 	// Draw current snapshot
-	if (current_snapshot != NULL) {
-		snapshot_to_horizon(hor, current_snapshot);
-		for (int y = img->h / 5 * 1; y < img->h / 5 * 2; y++) {
-			for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
-				PIXEL_UV(img, x, y) = 127;
-				PIXEL_Y(img, x, y) = hor[x];
-			}
+	vh_snapshot_to_horizon(&current_snapshot, hor);
+	for (int y = img->h / 5 * 1; y < img->h / 5 * 2; y++) {
+		for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
+			PIXEL_UV(img, x, y) = 127;
+			PIXEL_Y(img, x, y) = hor[x];
 		}
 	}
 	// Draw warped current snapshot
 	if (current_warped_snapshot != NULL) {
-		snapshot_to_horizon(hor, current_warped_snapshot);
+		vh_snapshot_to_horizon(current_warped_snapshot, hor);
 		for (int y = img->h / 5 * 2; y < img->h / 5 * 3; y++) {
 			for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
 				PIXEL_UV(img, x, y) = 127;
@@ -257,7 +249,7 @@ static void draw_snapshots(struct image_t *img) {
 	}
 	// Draw rotated target snapshot
 	if (target_rotated_snapshot != NULL) {
-		snapshot_to_horizon(hor, target_rotated_snapshot);
+		vh_snapshot_to_horizon(target_rotated_snapshot, hor);
 		for (int y = img->h / 5 * 3; y < img->h / 5 * 4; y++) {
 			for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
 				PIXEL_UV(img, x, y) = 127;
@@ -265,9 +257,9 @@ static void draw_snapshots(struct image_t *img) {
 			}
 		}
 	}
-	// Draw target snapshot
-	if (target_snapshot != NULL) {
-		snapshot_to_horizon(hor, target_snapshot);
+	if (use_target) {
+		// Draw target snapshot
+		vh_snapshot_to_horizon(&target_snapshot, hor);
 		for (int y = img->h / 5 * 4; y < img->h / 5 * 5; y++) {
 			for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
 				PIXEL_UV(img, x, y) = 127;

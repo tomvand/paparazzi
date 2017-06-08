@@ -17,29 +17,20 @@
  * along with paparazzi; see the file COPYING.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-/**
- * @file "modules/visualhoming/visualhoming.h"
- * @author Tom van Dijk
- * This file contains all platform-independent code for local visual homing.
- */
 
-#ifndef VISUALHOMING_CORE_H
-#define VISUALHOMING_CORE_H
+#ifndef VISUALHOMING_SNAPSHOT_H
+#define VISUALHOMING_SNAPSHOT_H
 
-#include <stdint.h>
+#include "visualhoming_video.h"
 
 // Configuration
-#ifndef SNAPSHOT_K
-#define SNAPSHOT_K 10 /**< Number of complex coefficients to store in snapshot */
-#endif
-
-#ifndef SNAPSHOT_N_IT
-#define SNAPSHOT_N_IT 1 /**< Number of iterations for homing vector estimation */
+#ifndef VISUALHOMING_SNAPSHOT_K
+#define VISUALHOMING_SNAPSHOT_K 10
 #endif
 
 struct snapshot_t {
-	float dc[2]; /**< For now includes the DC and Nyquist value! */
-	float data[2 * SNAPSHOT_K];
+	int8_t ak[VISUALHOMING_SNAPSHOT_K];
+	int8_t bk[VISUALHOMING_SNAPSHOT_K];
 };
 
 struct homingvector_t {
@@ -48,19 +39,17 @@ struct homingvector_t {
 	float sigma;
 };
 
-void visualhoming_core_init(void);
-void visualhoming_core_close(void);
+void vh_snapshot_init(void);
+void vh_snapshot_close(void);
 
-struct snapshot_t *snapshot_create(const float hor[]);
-void snapshot_free(struct snapshot_t * ss);
-void snapshot_copy(struct snapshot_t * dest, const struct snapshot_t * src);
-struct homingvector_t homing_vector(
+void vh_snapshot_from_horizon(struct snapshot_t *ss, const horizon_t hor);
+void vh_snapshot_to_horizon(const struct snapshot_t *ss, horizon_t hor);
+void vh_snapshot_copy(struct snapshot_t *dst, const struct snapshot_t *src);
+
+struct homingvector_t vh_snapshot_homingvector(
 		const struct snapshot_t * current,
 		const struct snapshot_t * target,
 		struct snapshot_t **c_warped,
 		struct snapshot_t **t_rotated);
-
-// Test function
-void snapshot_to_horizon(float hor[], const struct snapshot_t * ss);
 
 #endif

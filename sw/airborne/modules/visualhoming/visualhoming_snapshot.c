@@ -17,27 +17,27 @@
  * along with paparazzi; see the file COPYING.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-/**
- * @file "modules/visualhoming/visualhoming_core.c"
- * @author Tom van Dijk
- * This file contains all platform-independent code for local visual homing.
- */
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <assert.h>
-
-#include "visualhoming_core.h"
-#include "visualhoming_video.h"
-
-#include "math/pprz_algebra_float.h" /**< Replace with suitable header outside Paparazzi */
+#include "visualhoming_snapshot.h"
 
 #include "ext/pffft/pffft.h"
 
-#define SS_AK(ss, k) ( (ss)->data[2*((k)-1)] )
-#define SS_BK(ss, k) ( (ss)->data[2*((k)-1)+1] )
+#include "math/pprz_algebra_float.h"
 
+#include <stdio.h>
+
+#define COEFF_SCALE 0.1 // Max amplitude of coefficients (assuming [0..1] pixels)
+
+// Configuration
+#ifndef VISUALHOMING_SNAPSHOT_N_IT
+#define VISUALHOMING_SNAPSHOT_N_IT 1 /**< Number of iterations for homing vector estimation */
+#endif
+
+// Macros for 1-based indexing of Fourier coefficients
+#define SS_AK(ss, k) ( (ss)->ak[(k)-1] )
+#define SS_BK(ss, k) ( (ss)->bk[(k)-1] )
+
+// Macros for matrix operations
 /* _mat1 += _mat2 */
 #define MAT33_ADD(_mat1,_mat2) {     \
     MAT33_ELMT((_mat1),0,0) += MAT33_ELMT((_mat2),0,0);  \
@@ -58,6 +58,7 @@
     _det = MAT33_ELMT((_m),0,0)*m00 - MAT33_ELMT((_m),1,0)*m10 + MAT33_ELMT((_m),2,0)*m20; \
   }
 
+// Internal data types
 struct spatial_gradient_t {
 	float akx;
 	float aky;
@@ -65,18 +66,20 @@ struct spatial_gradient_t {
 	float bky;
 };
 
+// Static variables
 static PFFFT_Setup *pffft_setup;
 
+// Static function declarations
 static float relative_orientation(
-		const struct snapshot_t * current,
-		const struct snapshot_t * target);
-static struct FloatVect3 relative_pose(
 		const struct snapshot_t * current,
 		const struct snapshot_t * target);
 static void snapshot_rotate(
 		const struct snapshot_t* ss,
 		struct snapshot_t * ss_rotated,
 		float angle);
+static struct FloatVect3 relative_pose(
+		const struct snapshot_t * current,
+		const struct snapshot_t * target);
 static void snapshot_warp(struct snapshot_t * ss, struct FloatVect3 pose);
 static void spatial_gradient(
 		struct spatial_gradient_t * grad,
@@ -97,68 +100,78 @@ static void get_zk(
 		struct spatial_gradient_t g,
 		int k);
 
-void visualhoming_core_init(void) {
+// External functions
+void vh_snapshot_init(void) {
 	pffft_setup = pffft_new_setup(VISUALHOMING_HORIZON_RESOLUTION, PFFFT_REAL);
+	printf("Snapshot size: %lu bytes.\n", sizeof(struct snapshot_t));
 }
 
-void visualhoming_core_close(void) {
+void vh_snapshot_close(void) {
 	pffft_destroy_setup(pffft_setup);
 }
 
-struct snapshot_t *snapshot_create(const float hor[]) {
+void vh_snapshot_from_horizon(struct snapshot_t *ss, const horizon_t hor) {
 	float fourier_coeffs[VISUALHOMING_HORIZON_RESOLUTION];
-	struct snapshot_t *ss = NULL;
-
-	// Get (real) Fourier transform of horizon image.
+	// Get (real) Fourier transform of horizon image
 	pffft_transform_ordered(pffft_setup, hor, fourier_coeffs, NULL,
 			PFFFT_FORWARD);
-	// Store first SNAPSHOT_K components.
-	ss = (struct snapshot_t*)malloc(sizeof(struct snapshot_t));
-	ss->dc[0] = fourier_coeffs[0] / VISUALHOMING_HORIZON_RESOLUTION;
-	ss->dc[1] = fourier_coeffs[1] / VISUALHOMING_HORIZON_RESOLUTION;
-	for (int k = 1; k <= SNAPSHOT_K; k++) {
-		SS_AK(ss,k) = fourier_coeffs[2 * k] / VISUALHOMING_HORIZON_RESOLUTION;
-		SS_BK(ss,k) = -fourier_coeffs[2 * k + 1]
-				/ VISUALHOMING_HORIZON_RESOLUTION; // Minus sign following definition in Sturzl and Mallot (2006)
+	// Store first SNAPSHOT_K components
+	for (int k = 1; k <= VISUALHOMING_SNAPSHOT_K; k++) {
+		float ak = fourier_coeffs[2 * k] / VISUALHOMING_HORIZON_RESOLUTION
+				/ COEFF_SCALE;
+		if (ak > INT8_MAX) ak = INT8_MAX;
+		if (ak < INT8_MIN) ak = INT8_MIN;
+		float bk = fourier_coeffs[2 * k + 1] / VISUALHOMING_HORIZON_RESOLUTION
+				/ COEFF_SCALE;
+		if (bk > INT8_MAX) bk = INT8_MAX;
+		if (bk < INT8_MIN) bk = INT8_MIN;
+		SS_AK(ss, k) = ak;
+		SS_BK(ss, k) = -bk;
+		printf("K=%2d: %+3d %+3d\n", k, SS_AK(ss, k), SS_BK(ss, k));
 	}
-
-	// XXX show debug info
-//	printf("\nSnapshot:\n");
-//	printf("DC+Nq: %.2f%+.2fi\t", ss->dc[0], ss->dc[1]);
-//	for (int k = 1; k <= SNAPSHOT_K; k++) {
-//		printf("%d: %.2f%+.2fi\t", k, ss->data[2 * (k - 1)],
-//				ss->data[2 * (k - 1) + 1]);
-//	}
-//	printf("\n");
-
-	return ss;
 }
 
-void snapshot_free(struct snapshot_t *ss) {
-	free(ss);
+void vh_snapshot_to_horizon(const struct snapshot_t *ss, horizon_t hor) {
+	float fourier_coeffs[VISUALHOMING_HORIZON_RESOLUTION];
+	// Read Fourier coefficients from snapshot
+	memset(fourier_coeffs, 0, sizeof(fourier_coeffs));
+	fourier_coeffs[0] = 128;
+	fourier_coeffs[1] = 0;
+	for (int k = 1; k <= VISUALHOMING_SNAPSHOT_K; k++) {
+		fourier_coeffs[2 * k] = SS_AK(ss, k) * COEFF_SCALE;
+		fourier_coeffs[2 * k + 1] = -SS_BK(ss, k) * COEFF_SCALE;
+	}
+	// Perform inverse Fourier transform
+	pffft_transform_ordered(pffft_setup, fourier_coeffs, hor, NULL,
+			PFFFT_BACKWARD);
+	// Fix under-/overflows
+	for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
+		if (hor[x] < 0) hor[x] = 0;
+		if (hor[x] > 255) hor[x] = 255;
+	}
 }
 
-void snapshot_copy(struct snapshot_t * dest, const struct snapshot_t * src) {
-	memcpy(dest, src, sizeof(struct snapshot_t));
+void vh_snapshot_copy(struct snapshot_t *dst, const struct snapshot_t *src) {
+	memcpy(dst, src, sizeof(struct snapshot_t));
 }
 
-struct homingvector_t homing_vector(
+struct homingvector_t vh_snapshot_homingvector(
 		const struct snapshot_t * current,
 		const struct snapshot_t * target,
 		struct snapshot_t **c_warped,
 		struct snapshot_t **t_rotated) {
-	// TODO remove temporary snapshot output
+	// Temporary snapshot buffers
 	static struct snapshot_t target_rotated;
 	static struct snapshot_t current_warped;
-	struct homingvector_t vec;
 
-	vec.x = 0;
-	vec.y = 0;
-	vec.sigma = 0;
+	struct homingvector_t vec = {
+			.x = 0,
+			.y = 0,
+			.sigma = 0 };
 
-	snapshot_copy(&current_warped, current);
+	vh_snapshot_copy(&current_warped, current);
 
-	for (int i = 0; i < SNAPSHOT_N_IT; i++) {
+	for (int i = 0; i < VISUALHOMING_SNAPSHOT_N_IT; i++) {
 		float sigma;
 		struct FloatVect3 pose;
 
@@ -175,7 +188,7 @@ struct homingvector_t homing_vector(
 		snapshot_warp(&current_warped, pose);
 	}
 
-	// XXX Debug output snapshots
+	// Output temporary snapshots if requested
 	if (c_warped != NULL) {
 		*c_warped = &current_warped;
 	}
@@ -186,55 +199,7 @@ struct homingvector_t homing_vector(
 	return vec;
 }
 
-void snapshot_to_horizon(float hor[], const struct snapshot_t * ss) {
-	float fourier_coeffs[VISUALHOMING_HORIZON_RESOLUTION];
-
-	// Read Fourier coefficients from snapshot
-	memset(fourier_coeffs, 0, sizeof(fourier_coeffs));
-	fourier_coeffs[0] = ss->dc[0];
-	fourier_coeffs[1] = ss->dc[1];
-	for (int k = 1; k <= SNAPSHOT_K; k++) {
-		fourier_coeffs[2 * k] = SS_AK(ss, k);
-		fourier_coeffs[2 * k + 1] = -SS_BK(ss, k);
-	}
-	// Perform inverse Fourier transform
-	pffft_transform_ordered(pffft_setup, fourier_coeffs, hor, NULL,
-			PFFFT_BACKWARD);
-	// Fix under-/overflows
-	for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
-		if (hor[x] < 0) hor[x] = 0;
-		if (hor[x] > 255) hor[x] = 255;
-	}
-}
-
-static void snapshot_rotate(
-		const struct snapshot_t* ss,
-		struct snapshot_t * ss_rotated,
-		float angle) {
-	printf("Snapshot rotate angle = %.0f\n", angle / M_PI * 180);
-	for (int k = 1; k <= SNAPSHOT_K; k++) {
-		SS_AK(ss_rotated,k) = SS_AK(ss,k) * cos(k * angle)
-				+ SS_BK(ss,k) * sin(k * angle);
-		SS_BK(ss_rotated,k) = SS_BK(ss,k) * cos(k * angle)
-				- SS_AK(ss,k) * sin(k * angle);
-	}
-	ss_rotated->dc[0] = ss->dc[0];
-	ss_rotated->dc[1] = ss->dc[1]; // TODO remove
-}
-
-static void snapshot_warp(struct snapshot_t * ss, struct FloatVect3 pose) {
-	struct snapshot_t ss_old;
-	struct spatial_gradient_t g;
-
-	snapshot_copy(&ss_old, ss);
-
-	for (int k = 1; k <= SNAPSHOT_K; k++) {
-		spatial_gradient(&g, &ss_old, k);
-		SS_AK(ss,k) += g.akx * pose.x + g.aky * pose.y;
-		SS_BK(ss,k) += g.bkx * pose.x + g.bky * pose.y;
-	}
-}
-
+// Static functions
 static float relative_orientation(
 		const struct snapshot_t * current,
 		const struct snapshot_t * target) {
@@ -242,7 +207,7 @@ static float relative_orientation(
 	// Fourier transformed panoramic images." section 2.4.
 	float sigma = 0.0;
 	float w = 0.0;
-	for (int k = 1; k <= SNAPSHOT_K; k++) {
+	for (int k = 1; k <= VISUALHOMING_SNAPSHOT_K; k++) {
 		float ac, bc, at, bt;
 		float magn_c, phase_c;
 		float magn_t, phase_t;
@@ -250,10 +215,10 @@ static float relative_orientation(
 		float sigma_k;
 		float w_k;
 
-		ac = current->data[2 * (k - 1)];
-		bc = current->data[2 * (k - 1) + 1];
-		at = target->data[2 * (k - 1)];
-		bt = target->data[2 * (k - 1) + 1];
+		ac = SS_AK(current, k);
+		bc = SS_BK(current, k);
+		at = SS_AK(target, k);
+		bt = SS_BK(target, k);
 
 		magn_c = sqrtf(ac * ac + bc * bc);
 		phase_c = atan2f(bc, ac);
@@ -271,6 +236,18 @@ static float relative_orientation(
 	return sigma;
 }
 
+static void snapshot_rotate(
+		const struct snapshot_t* ss,
+		struct snapshot_t * ss_rotated,
+		float angle) {
+	for (int k = 1; k <= VISUALHOMING_SNAPSHOT_K; k++) {
+		SS_AK(ss_rotated, k) = SS_AK(ss, k) * cos(k * angle)
+				+ SS_BK(ss, k) * sin(k * angle);
+		SS_BK(ss_rotated, k) = SS_BK(ss, k) * cos(k * angle)
+				- SS_AK(ss, k) * sin(k * angle);
+	}
+}
+
 static struct FloatVect3 relative_pose(
 		const struct snapshot_t * c,
 		const struct snapshot_t * t) {
@@ -283,7 +260,7 @@ static struct FloatVect3 relative_pose(
 	FLOAT_MAT33_ZERO(A);
 	FLOAT_VECT3_ZERO(z);
 
-	for (int k = 1; k <= SNAPSHOT_K; k++) {
+	for (int k = 1; k <= VISUALHOMING_SNAPSHOT_K; k++) {
 		struct spatial_gradient_t gk;
 		struct FloatMat33 Ak;
 		struct FloatVect3 zk;
@@ -326,6 +303,19 @@ static struct FloatVect3 relative_pose(
 	return out;
 }
 
+static void snapshot_warp(struct snapshot_t * ss, struct FloatVect3 pose) {
+	struct snapshot_t ss_old;
+	struct spatial_gradient_t g;
+
+	vh_snapshot_copy(&ss_old, ss);
+
+	for (int k = 1; k <= VISUALHOMING_SNAPSHOT_K; k++) {
+		spatial_gradient(&g, &ss_old, k);
+		SS_AK(ss, k) += g.akx * pose.x + g.aky * pose.y;
+		SS_BK(ss, k) += g.bkx * pose.x + g.bky * pose.y;
+	}
+}
+
 static void spatial_gradient(
 		struct spatial_gradient_t * g,
 		const struct snapshot_t * ss,
@@ -335,7 +325,7 @@ static void spatial_gradient(
 		g->aky = 0.5 * ((k + 1) * SS_BK(ss, k + 1));
 		g->bkx = 0.5 * ((k + 1) * SS_BK(ss, k + 1));
 		g->bky = 0.5 * (-(k + 1) * SS_AK(ss, k + 1));
-	} else if (k == SNAPSHOT_K) {
+	} else if (k == VISUALHOMING_SNAPSHOT_K) {
 		g->akx = 0.5 * (-(k - 1) * SS_AK(ss, k - 1));
 		g->aky = 0.5 * ((k - 1) * SS_BK(ss, k - 1));
 		g->bkx = 0.5 * (-(k - 1) * SS_BK(ss, k - 1));
@@ -372,15 +362,15 @@ static void get_Ak(
 	float t8 = akhs0 * g.bky;
 	float t9 = t8 - g.aky * bkhs0;
 	float t10 = k * t9 * 2.0;
-	MAT33_ELMT(*ak,0,0) = (g.akx * g.akx) * 2.0 + (g.bkx * g.bkx) * 2.0;
-	MAT33_ELMT(*ak,0,1) = t4;
-	MAT33_ELMT(*ak,0,2) = t7;
-	MAT33_ELMT(*ak,1,0) = t4;
-	MAT33_ELMT(*ak,1,1) = (g.aky * g.aky) * 2.0 + (g.bky * g.bky) * 2.0;
-	MAT33_ELMT(*ak,1,2) = t10;
-	MAT33_ELMT(*ak,2,0) = t7;
-	MAT33_ELMT(*ak,2,1) = t10;
-	MAT33_ELMT(*ak,2,2) = (k * k) * (akhs0 * akhs0 + bkhs0 * bkhs0) * 2.0;
+	MAT33_ELMT(*ak, 0, 0) = (g.akx * g.akx) * 2.0 + (g.bkx * g.bkx) * 2.0;
+	MAT33_ELMT(*ak, 0, 1) = t4;
+	MAT33_ELMT(*ak, 0, 2) = t7;
+	MAT33_ELMT(*ak, 1, 0) = t4;
+	MAT33_ELMT(*ak, 1, 1) = (g.aky * g.aky) * 2.0 + (g.bky * g.bky) * 2.0;
+	MAT33_ELMT(*ak, 1, 2) = t10;
+	MAT33_ELMT(*ak, 2, 0) = t7;
+	MAT33_ELMT(*ak, 2, 1) = t10;
+	MAT33_ELMT(*ak, 2, 2) = (k * k) * (akhs0 * akhs0 + bkhs0 * bkhs0) * 2.0;
 }
 
 static void get_zk(
@@ -399,3 +389,4 @@ static void get_zk(
 			- bkhs0 * g.bky * 2.0;
 	zk->z = k * (ak * bkhs0 - akhs0 * bk) * -2.0;
 }
+

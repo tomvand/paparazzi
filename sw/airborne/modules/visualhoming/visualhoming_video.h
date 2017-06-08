@@ -40,7 +40,7 @@ struct calibration_t {
 extern struct calibration_t calibration;
 extern float derotate_gain;
 
-typedef float horizon_t[VISUALHOMING_HORIZON_RESOLUTION]; // TODO make uint8_t
+typedef float horizon_t[VISUALHOMING_HORIZON_RESOLUTION]; // float instead of uint8_t for easy manipulation in PFFFT.
 
 void vh_video_init(void);
 void vh_get_current_horizon(horizon_t hor);

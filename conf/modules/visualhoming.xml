@@ -42,9 +42,9 @@
   	<define name="GUIDANCE_H_MODE_MODULE_SETTING" value="GUIDANCE_H_MODE_MODULE"/>
   	<!-- <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_NAV"/> -->
     <file name="visualhoming.c"/>
-    <file name="visualhoming_core.c"/>
     <file name="visualhoming_guidance_h.c"/>
     <file name="visualhoming_video.c"/>
+    <file name="visualhoming_snapshot.c"/>
     <file name="pffft.c" dir="modules/visualhoming/ext/pffft"/>
   </makefile>
 </module>
