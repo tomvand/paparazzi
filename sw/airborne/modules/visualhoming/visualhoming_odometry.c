@@ -32,7 +32,7 @@
  * @param delta_y Position change relative to last measurement
  * @param delta_psi Heading change relative to last measurement
  */
-void odometry_update(
+void vh_odometry_update(
 		struct odometry_t *odo,
 		float delta_x,
 		float delta_y,

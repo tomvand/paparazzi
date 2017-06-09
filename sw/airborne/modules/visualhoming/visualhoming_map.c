@@ -22,3 +22,5 @@
 
 struct snapshot_t vh_snapshots[VISUALHOMING_MAX_WAYPOINTS];
 struct odometry_t vh_vectors[VISUALHOMING_MAX_WAYPOINTS];
+
+int vh_current_waypoint = 0;

@@ -17,25 +17,29 @@
  * along with paparazzi; see the file COPYING.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-/**
- * @file "modules/visualhoming/visualhoming.h"
- * @author Tom van Dijk
- * Fourier-based local visual homing.
- */
 
 #ifndef VISUALHOMING_H
 #define VISUALHOMING_H
 
-extern int take_snapshot;
-extern int drop_snapshot;
+/* Control modes */
+enum visualhoming_mode_t {
+	VH_MODE_SNAPSHOT,
+	VH_MODE_ODOMETRY,
+	VH_MODE_ROUTE
+};
+extern enum visualhoming_mode_t vh_mode;
+extern int vh_record_cmd;
+extern int vh_drop_cmd;
 
-extern float environment_radius;
-extern int use_frame_to_frame_velocity;
+/* Navigation functions for flightplan */
+bool NavVisualHomingDrop(void);
+bool NavVisualHomingRecord(enum visualhoming_mode_t mode);
+bool NavVisualHomingReturn(void);
 
-extern void visualhoming_init(void);
-extern void visualhoming_periodic(void);
-extern void visualhoming_start(void);
-extern void visualhoming_stop(void);
+/* Module functions */
+void visualhoming_init(void);
+void visualhoming_periodic(void);
+void visualhoming_start(void);
+void visualhoming_stop(void);
 
 #endif
-

@@ -21,7 +21,7 @@
 #ifndef VISUALHOMING_MAP_H
 #define VISUALHOMING_MAP_H
 
-#include "visualhoming_core.h"
+#include "visualhoming_snapshot.h"
 #include "visualhoming_odometry.h"
 
 // Configuration
@@ -31,6 +31,8 @@
 
 // Map buffers
 extern struct snapshot_t vh_snapshots[VISUALHOMING_MAX_WAYPOINTS];
-extern struct odometry_t vh_odometry_vectors[VISUALHOMING_MAX_WAYPOINTS];
+extern struct odometry_t vh_vectors[VISUALHOMING_MAX_WAYPOINTS];
+
+extern int vh_current_waypoint;
 
 #endif

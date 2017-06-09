@@ -26,7 +26,7 @@ struct odometry_t {
 	float y;
 };
 
-void odometry_update(
+void vh_odometry_update(
 		struct odometry_t *odo,
 		float delta_x,
 		float delta_y,

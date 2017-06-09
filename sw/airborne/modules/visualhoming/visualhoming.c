@@ -17,216 +17,145 @@
  * along with paparazzi; see the file COPYING.  If not, see
  * <http://www.gnu.org/licenses/>.
  */
-/**
- * @file "modules/visualhoming/visualhoming.c"
- * @author Tom van Dijk
- * Fourier-based local visual homing.
- */
 
-// Standard headers
-#include <stdio.h>
-#include <sys/fcntl.h>
-#include <math.h>
-#include <unistd.h>
-#include <inttypes.h>
-#include <pthread.h>
-#include <assert.h>
-
-// Paparazzi headers
-#include "math/pprz_algebra_float.h"
-#include "math/pprz_geodetic_int.h"
-#include "state.h"
-#include "subsystems/datalink/telemetry.h"
-
-// Own headers
 #include "visualhoming.h"
 #include "visualhoming_video.h"
 #include "visualhoming_snapshot.h"
+#include "visualhoming_map.h"
+#include "visualhoming_guidance_h.h"
 
-// Image formats
-#include "modules/computer_vision/cv.h"
-#include "modules/computer_vision/lib/vision/image.h"
+/* Control mode */
+enum visualhoming_mode_t vh_mode = VH_MODE_SNAPSHOT;
+int vh_record_cmd = 0;
+int vh_drop_cmd = 0;
 
-// Guidance in MODULE mode
-#include "subsystems/abi.h"
-#include "modules/visualhoming/visualhoming_guidance_h.h"
-//#include "modules/guidance_opticflow/guidance_opticflow_hover.h"
-//#include "firmwares/rotorcraft/guidance/guidance_h.h"
+/* Navigation functions for flightplan */
+bool NavVisualHomingDrop(void) {
+	vh_drop_cmd = 1;
+	return FALSE;
+}
 
-// Guidance in GUIDED mode
-#include "firmwares/rotorcraft/guidance/guidance_h.h"
-#include "firmwares/rotorcraft/guidance/guidance_v.h"
+bool NavVisualHomingRecord(enum visualhoming_mode_t mode) {
+	vh_mode = mode;
+	vh_record_cmd = 1;
+	return FALSE; // Immediately continue
+}
 
-// Default settings
-#ifndef VISUALHOMING_ENV_RADIUS
-#define VISUALHOMING_ENV_RADIUS 5.0
-#endif
-#ifndef VISUALHOMING_USE_FRAME_TO_FRAME_VELOCITY
-#define VISUALHOMING_USE_FRAME_TO_FRAME_VELOCITY 1
-#endif
+bool NavVisualHomingReturn(void) {
+	vh_record_cmd = 0;
+	return TRUE; // TODO Report end of procedure.
+}
 
-// Settings
-int take_snapshot = 0;
-int drop_snapshot = 0;
-float environment_radius = VISUALHOMING_ENV_RADIUS;
-int use_frame_to_frame_velocity = VISUALHOMING_USE_FRAME_TO_FRAME_VELOCITY;
+/* Static variables */
+// Guidance targets
+static struct snapshot_t *target_snapshot = NULL;
+static struct odometry_t *target_odometry = NULL;
 
-// Snapshots
-static int first_run = 1;
+// Target buffers
+static struct snapshot_t current_warped_snapshot;
+static struct snapshot_t target_rotated_snapshot;
+static struct snapshot_t single_target_snapshot;
+static struct odometry_t single_target_odometry;
+
+// Shared measurements
+static struct horizon_t horizon;
 static struct snapshot_t current_snapshot;
-static struct snapshot_t previous_snapshot;
+static struct homingvector_t velocity;
 
-static int use_target = 0;
-static struct snapshot_t target_snapshot;
-static struct snapshot_t *current_warped_snapshot = NULL;
-static struct snapshot_t *target_rotated_snapshot = NULL;
-
-// Telemetry data
-struct homingvector_t homingvector_telemetry;
-struct homingvector_t velocity_telemetry;
-
-// Function declarations
-// Telemetry callback
-static void send_visualhoming(
-		struct transport_tx *trans,
-		struct link_device *dev);
-// Video callback
+/* Static functions */
 static void draw_snapshots(struct image_t *img);
 
-// Function definitions
-// Module functions
+/* Module functions */
 void visualhoming_init(void) {
-	printf("visualhoming_init\n");
-	// Initialize video handling
-	vh_video_init();
+	// Initialize submodules
+	vh_video_init(); // TODO set draw_snapshots callback
 	vh_video_set_callback(draw_snapshots);
-	// Initialize snapshots
 	vh_snapshot_init();
-	// Register telemetry message
-	homingvector_telemetry.x = 0.0;
-	homingvector_telemetry.y = 0.0;
-	homingvector_telemetry.sigma = 0.0;
-	register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_VISUALHOMING,
-			send_visualhoming);
 }
 
 void visualhoming_periodic(void) {
-	static struct homingvector_t vel_vec = { 0, 0, 0 };
-	struct homingvector_t vec = { 0, 0, 0 };
-	struct homingvector_t measured_vel = { 0, 0, 0 };
-
-	// Get current horizon
-	horizon_t horizon;
+	// Get current snapshot
 	vh_get_current_horizon(horizon);
-	// Transform into snapshot
 	vh_snapshot_from_horizon(&current_snapshot, horizon);
-	if (first_run) {
-		vh_snapshot_from_horizon(&previous_snapshot, horizon);
-		first_run = 0;
+	// Estimate velocity
+	velocity = vh_estimate_velocity(&current_snapshot);
+
+	// Handle recording and dropping
+	switch (vh_mode) {
+	case VH_MODE_SNAPSHOT:
+		if (vh_record_cmd) {
+			vh_snapshot_copy(&single_target_snapshot, &current_snapshot);
+			target_snapshot = &single_target_snapshot;
+			vh_record_cmd = 0;
+		}
+		if (vh_drop_cmd) {
+			target_snapshot = NULL;
+			vh_drop_cmd = 0;
+		}
+		break;
+
+	case VH_MODE_ODOMETRY:
+		if (vh_record_cmd) {
+			single_target_odometry.x = 0;
+			single_target_odometry.y = 0;
+			target_odometry = &single_target_odometry;
+			vh_record_cmd = 0;
+		}
+		if (vh_drop_cmd) {
+			target_odometry = NULL;
+			vh_drop_cmd = 0;
+		}
+		break;
+
+	case VH_MODE_ROUTE:
+		default:
+		// Not implemented
+		break;
 	}
 
-	// Store or drop target snapshot
-	if (take_snapshot) {
-		vh_snapshot_copy(&target_snapshot, &current_snapshot);
-		use_target = 1;
-		take_snapshot = 0;
-	}
-	if (drop_snapshot) {
-		use_target = 0;
-		target_rotated_snapshot = NULL;
-		current_warped_snapshot = NULL;
-		drop_snapshot = 0;
+	// Update odometry
+	if (target_odometry) {
+		float delta_x = VISUALHOMING_PERIODIC_PERIOD * velocity.x;
+		float delta_y = VISUALHOMING_PERIODIC_PERIOD * velocity.y;
+		float delta_psi = velocity.sigma;
+		vh_odometry_update(target_odometry, delta_x, delta_y, delta_psi);
 	}
 
-	/*
-	 * Navigation
-	 */
-	// Estimate current velocity
-	const float GAIN = 0.20;
-	measured_vel = vh_snapshot_homingvector(&previous_snapshot,
-			&current_snapshot, NULL, NULL);
-	measured_vel.x *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
-	measured_vel.y *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
-	if (!isnan(measured_vel.x) && !isnan(measured_vel.y)) {
-		vel_vec.x = GAIN * measured_vel.x + (1 - GAIN) * vel_vec.x;
-		vel_vec.y = GAIN * measured_vel.y + (1 - GAIN) * vel_vec.y;
-	}
-	printf("VELOCITY: vx = %+.1f, vy = %+.1f\n", vel_vec.x, vel_vec.y);
-	// Update previous snapshot
-	vh_snapshot_copy(&previous_snapshot, &current_snapshot);
-
-	// Estimate homing vector if req'd
-	if (use_target) {
-		vec = vh_snapshot_homingvector(&current_snapshot, &target_snapshot,
-				&current_warped_snapshot, &target_rotated_snapshot);
-		vec.x *= environment_radius;
-		vec.y *= environment_radius;
-		printf("dX = %+.2f\tdY = %+.2f\tsigma = %+4.0f\n", vec.x, vec.y,
-				vec.sigma / M_PI * 180.0);
-	}
-
-	/*
-	 * GPS-less guidance in MODULE mode.
-	 */
-	if (use_frame_to_frame_velocity) {
-		visualhoming_guidance_set_PD(vec.x, -vec.y, vel_vec.x, -vel_vec.y);
+	// Guidance
+	struct homingvector_t vec;
+	if (target_odometry && vh_mode != VH_MODE_SNAPSHOT) {
+		// Follow odometry
+		vec.x = target_odometry->x;
+		vec.y = target_odometry->y;
+		vec.sigma = 0;
+		// TODO If VH_MODE_ROUTE and below threshold
+		// target_odometry = NULL;
+	} else if (target_snapshot) {
+		// Home towards snapshot
+		vec = vh_snapshot_homingvector(&current_snapshot, target_snapshot, NULL,
+				NULL);
+		// TODO If VH_MODE_ROUTE and below threshold
+		// Switch to next target if possible
 	} else {
-		visualhoming_guidance_set_pos_error(vec.x, -vec.y);
+		// Maintain zero velocity
+		vec.x = 0;
+		vec.y = 0;
+		vec.sigma = 0;
 	}
-	visualhoming_guidance_set_heading_error(vec.sigma);
-
-	/*
-	 * GPS-assisted guidance in GUIDED mode.
-	 */
-	// Set position reference for guided mode.
-	// Note: vec = {0, 0, 0} without snapshot.
-	float x_ref, y_ref;
-	struct NedCoor_f *current_pos = stateGetPositionNed_f();
-	struct FloatEulers * current_eulers = stateGetNedToBodyEulers_f();
-	float heading = current_eulers->psi;
-	printf("Pos = %+.1f, %+.1f\n", current_pos->x, current_pos->y);
-	printf("Heading = %+.2f\n", heading);
-	x_ref = current_pos->x + (vec.x * cos(heading) + vec.y * sin(heading));
-	y_ref = current_pos->y + (vec.x * sin(heading) - vec.y * cos(heading));
-	printf("Pos_ref = %+.1f, %+.1f\n", x_ref, y_ref);
-	guidance_h_set_guided_pos(x_ref, y_ref);
-
-	/*
-	 * Telemetry
-	 */
-	// Save homing vector for telemetry
-	homingvector_telemetry = vec;
-	velocity_telemetry = vel_vec;
+	visualhoming_guidance_set_PD(vec.x, vec.y, velocity.x, velocity.y);
 }
 
-void visualhoming_start(void) {
-}
-
-void visualhoming_stop(void) {
-}
-
-// Telemetry callback
-static void send_visualhoming(
-		struct transport_tx *trans,
-		struct link_device *dev) {
-	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &homingvector_telemetry.x,
-			&homingvector_telemetry.y, &homingvector_telemetry.sigma,
-			&velocity_telemetry.x, &velocity_telemetry.y);
-}
-
-// Camera callback
 static void draw_snapshots(struct image_t *img) {
 	// CAUTION: This function is called from the video thread.
 	// Because this function only reads shared data and because the
 	// output is only user feedback, no special precautions (mutex)
 	// are taken.
-	// Draw current horizon
 	horizon_t hor;
-	vh_get_current_horizon(hor);
+	// Draw current horizon
 	for (int y = 0; y < img->h / 5 * 1; y++) {
 		for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
 			PIXEL_UV(img, x, y) = 127;
-			PIXEL_Y(img, x, y) = hor[x];
+			PIXEL_Y(img, x, y) = horizon[x];
 		}
 	}
 	// Draw current snapshot
@@ -237,27 +166,23 @@ static void draw_snapshots(struct image_t *img) {
 			PIXEL_Y(img, x, y) = hor[x];
 		}
 	}
-	// Draw warped current snapshot
-	if (current_warped_snapshot != NULL) {
-		vh_snapshot_to_horizon(current_warped_snapshot, hor);
+	if (target_snapshot != NULL) {
+		// Draw warped current snapshot
+		vh_snapshot_to_horizon(&current_warped_snapshot, hor);
 		for (int y = img->h / 5 * 2; y < img->h / 5 * 3; y++) {
 			for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
 				PIXEL_UV(img, x, y) = 127;
 				PIXEL_Y(img, x, y) = hor[x];
 			}
 		}
-	}
-	// Draw rotated target snapshot
-	if (target_rotated_snapshot != NULL) {
-		vh_snapshot_to_horizon(target_rotated_snapshot, hor);
+		// Draw rotated target snapshot
+		vh_snapshot_to_horizon(&target_rotated_snapshot, hor);
 		for (int y = img->h / 5 * 3; y < img->h / 5 * 4; y++) {
 			for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
 				PIXEL_UV(img, x, y) = 127;
 				PIXEL_Y(img, x, y) = hor[x];
 			}
 		}
-	}
-	if (use_target) {
 		// Draw target snapshot
 		vh_snapshot_to_horizon(&target_snapshot, hor);
 		for (int y = img->h / 5 * 4; y < img->h / 5 * 5; y++) {
@@ -268,3 +193,4 @@ static void draw_snapshots(struct image_t *img) {
 		}
 	}
 }
+
