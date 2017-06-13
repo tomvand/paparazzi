@@ -20,6 +20,8 @@
 
 #include "visualhoming_odometry.h"
 
+#include <math.h>
+
 /**
  * Update odometric vector using the latest body-centric displacement and
  * rotation measurements.

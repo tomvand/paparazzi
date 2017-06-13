@@ -38,36 +38,6 @@ static struct vh_guidance_cmd_t {
 } vh_cmd;
 
 /**
- * Estimate velocity. Should be called every run with the current snapshot.
- * @param new_ss
- * @return
- */
-struct homingvector_t vh_estimate_velocity(const struct snapshot_t *new_ss) {
-	static struct homingvector_t velocity;
-	static struct snapshot_t previous_snapshot;
-	static int first_run = 1;
-	if (first_run) {
-		vh_snapshot_copy(&previous_snapshot, new_ss);
-		first_run = 0;
-	}
-	// Get instantaneous velocity measurement
-	struct homingvector_t measured_vel;
-	measured_vel = vh_snapshot_homingvector(&previous_snapshot, new_ss, NULL,
-			NULL);
-	measured_vel.x *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
-	measured_vel.y *= VISUALHOMING_PERIODIC_FREQ * environment_radius;
-	// Filter velocities
-	if (!isnan(measured_vel.x) && !isnan(measured_vel.y)) {
-		velocity.x = vh_guidance_tuning.Kf * measured_vel.x
-				+ (1 - vh_guidance_tuning.Kf) * velocity.x;
-		velocity.y = vh_guidance_tuning.Kf * measured_vel.y
-				+ (1 - vh_guidance_tuning.Kf) * velocity.y;
-	}
-	// Store previous snapshot
-	vh_snapshot_copy(&previous_snapshot, new_ss);
-}
-
-/**
  * Set new position error.
  *
  * This function estimates the current velocity using the change in position

@@ -13,15 +13,13 @@
         <dl_setting shortname="center_y" param="VISUALHOMING_CENTER_Y" var="calibration.center_y" min="0" step="0.01" max="1"/>
         <dl_setting shortname="radius_top" param="VISUALHOMING_RADIUS_TOP" var="calibration.radius_top" min="0" step="0.01" max="0.5"/>
         <dl_setting shortname="radius_bottom" param="VISUALHOMING_RADIUS_BOTTOM" var="calibration.radius_bottom" min="0" step="0.01" max="0.5"/>
-        <dl_setting shortname="env_radius" param="VISUALHOMING_ENV_RADIUS" var="environment_radius" min="0.5" step="0.5" max="20"/>
+        <dl_setting shortname="env_radius" param="VISUALHOMING_ENV_RADIUS" var="vh_environment_radius" min="0.5" step="0.5" max="20"/>
         <dl_setting shortname="derotate_gain" param="VISUALHOMING_DEROTATE_GAIN" var="derotate_gain" min="-0.15" step="0.01" max="0.15"/>
-        <dl_setting shortname="use_ftf_vel" param="VISUALHOMING_USE_FRAME_TO_FRAME_VELOCITY" var="use_frame_to_frame_velocity" min="0" step="1" max="1"/>
-        <dl_setting shortname="take_snapshot" var="take_snapshot" min="0" step="1" max="1">
-          <strip_button name="Snapshot" icon="digital-camera.png" value="1" group="video"/>
-        </dl_setting>
-        <dl_setting shortname="drop_snapshot" var="drop_snapshot" min="0" step="1" max="1">
-          <strip_button name="Drop snapshot" icon="dcstop.png" value="1" group="video"/>
-        </dl_setting>
+        <dl_setting shortname="mode_command" var="vh_mode_cmd" min="0" step="1" max="2">
+          <strip_button name="STOP" value="0" group="visualhoming"/>
+          <strip_button name="Snapshot" value="1" group="visualhoming"/>
+          <strip_button name="Odometry" value="2" group="visualhoming"/>
+        </dl_setting> 
       </dl_settings>
       <dl_settings name="vh_guidance">
         <dl_setting shortname="p_gain" param="VISUALHOMING_GUIDANCE_P" var="vh_guidance_tuning.Kp" min="0" step="0.01" max="1"/>
@@ -36,7 +34,7 @@
     <file name="visualhoming_video.h"/>
   </header>
   <init fun="visualhoming_init()"/>
-  <periodic fun="visualhoming_periodic()" freq="10" start="visualhoming_start()" stop="visualhoming_stop()" autorun="TRUE"/>
+  <periodic fun="visualhoming_periodic()" freq="10" autorun="TRUE"/>
   <makefile>
   	<define name="PFFFT_SIMD_DISABLE"/>
   	<define name="GUIDANCE_H_MODE_MODULE_SETTING" value="GUIDANCE_H_MODE_MODULE"/>
@@ -45,6 +43,7 @@
     <file name="visualhoming_guidance_h.c"/>
     <file name="visualhoming_video.c"/>
     <file name="visualhoming_snapshot.c"/>
+    <file name="visualhoming_odometry.c"/>
     <file name="pffft.c" dir="modules/visualhoming/ext/pffft"/>
   </makefile>
 </module>

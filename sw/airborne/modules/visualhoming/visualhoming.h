@@ -21,20 +21,28 @@
 #ifndef VISUALHOMING_H
 #define VISUALHOMING_H
 
+#include <stdbool.h>
+
+// Settings
+extern float vh_environment_radius;
+
 /* Control modes */
 enum visualhoming_mode_t {
+	VH_MODE_STOP,
 	VH_MODE_SNAPSHOT,
 	VH_MODE_ODOMETRY,
-	VH_MODE_ROUTE
+	VH_RECORD_ROUTE,
+	VH_FOLLOW_ROUTE,
+	VH_MODE_NOCMD,
 };
-extern enum visualhoming_mode_t vh_mode;
-extern int vh_record_cmd;
-extern int vh_drop_cmd;
+
+/* GCS buttons */
+extern enum visualhoming_mode_t vh_mode_cmd;
 
 /* Navigation functions for flightplan */
-bool NavVisualHomingDrop(void);
-bool NavVisualHomingRecord(enum visualhoming_mode_t mode);
-bool NavVisualHomingReturn(void);
+bool VisualHomingTakeSnapshot(void);
+bool VisualHomingRecordOdometry(void);
+bool NavVisualHoming(void);
 
 /* Module functions */
 void visualhoming_init(void);
