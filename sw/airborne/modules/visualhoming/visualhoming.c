@@ -51,7 +51,7 @@ bool VisualHomingRecordOdometry(void) {
 }
 
 bool NavVisualHoming(void) {
-	// TODO Send guidance commands to NAV.
+	visualhoming_guidance_update_nav();
 	return TRUE; // TODO detect arrival.
 }
 

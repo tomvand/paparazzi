@@ -20,6 +20,7 @@
 
 #include "visualhoming_guidance_h.h"
 
+#include "firmwares/rotorcraft/navigation.h"
 #include "mcu_periph/sys_time.h"
 
 #include <stdio.h>
@@ -95,6 +96,19 @@ void visualhoming_guidance_set_heading_error(float dpsi __attribute__((unused)))
 //		vh_cmd.cmd_psi -= 2. * M_PI;
 //	while (vh_cmd.cmd_psi < 0)
 //		vh_cmd.cmd_psi += 2. * M_PI;
+}
+
+/**
+ * Write attitude setpoints in NAV mode.
+ */
+void visualhoming_guidance_update_nav(void) {
+	struct Int32Eulers rpy = {
+			.theta = ANGLE_BFP_OF_REAL(vh_cmd.cmd_theta),
+			.phi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_phi),
+			.psi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_psi) };
+	horizontal_mode = HORIZONTAL_MODE_ATTITUDE;
+	nav_roll = rpy.phi;
+	nav_pitch = rpy.theta;
 }
 
 void guidance_h_module_init(void) {
