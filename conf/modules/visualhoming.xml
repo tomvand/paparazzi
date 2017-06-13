@@ -16,9 +16,9 @@
         <dl_setting shortname="env_radius" param="VISUALHOMING_ENV_RADIUS" var="vh_environment_radius" min="0.5" step="0.5" max="20"/>
         <dl_setting shortname="derotate_gain" param="VISUALHOMING_DEROTATE_GAIN" var="derotate_gain" min="-0.15" step="0.01" max="0.15"/>
         <dl_setting shortname="mode_command" var="vh_mode_cmd" min="0" step="1" max="2">
-          <strip_button name="STOP" value="0" group="visualhoming"/>
-          <strip_button name="Snapshot" value="1" group="visualhoming"/>
-          <strip_button name="Odometry" value="2" group="visualhoming"/>
+          <strip_button name="STOP" value="0" group="visualhoming" icon="dcstop.png"/>
+          <strip_button name="Snapshot" value="1" group="visualhoming" icon="digital-camera.png"/>
+          <strip_button name="Odometry" value="2" group="visualhoming" icon="line.png"/>
         </dl_setting> 
       </dl_settings>
       <dl_settings name="vh_guidance">
