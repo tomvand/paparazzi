@@ -12,6 +12,7 @@
       <define name="VISUALHOMING_CENTER_Y" value="0.47"/>
       <define name="VISUALHOMING_RADIUS_TOP" value="0.25"/>
       <define name="VISUALHOMING_RADIUS_BOTTOM" value="0.27"/>
+      
     </target>
 
     <target name="nps" board="pc">
@@ -20,6 +21,8 @@
       <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_NAV"/>
     </target>
 
+    <!--  Optitrack -->
+    <configure name="USE_MAGNETOMETER" value="0"/>
 	<!-- Subsystem section -->
     <module name="telemetry" type="transparent_udp"/>
     <module name="radio_control" type="datalink"/>
@@ -27,7 +30,7 @@
     <module name="actuators" type="ardrone2"/>
     <module name="imu" type="ardrone2"/>
     <!-- gps: "ublox" or change to "sirf" for usage with parrot flight recorder -->
-    <module name="gps" type="ublox"/>
+    <module name="gps" type="datalink"/>
     <module name="stabilization" type="int_quat"/>
     <module name="ahrs" type="int_cmpl_quat"/>
     <module name="ins" type="extended"/>
@@ -36,7 +39,7 @@
   <modules main_freq="512">
     <module name="bat_voltage_ardrone2"/>
     <!-- remove the gps_ubx_ucenter module if you use the sirf gps (flight recorder) -->
-    <module name="gps" type="ubx_ucenter"/>
+    <!-- <module name="gps" type="ubx_ucenter"/> -->
     <module name="send_imu_mag_current"/>
     <module name="air_data"/>
     <module name="geo_mag"/>
@@ -46,7 +49,7 @@
     <module name="video_rtp_stream">
       <define name="VIEWVIDEO_CAMERA" value="bottom_camera"/>
       <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="1"/>
-      <define name="VIEWVIDEO_QUALITY_FACTOR" value="60"/>
+      <define name="VIEWVIDEO_QUALITY_FACTOR" value="40"/>
     </module>
   </modules>
 
@@ -117,11 +120,17 @@
     <define name="H_X" value="0.3892503"/>
     <define name="H_Y" value="0.0017972"/>
     <define name="H_Z" value="0.9211303"/>
+    <!-- Use GPS heading instead of magneto -->
+    <define name="USE_GPS_HEADING" value="1"/>
+    <define name="HEADING_UPDATE_GPS_MIN_SPEED" value="0"/>
   </section>
 
   <section name="INS" prefix="INS_">
     <define name="SONAR_MAX_RANGE" value="2.2"/>
     <define name="SONAR_UPDATE_ON_AGL" value="TRUE"/>
+    <!-- Use GPS altitude measurments and set the R gain -->
+    <define name="USE_GPS_ALT" value="1"/>
+    <define name="VFF_R_GPS" value="0.01"/>
   </section>
 
 
@@ -173,8 +182,8 @@
     <define name="HOVER_KP" value="283"/>
     <define name="HOVER_KD" value="82"/>
     <define name="HOVER_KI" value="13"/>
-    <define name="NOMINAL_HOVER_THROTTLE" value="0.655"/>
-    <define name="ADAPT_THROTTLE_ENABLED" value="FALSE"/>
+    <define name="NOMINAL_HOVER_THROTTLE" value="0.75"/>
+    <define name="ADAPT_THROTTLE_ENABLED" value="TRUE"/>
   </section>
 
   <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
@@ -195,6 +204,7 @@
     <define name="JSBSIM_MODEL" value="simple_ardrone2" type="string"/>
     <define name="SENSORS_PARAMS" value="nps_sensors_params_ardrone2.h" type="string"/>
     <define name="BYPASS_AHRS" value="1"/>
+    <define name="BYPASS_INS" value="1"/>
     <define name="SIMULATE_VIDEO" value="1"/>
   </section>
 
@@ -202,7 +212,7 @@
     <define name="MODE_STARTUP" value="AP_MODE_NAV"/>
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
     <define name="MODE_AUTO1" value="AP_MODE_ATTITUDE_Z_HOLD"/>
-    <define name="MODE_AUTO2" value="AP_MODE_MODULE"/>
+    <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
   </section>
 
   <section name="BAT">

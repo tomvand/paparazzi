@@ -26,7 +26,7 @@
 
 #include <stdio.h>
 
-#define COEFF_SCALE 0.1 // Max amplitude of coefficients (assuming [0..1] pixels)
+#define COEFF_SCALE 0.25 // Max amplitude of coefficients (assuming [0..1] pixels)
 
 // Configuration
 #ifndef VISUALHOMING_SNAPSHOT_N_IT
@@ -103,7 +103,7 @@ static void get_zk(
 // External functions
 void vh_snapshot_init(void) {
 	pffft_setup = pffft_new_setup(VISUALHOMING_HORIZON_RESOLUTION, PFFFT_REAL);
-	printf("Snapshot size: %lu bytes.\n", sizeof(struct snapshot_t));
+	printf("Snapshot size: %u bytes.\n", sizeof(struct snapshot_t));
 }
 
 void vh_snapshot_close(void) {
@@ -119,15 +119,31 @@ void vh_snapshot_from_horizon(struct snapshot_t *ss, const horizon_t hor) {
 	for (int k = 1; k <= VISUALHOMING_SNAPSHOT_K; k++) {
 		float ak = fourier_coeffs[2 * k] / VISUALHOMING_HORIZON_RESOLUTION
 				/ COEFF_SCALE;
-		if (ak > INT8_MAX) ak = INT8_MAX;
-		if (ak < INT8_MIN) ak = INT8_MIN;
+		if (ak > INT8_MAX) {
+			printf("SNAPSHOT OVERFLOW: value = %+.0f, max = %d!\n", ak,
+			INT8_MAX);
+			ak = INT8_MAX;
+		}
+		if (ak < INT8_MIN) {
+			printf("SNAPSHOT UNDERFLOW: value = %+.0f, min = %d!\n", ak,
+			INT8_MIN);
+			ak = INT8_MIN;
+		}
 		float bk = fourier_coeffs[2 * k + 1] / VISUALHOMING_HORIZON_RESOLUTION
 				/ COEFF_SCALE;
-		if (bk > INT8_MAX) bk = INT8_MAX;
-		if (bk < INT8_MIN) bk = INT8_MIN;
+		if (bk > INT8_MAX) {
+			printf("SNAPSHOT OVERFLOW: value = %+.0f, max = %d!\n", bk,
+			INT8_MAX);
+			bk = INT8_MAX;
+		}
+		if (bk < INT8_MIN) {
+			printf("SNAPSHOT UNDERFLOW: value = %+.0f, min = %d!\n", bk,
+			INT8_MIN);
+			bk = INT8_MIN;
+		}
 		SS_AK(ss, k) = ak;
 		SS_BK(ss, k) = -bk;
-		printf("K=%2d: %+3d %+3d\n", k, SS_AK(ss, k), SS_BK(ss, k));
+//		printf("K=%2d: %+3d %+3d\n", k, SS_AK(ss, k), SS_BK(ss, k));
 	}
 }
 
@@ -180,7 +196,7 @@ struct homingvector_t vh_snapshot_homingvector(
 		snapshot_rotate(target, &target_rotated, -sigma);
 		// Estimate position
 		pose = relative_pose(&current_warped, &target_rotated);
-		printf("Delta_sigma = %.0f\n", pose.z / M_PI * 180);
+//		printf("Delta_sigma = %.0f\n", pose.z / M_PI * 180);
 		// Update homing vector and warp current snapshot accordingly
 		vec.x += pose.x;
 		vec.y += pose.y;

@@ -49,13 +49,13 @@
     <block name="Stay at goal">
       <stay wp="GOAL"/>
     </block>
-    <block name="Take snapshot">
-      <call_once fun="VisualHomingTakeSnapshot()"/>
+    <block name="Start odometry recording">
+      <call_once fun="VisualHomingRecordOdometry()"/>
     </block>
-    <block name="Stay at standby">
+    <block name="Go to standby">
       <stay wp="STDBY"/>
     </block>
-    <block name="Home towards snapshot">
+    <block name="Return with odometry">
       <call fun="NavVisualHoming()"/>
     </block>
   </blocks>
