@@ -1,0 +1,119 @@
+<!DOCTYPE procedure SYSTEM "flight_plan.dtd">
+<procedure>
+<waypoints>
+<waypoint name="G" x="0" y="0"/>
+<waypoint name="S00" x="1.00" y="0.00"/>
+<waypoint name="S01" x="1.75" y="0.00"/>
+<waypoint name="S02" x="2.50" y="0.00"/>
+<waypoint name="S10" x="-0.50" y="0.87"/>
+<waypoint name="S11" x="-0.87" y="1.52"/>
+<waypoint name="S12" x="-1.25" y="2.17"/>
+<waypoint name="S20" x="-0.50" y="-0.87"/>
+<waypoint name="S21" x="-0.88" y="-1.52"/>
+<waypoint name="S22" x="-1.25" y="-2.17"/>
+</waypoints>
+
+
+
+<blocks>
+<!-- Run 00 -->
+<block name="Prepare run 00">
+  <stay wp="G" until="stage_time>5.0"/>
+</block>
+<block name="Record odometry run 00">
+  <call_once fun="VisualHomingRecordOdometry()"/>
+  <stay wp="S00" until="stage_time>5.0"/>
+</block>
+<block name="Return run 00">
+  <call fun="NavVisualHoming()"/>
+</block>
+<!-- Run 01 -->
+<block name="Prepare run 01">
+  <stay wp="G" until="stage_time>5.0"/>
+</block>
+<block name="Record odometry run 01">
+  <call_once fun="VisualHomingRecordOdometry()"/>
+  <stay wp="S01" until="stage_time>5.0"/>
+</block>
+<block name="Return run 01">
+  <call fun="NavVisualHoming()"/>
+</block>
+<!-- Run 02 -->
+<block name="Prepare run 02">
+  <stay wp="G" until="stage_time>5.0"/>
+</block>
+<block name="Record odometry run 02">
+  <call_once fun="VisualHomingRecordOdometry()"/>
+  <stay wp="S02" until="stage_time>5.0"/>
+</block>
+<block name="Return run 02">
+  <call fun="NavVisualHoming()"/>
+</block>
+<!-- Run 10 -->
+<block name="Prepare run 10">
+  <stay wp="G" until="stage_time>5.0"/>
+</block>
+<block name="Record odometry run 10">
+  <call_once fun="VisualHomingRecordOdometry()"/>
+  <stay wp="S10" until="stage_time>5.0"/>
+</block>
+<block name="Return run 10">
+  <call fun="NavVisualHoming()"/>
+</block>
+<!-- Run 11 -->
+<block name="Prepare run 11">
+  <stay wp="G" until="stage_time>5.0"/>
+</block>
+<block name="Record odometry run 11">
+  <call_once fun="VisualHomingRecordOdometry()"/>
+  <stay wp="S11" until="stage_time>5.0"/>
+</block>
+<block name="Return run 11">
+  <call fun="NavVisualHoming()"/>
+</block>
+<!-- Run 12 -->
+<block name="Prepare run 12">
+  <stay wp="G" until="stage_time>5.0"/>
+</block>
+<block name="Record odometry run 12">
+  <call_once fun="VisualHomingRecordOdometry()"/>
+  <stay wp="S12" until="stage_time>5.0"/>
+</block>
+<block name="Return run 12">
+  <call fun="NavVisualHoming()"/>
+</block>
+<!-- Run 20 -->
+<block name="Prepare run 20">
+  <stay wp="G" until="stage_time>5.0"/>
+</block>
+<block name="Record odometry run 20">
+  <call_once fun="VisualHomingRecordOdometry()"/>
+  <stay wp="S20" until="stage_time>5.0"/>
+</block>
+<block name="Return run 20">
+  <call fun="NavVisualHoming()"/>
+</block>
+<!-- Run 21 -->
+<block name="Prepare run 21">
+  <stay wp="G" until="stage_time>5.0"/>
+</block>
+<block name="Record odometry run 21">
+  <call_once fun="VisualHomingRecordOdometry()"/>
+  <stay wp="S21" until="stage_time>5.0"/>
+</block>
+<block name="Return run 21">
+  <call fun="NavVisualHoming()"/>
+</block>
+<!-- Run 22 -->
+<block name="Prepare run 22">
+  <stay wp="G" until="stage_time>5.0"/>
+</block>
+<block name="Record odometry run 22">
+  <call_once fun="VisualHomingRecordOdometry()"/>
+  <stay wp="S22" until="stage_time>5.0"/>
+</block>
+<block name="Return run 22">
+  <call fun="NavVisualHoming()"/>
+</block>
+</blocks>
+</procedure>

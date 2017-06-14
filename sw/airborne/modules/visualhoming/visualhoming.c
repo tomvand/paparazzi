@@ -26,10 +26,21 @@
 #include "visualhoming_odometry.h"
 
 #include "generated/modules.h"
+#include "subsystems/datalink/telemetry.h"
 
 #include <stdio.h>
 
 /* Settings */
+#ifndef VISUALHOMING_ODOMETRY_THRESHOLD
+#define VISUALHOMING_ODOMETRY_THRESHOLD 0.3
+#endif
+float vh_odometry_threshold = VISUALHOMING_ODOMETRY_THRESHOLD;
+
+#ifndef VISUALHOMING_SNAPSHOT_THRESHOLD
+#define VISUALHOMING_SNAPSHOT_THRESHOLD 0.1
+#endif
+float vh_snapshot_threshold = VISUALHOMING_SNAPSHOT_THRESHOLD;
+
 #ifndef VISUALHOMING_ENV_RADIUS
 #define VISUALHOMING_ENV_RADIUS 5.0
 #endif
@@ -38,22 +49,6 @@ float vh_environment_radius = VISUALHOMING_ENV_RADIUS;
 /* Control mode */
 enum visualhoming_mode_t vh_mode_cmd = VH_MODE_NOCMD;
 static enum visualhoming_mode_t vh_mode = VH_MODE_STOP;
-
-/* Navigation functions for flightplan */
-bool VisualHomingTakeSnapshot(void) {
-	vh_mode_cmd = VH_MODE_SNAPSHOT;
-	return FALSE; // Return immediately
-}
-
-bool VisualHomingRecordOdometry(void) {
-	vh_mode_cmd = VH_MODE_ODOMETRY;
-	return FALSE; // Return immediately
-}
-
-bool NavVisualHoming(void) {
-	visualhoming_guidance_update_nav();
-	return TRUE; // TODO detect arrival.
-}
 
 /* Static variables */
 // Snapshot mode buffers
@@ -69,10 +64,44 @@ static horizon_t horizon;
 static struct snapshot_t current_snapshot;
 static struct homingvector_t velocity;
 
+/* Navigation functions for flightplan */
+bool VisualHomingTakeSnapshot(void) {
+	vh_mode_cmd = VH_MODE_SNAPSHOT;
+	return FALSE; // Return immediately
+}
+
+bool VisualHomingRecordOdometry(void) {
+	vh_mode_cmd = VH_MODE_ODOMETRY;
+	return FALSE; // Return immediately
+}
+
+bool NavVisualHoming(void) {
+	visualhoming_guidance_update_nav();
+	// Detect arrivals
+	bool arrived = FALSE;
+	switch (vh_mode) {
+	case VH_MODE_ODOMETRY:
+		if (sqrt(
+				single_target_odometry.x * single_target_odometry.x
+						+ single_target_odometry.y * single_target_odometry.y)
+				< vh_odometry_threshold) {
+			arrived = TRUE;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return !arrived;
+}
+
 /* Static functions */
 static struct homingvector_t estimate_velocity(
 		const struct snapshot_t *new_ss);
 static void draw_snapshots(struct image_t *img);
+static void send_visualhoming(
+		struct transport_tx *trans,
+		struct link_device *dev);
 
 /* Module functions */
 void visualhoming_init(void) {
@@ -80,6 +109,9 @@ void visualhoming_init(void) {
 	vh_video_init(); // TODO set draw_snapshots callback
 	vh_video_set_callback(draw_snapshots);
 	vh_snapshot_init();
+	// Register telemetry
+	register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_VISUALHOMING,
+			send_visualhoming);
 }
 
 void visualhoming_periodic(void) {
@@ -227,5 +259,15 @@ static void draw_snapshots(struct image_t *img) {
 			}
 		}
 	}
+}
+
+static void send_visualhoming(
+		struct transport_tx *trans,
+		struct link_device *dev) {
+	int8_t m = vh_mode;
+	struct EnuCoor_f *enu = stateGetPositionEnu_f();
+	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &m,
+			&single_target_odometry.x, &single_target_odometry.y, &enu->x,
+			&enu->y, &velocity.x, &velocity.y);
 }
 
