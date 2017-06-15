@@ -82,10 +82,6 @@ void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
 	vh_cmd.cmd_phi = vh_guidance_tuning.Kp * dy - vh_guidance_tuning.Kd * vy;
 	BoundAbs(vh_cmd.cmd_phi, VISUALHOMING_GUIDANCE_MAX_BANK);
 	BoundAbs(vh_cmd.cmd_theta, VISUALHOMING_GUIDANCE_MAX_BANK);
-	printf("\n");
-	printf("PITCH: %.1f\n", vh_cmd.cmd_theta / M_PI * 180.0);
-	printf("ROLL:  %.1f\n", vh_cmd.cmd_phi / M_PI * 180.0);
-	printf("\n");
 }
 
 void visualhoming_guidance_set_heading_error(float dpsi __attribute__((unused))) {

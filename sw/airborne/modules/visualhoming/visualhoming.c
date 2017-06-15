@@ -32,7 +32,7 @@
 
 /* Settings */
 #ifndef VISUALHOMING_ODOMETRY_THRESHOLD
-#define VISUALHOMING_ODOMETRY_THRESHOLD 0.3
+#define VISUALHOMING_ODOMETRY_THRESHOLD 0.1
 #endif
 float vh_odometry_threshold = VISUALHOMING_ODOMETRY_THRESHOLD;
 
@@ -42,7 +42,7 @@ float vh_odometry_threshold = VISUALHOMING_ODOMETRY_THRESHOLD;
 float vh_snapshot_threshold = VISUALHOMING_SNAPSHOT_THRESHOLD;
 
 #ifndef VISUALHOMING_ENV_RADIUS
-#define VISUALHOMING_ENV_RADIUS 5.0
+#define VISUALHOMING_ENV_RADIUS 3.0
 #endif
 float vh_environment_radius = VISUALHOMING_ENV_RADIUS;
 
@@ -135,8 +135,7 @@ void visualhoming_periodic(void) {
 			vh_mode = VH_MODE_SNAPSHOT;
 			break;
 		case VH_MODE_ODOMETRY:
-			single_target_odometry.x = 0;
-			single_target_odometry.y = 0;
+			vh_odometry_reset(&single_target_odometry, &current_snapshot);
 			vh_mode = VH_MODE_ODOMETRY;
 			break;
 		default:
@@ -163,14 +162,11 @@ void visualhoming_periodic(void) {
 		visualhoming_guidance_set_PD(vec.x, vec.y, velocity.x, velocity.y);
 		break;
 	case VH_MODE_ODOMETRY:
-		vec.x = VISUALHOMING_PERIODIC_PERIOD * velocity.x;
-		vec.y = VISUALHOMING_PERIODIC_PERIOD * velocity.y;
-		vec.sigma = velocity.sigma;
-		vh_odometry_update(&single_target_odometry, vec.x, vec.y, vec.sigma);
+		vh_odometry_update(&single_target_odometry, &current_snapshot);
 		visualhoming_guidance_set_PD(single_target_odometry.x,
-				single_target_odometry.y, velocity.x, velocity.y);
-		printf("[VISUALHOMING] Odometry x = %+.1f, y = %+.1f\n",
-				single_target_odometry.x, single_target_odometry.y);
+				-single_target_odometry.y, velocity.x, velocity.y); // TODO check sign...
+//		printf("[VISUALHOMING] Odometry x = %+.1f, y = %+.1f\n",
+//				single_target_odometry.x, single_target_odometry.y);
 		break;
 	default:
 		printf("[VISUALHOMING] Invalid mode: %d!\n", vh_mode);
@@ -274,6 +270,7 @@ static void send_visualhoming(
 	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &m, &tel_homingvector.x,
 			&tel_homingvector.y, &tel_homingvector.sigma,
 			&single_target_odometry.x, &single_target_odometry.y,
+			&tel_ss_ref_odo.x, &tel_ss_ref_odo.y,
 			&enu->x, &enu->y, &psi,
 			&velocity.x, &velocity.y);
 }

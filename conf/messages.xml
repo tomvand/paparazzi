@@ -1736,6 +1736,8 @@
       <field name="sigma" type="float" unit="rad"/> 
       <field name="odo_x" type="float"/>
       <field name="odo_y" type="float"/>
+      <field name="odo_ref_x" type="float"/>
+      <field name="odo_ref_y" type="float"/>
       <field name="nav_x" type="float"/>
       <field name="nav_y" type="float"/>
       <field name="nav_psi" type="float" unit="rad"/>

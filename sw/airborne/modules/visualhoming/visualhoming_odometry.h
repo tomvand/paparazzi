@@ -21,15 +21,22 @@
 #ifndef VISUALHOMING_ODOMETRY_H
 #define VISUALHOMING_ODOMETRY_H
 
+#include "visualhoming_snapshot.h"
+
+extern float vh_odo_update_threshold;
+
 struct odometry_t {
 	float x;
 	float y;
 };
 
+extern struct odometry_t tel_ss_ref_odo;
+
+void vh_odometry_reset(
+		struct odometry_t *odo,
+		const struct snapshot_t *current_ss);
 void vh_odometry_update(
 		struct odometry_t *odo,
-		float delta_x,
-		float delta_y,
-		float delta_psi);
+		const struct snapshot_t *current_ss);
 
 #endif

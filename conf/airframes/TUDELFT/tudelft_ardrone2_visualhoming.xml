@@ -191,8 +191,8 @@
     <define name="MAX_BANK" value="20" unit="deg"/><!-- Omni-lens limit -->
     <!-- Bad weather -->
     <!-- define name="MAX_BANK" value="32" unit="deg"/ -->
-    <define name="PGAIN" value="79"/>
-    <define name="DGAIN" value="100"/>
+    <define name="PGAIN" value="100"/>
+    <define name="DGAIN" value="120"/>
     <define name="IGAIN" value="30"/>
   </section>
 
