@@ -64,6 +64,9 @@ static horizon_t horizon;
 static struct snapshot_t current_snapshot;
 static struct homingvector_t velocity;
 
+// Telemetry data
+static struct homingvector_t tel_homingvector;
+
 /* Navigation functions for flightplan */
 bool VisualHomingTakeSnapshot(void) {
 	vh_mode_cmd = VH_MODE_SNAPSHOT;
@@ -156,6 +159,7 @@ void visualhoming_periodic(void) {
 				&target_rotated_snapshot);
 		vec.x *= vh_environment_radius;
 		vec.y *= -vh_environment_radius;
+		tel_homingvector = vec; // Output telemetry data
 		visualhoming_guidance_set_PD(vec.x, vec.y, velocity.x, velocity.y);
 		break;
 	case VH_MODE_ODOMETRY:
@@ -266,8 +270,11 @@ static void send_visualhoming(
 		struct link_device *dev) {
 	int8_t m = vh_mode;
 	struct EnuCoor_f *enu = stateGetPositionEnu_f();
-	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &m,
-			&single_target_odometry.x, &single_target_odometry.y, &enu->x,
-			&enu->y, &velocity.x, &velocity.y);
+	float psi = stateGetNedToBodyEulers_f()->psi;
+	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &m, &tel_homingvector.x,
+			&tel_homingvector.y, &tel_homingvector.sigma,
+			&single_target_odometry.x, &single_target_odometry.y,
+			&enu->x, &enu->y, &psi,
+			&velocity.x, &velocity.y);
 }
 
