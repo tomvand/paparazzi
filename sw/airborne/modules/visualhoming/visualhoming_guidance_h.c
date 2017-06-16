@@ -25,6 +25,20 @@
 
 #include <stdio.h>
 
+// PD tuning
+#ifndef VISUALHOMING_GUIDANCE_P
+#define VISUALHOMING_GUIDANCE_P 0.30
+#endif
+#ifndef VISUALHOMING_GUIDANCE_D
+#define VISUALHOMING_GUIDANCE_D 0.00
+#endif
+#ifndef VISUALHOMING_GUIDANCE_FILTER_GAIN
+#define VISUALHOMING_GUIDANCE_FILTER_GAIN 0.20
+#endif
+#ifndef VISUALHOMING_GUIDANCE_MAX_BANK
+#define VISUALHOMING_GUIDANCE_MAX_BANK 0.18 // rad
+#endif
+
 struct vh_guidance_tuning_t vh_guidance_tuning = {
 		.Kp = VISUALHOMING_GUIDANCE_P,
 		.Kd = VISUALHOMING_GUIDANCE_D,
@@ -76,11 +90,16 @@ void visualhoming_guidance_set_pos_error(float dx, float dy) {
  * @param vy Current velocity [m/s]
  */
 void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
-	// Simple PD controller for attitude from position and velocity
-	vh_cmd.cmd_theta =
-			-(vh_guidance_tuning.Kp * dx - vh_guidance_tuning.Kd * vx);
-	vh_cmd.cmd_phi = vh_guidance_tuning.Kp * dy - vh_guidance_tuning.Kd * vy;
+	// Bounded P action
+	vh_cmd.cmd_theta = -vh_guidance_tuning.Kp * dx;
+	vh_cmd.cmd_phi = vh_guidance_tuning.Kp * dy;
 	BoundAbs(vh_cmd.cmd_phi, VISUALHOMING_GUIDANCE_MAX_BANK);
+	BoundAbs(vh_cmd.cmd_theta, VISUALHOMING_GUIDANCE_MAX_BANK);
+	// D action
+	vh_cmd.cmd_theta += vh_guidance_tuning.Kd * vx;
+	vh_cmd.cmd_phi += -vh_guidance_tuning.Kd * vy;
+	BoundAbs(vh_cmd.cmd_phi, VISUALHOMING_GUIDANCE_MAX_BANK);
+	// Final bound
 	BoundAbs(vh_cmd.cmd_theta, VISUALHOMING_GUIDANCE_MAX_BANK);
 }
 
