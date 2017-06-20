@@ -21,6 +21,8 @@
 #include "visualhoming_guidance_h.h"
 
 #include "firmwares/rotorcraft/navigation.h"
+#include "firmwares/rotorcraft/guidance/guidance_h.h"
+#include "firmwares/rotorcraft/stabilization/stabilization_attitude.h"
 #include "mcu_periph/sys_time.h"
 
 #include <stdio.h>
@@ -121,11 +123,12 @@ void visualhoming_guidance_update_nav(void) {
 			.theta = ANGLE_BFP_OF_REAL(vh_cmd.cmd_theta),
 			.phi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_phi),
 			.psi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_psi) };
-	horizontal_mode = HORIZONTAL_MODE_ATTITUDE;
-	// XXX Causes sharp attitude steps when changing to/from waypoint mode.
-	// Maybe because stabilization_attitude_enter() is not called!
-	// TODO Check if horizontal mode changes and reset stabilization by hand
-	// at least when starting.
+	if (horizontal_mode != HORIZONTAL_MODE_ATTITUDE) {
+		horizontal_mode = HORIZONTAL_MODE_ATTITUDE;
+		// Reset stabilization
+		guidance_h_nav_enter();
+		stabilization_attitude_enter();
+	}
 	nav_roll = rpy.phi;
 	nav_pitch = rpy.theta;
 }
