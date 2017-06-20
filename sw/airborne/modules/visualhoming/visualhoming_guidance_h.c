@@ -122,6 +122,10 @@ void visualhoming_guidance_update_nav(void) {
 			.phi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_phi),
 			.psi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_psi) };
 	horizontal_mode = HORIZONTAL_MODE_ATTITUDE;
+	// XXX Causes sharp attitude steps when changing to/from waypoint mode.
+	// Maybe because stabilization_attitude_enter() is not called!
+	// TODO Check if horizontal mode changes and reset stabilization by hand
+	// at least when starting.
 	nav_roll = rpy.phi;
 	nav_pitch = rpy.theta;
 }
