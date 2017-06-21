@@ -32,7 +32,7 @@
 
 /* Settings */
 #ifndef VISUALHOMING_ODOMETRY_THRESHOLD
-#define VISUALHOMING_ODOMETRY_THRESHOLD 0.1
+#define VISUALHOMING_ODOMETRY_THRESHOLD 0.0
 #endif
 float vh_odometry_threshold = VISUALHOMING_ODOMETRY_THRESHOLD;
 
@@ -55,6 +55,7 @@ static enum visualhoming_mode_t vh_mode = VH_MODE_STOP;
 static struct snapshot_t single_target_snapshot;
 static struct snapshot_t *current_warped_snapshot = NULL;
 static struct snapshot_t *target_rotated_snapshot = NULL;
+static struct homingvector_t homingvector;
 
 // Odometry mode buffers
 static struct odometry_t single_target_odometry;
@@ -63,9 +64,7 @@ static struct odometry_t single_target_odometry;
 static horizon_t horizon;
 static struct snapshot_t current_snapshot;
 static struct homingvector_t velocity;
-
-// Telemetry data
-static struct homingvector_t tel_homingvector;
+static int arrival_detected = 0;
 
 /* Navigation functions for flightplan */
 bool VisualHomingTakeSnapshot(void) {
@@ -80,22 +79,7 @@ bool VisualHomingRecordOdometry(void) {
 
 bool NavVisualHoming(void) {
 	visualhoming_guidance_update_nav();
-	// Detect arrivals
-	bool arrived = FALSE;
-	switch (vh_mode) {
-	case VH_MODE_ODOMETRY:
-		if (sqrt(
-				single_target_odometry.x * single_target_odometry.x
-						+ single_target_odometry.y * single_target_odometry.y)
-				< vh_odometry_threshold) {
-			arrived = TRUE;
-		}
-		break;
-	default:
-		break;
-	}
-
-	return !arrived;
+	return !arrival_detected;
 }
 
 /* Static functions */
@@ -135,6 +119,7 @@ void visualhoming_periodic(void) {
 			vh_mode = VH_MODE_SNAPSHOT;
 			break;
 		case VH_MODE_ODOMETRY:
+			vh_snapshot_copy(&single_target_snapshot, &current_snapshot); // Return after odometry is completed!
 			vh_odometry_reset(&single_target_odometry, &current_snapshot);
 			vh_mode = VH_MODE_ODOMETRY;
 			break;
@@ -146,7 +131,9 @@ void visualhoming_periodic(void) {
 	}
 
 	// Update guidance
+	arrival_detected = 0;
 	struct homingvector_t vec;
+	static int odometry_was_large = 0;
 	switch (vh_mode) {
 	case VH_MODE_STOP:
 		visualhoming_guidance_set_PD(0, 0, velocity.x, velocity.y);
@@ -158,8 +145,11 @@ void visualhoming_periodic(void) {
 				&target_rotated_snapshot);
 		vec.x *= vh_environment_radius;
 		vec.y *= -vh_environment_radius;
-		tel_homingvector = vec; // Output telemetry data
+		homingvector = vec; // Output telemetry data
 		visualhoming_guidance_set_PD(vec.x, vec.y, velocity.x, velocity.y);
+		if (sqrt(vec.x * vec.x + vec.y * vec.y) < vh_snapshot_threshold) {
+			arrival_detected = 1;
+		}
 		break;
 	case VH_MODE_ODOMETRY:
 		vh_odometry_update(&single_target_odometry, &current_snapshot);
@@ -167,6 +157,18 @@ void visualhoming_periodic(void) {
 				-single_target_odometry.y, velocity.x, velocity.y); // TODO check sign...
 //		printf("[VISUALHOMING] Odometry x = %+.1f, y = %+.1f\n",
 //				single_target_odometry.x, single_target_odometry.y);
+		float odo_distance = sqrt(
+				single_target_odometry.x * single_target_odometry.x
+						+ single_target_odometry.y * single_target_odometry.y);
+		if (odo_distance > 1.2 * vh_odometry_threshold) {
+			odometry_was_large = 1;
+		}
+		if (odo_distance < vh_odometry_threshold && odometry_was_large) {
+			// Only trigger when odometric distance decreases below threshold
+			// after it has been above it.
+			odometry_was_large = 0;
+			vh_mode = VH_MODE_SNAPSHOT;
+		}
 		break;
 	default:
 		printf("[VISUALHOMING] Invalid mode: %d!\n", vh_mode);
@@ -267,8 +269,8 @@ static void send_visualhoming(
 	int8_t m = vh_mode;
 	struct EnuCoor_f *enu = stateGetPositionEnu_f();
 	float psi = stateGetNedToBodyEulers_f()->psi;
-	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &m, &tel_homingvector.x,
-			&tel_homingvector.y, &tel_homingvector.sigma,
+	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &m, &homingvector.x,
+			&homingvector.y, &homingvector.sigma,
 			&single_target_odometry.x, &single_target_odometry.y,
 			&tel_ss_ref_odo.x, &tel_ss_ref_odo.y,
 			&enu->x, &enu->y, &psi,

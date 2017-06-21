@@ -37,6 +37,7 @@ enum visualhoming_mode_t {
 	VH_FOLLOW_ROUTE,
 	VH_MODE_NOCMD,
 };
+// TODO Add separate return modes!
 
 /* GCS buttons */
 extern enum visualhoming_mode_t vh_mode_cmd;
