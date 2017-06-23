@@ -27,6 +27,7 @@
 
 #include "generated/modules.h"
 #include "subsystems/datalink/telemetry.h"
+#include "mcu_periph/sys_time.h"
 
 #include <stdio.h>
 
@@ -56,6 +57,8 @@ static struct snapshot_t single_target_snapshot;
 static struct snapshot_t *current_warped_snapshot = NULL;
 static struct snapshot_t *target_rotated_snapshot = NULL;
 static struct homingvector_t homingvector;
+static uint32_t current_ts;
+static uint32_t previous_ts;
 
 // Odometry mode buffers
 static struct odometry_t single_target_odometry;
@@ -102,6 +105,13 @@ void visualhoming_init(void) {
 }
 
 void visualhoming_periodic(void) {
+	// Check that horizon has been updated
+	current_ts = vh_get_current_timestamp();
+	if (current_ts == previous_ts) return; // Nothing to do if image hasn't been updated.
+
+	// Measure run-time of step
+	uint32_t start_ts = get_sys_time_usec();
+
 	// Get current snapshot
 	vh_get_current_horizon(horizon);
 	vh_snapshot_from_horizon(&current_snapshot, horizon);
@@ -174,6 +184,13 @@ void visualhoming_periodic(void) {
 		printf("[VISUALHOMING] Invalid mode: %d!\n", vh_mode);
 		break;
 	}
+
+	// Update timestamps
+	previous_ts = current_ts;
+
+	// Measure run-time of step
+	uint32_t end_ts = get_sys_time_usec();
+	printf("Step time = %u us\n", end_ts - start_ts);
 }
 
 /* Static functions */
@@ -193,10 +210,14 @@ static struct homingvector_t estimate_velocity(
 	}
 	// Get instantaneous velocity measurement
 	struct homingvector_t measured_vel;
+	float dt = (current_ts - previous_ts) / 1e6;
 	measured_vel = vh_snapshot_homingvector(&previous_snapshot, new_ss, NULL,
 	NULL);
-	measured_vel.x *= VISUALHOMING_PERIODIC_FREQ * vh_environment_radius;
-	measured_vel.y *= -VISUALHOMING_PERIODIC_FREQ * vh_environment_radius;
+	printf("dt = %+.3f\n", dt);
+	if (dt != 0) {
+		measured_vel.x *= vh_environment_radius / dt;
+		measured_vel.y *= -vh_environment_radius / dt;
+	}
 	// Filter velocities
 	if (!isnan(measured_vel.x) && !isnan(measured_vel.y)) {
 		velocity.x = vh_guidance_tuning.Kf * measured_vel.x
@@ -274,6 +295,7 @@ static void send_visualhoming(
 			&single_target_odometry.x, &single_target_odometry.y,
 			&tel_ss_ref_odo.x, &tel_ss_ref_odo.y,
 			&enu->x, &enu->y, &psi,
-			&velocity.x, &velocity.y);
+			&velocity.x, &velocity.y,
+			&current_ts);
 }
 

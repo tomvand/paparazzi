@@ -1743,6 +1743,7 @@
       <field name="nav_psi" type="float" unit="rad"/>
       <field name="vx" type="float"/>
       <field name="vy" type="float"/>
+      <field name="ts" type="uint32" unit="us"/>
 	</message>
 
     <message name="ROTORCRAFT_STATUS" id="231">

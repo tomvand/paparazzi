@@ -65,6 +65,7 @@ static video_callback_t callback = 0;
 // Cross-thread variables
 static pthread_mutex_t video_mutex;
 static horizon_t current_horizon;
+static uint32_t current_timestamp;
 static struct FloatRMat attitude;
 
 // Static function declarations
@@ -93,6 +94,14 @@ void vh_get_current_horizon(horizon_t hor) {
 	pthread_mutex_unlock(&video_mutex);
 }
 
+uint32_t vh_get_current_timestamp(void) {
+	uint32_t ts;
+	pthread_mutex_lock(&video_mutex);
+	ts = current_timestamp;
+	pthread_mutex_unlock(&video_mutex);
+	return ts;
+}
+
 void vh_video_set_callback(video_callback_t cb) {
 	callback = cb;
 }
@@ -102,6 +111,7 @@ static struct image_t* camera_callback(struct image_t *img) {
 	// Caution: runs on video thread
 	pthread_mutex_lock(&video_mutex);
 	extract_horizon(img, current_horizon);
+	current_timestamp = img->pprz_ts;
 	pthread_mutex_unlock(&video_mutex);
 
 	draw_calibration(img);

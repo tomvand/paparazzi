@@ -44,6 +44,7 @@ typedef float horizon_t[VISUALHOMING_HORIZON_RESOLUTION]; // float instead of ui
 
 void vh_video_init(void);
 void vh_get_current_horizon(horizon_t hor);
+uint32_t vh_get_current_timestamp(void);
 
 typedef void (*video_callback_t)(struct image_t *img);
 void vh_video_set_callback(video_callback_t cb);
