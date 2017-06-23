@@ -1744,6 +1744,8 @@
       <field name="vx" type="float"/>
       <field name="vy" type="float"/>
       <field name="ts" type="uint32" unit="us"/>
+      <field name="dt" type="float" unit="s"/>
+      <field name="step_time" type="uint32" unit="us"/>
 	</message>
 
     <message name="ROTORCRAFT_STATUS" id="231">

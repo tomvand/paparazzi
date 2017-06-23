@@ -69,6 +69,10 @@ static struct snapshot_t current_snapshot;
 static struct homingvector_t velocity;
 static int arrival_detected = 0;
 
+// Miscellaneous telemetry data
+static uint32_t step_time;
+static float tel_dt;
+
 /* Navigation functions for flightplan */
 bool VisualHomingTakeSnapshot(void) {
 	vh_mode_cmd = VH_MODE_SNAPSHOT;
@@ -188,7 +192,7 @@ void visualhoming_periodic(void) {
 	// Measure run-time of step
 	printf("End time     = %u\n", get_sys_time_usec());
 	printf("Current time = %u\n", current_ts);
-	uint32_t step_time = get_sys_time_usec() - current_ts;
+	step_time = get_sys_time_usec() - current_ts;
 	printf("Step time = %u us\n", step_time);
 }
 
@@ -210,9 +214,9 @@ static struct homingvector_t estimate_velocity(
 	// Get instantaneous velocity measurement
 	struct homingvector_t measured_vel;
 	float dt = (current_ts - previous_ts) / 1e6;
+	tel_dt = dt;
 	measured_vel = vh_snapshot_homingvector(&previous_snapshot, new_ss, NULL,
 	NULL);
-	printf("dt = %+.3f\n", dt);
 	if (dt != 0) {
 		measured_vel.x *= vh_environment_radius / dt;
 		measured_vel.y *= -vh_environment_radius / dt;
@@ -295,6 +299,6 @@ static void send_visualhoming(
 			&tel_ss_ref_odo.x, &tel_ss_ref_odo.y,
 			&enu->x, &enu->y, &psi,
 			&velocity.x, &velocity.y,
-			&current_ts);
+			&current_ts, &tel_dt, &step_time);
 }
 

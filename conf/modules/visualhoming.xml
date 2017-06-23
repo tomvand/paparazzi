@@ -38,7 +38,7 @@
     <file name="visualhoming_odometry.h"/>
   </header>
   <init fun="visualhoming_init()"/>
-  <periodic fun="visualhoming_periodic()" freq="10" autorun="TRUE"/>
+  <periodic fun="visualhoming_periodic()" freq="100" autorun="TRUE"/>
   <makefile>
   	<define name="PFFFT_SIMD_DISABLE"/>
   	<define name="GUIDANCE_H_MODE_MODULE_SETTING" value="GUIDANCE_H_MODE_MODULE"/>
