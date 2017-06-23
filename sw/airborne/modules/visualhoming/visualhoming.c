@@ -190,10 +190,7 @@ void visualhoming_periodic(void) {
 	previous_ts = current_ts;
 
 	// Measure run-time of step
-	printf("End time     = %u\n", get_sys_time_usec());
-	printf("Current time = %u\n", current_ts);
 	step_time = get_sys_time_usec() - current_ts;
-	printf("Step time = %u us\n", step_time);
 }
 
 /* Static functions */

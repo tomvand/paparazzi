@@ -36,6 +36,7 @@
 			</visual>
 		</link>
 
+		<!--
 		<link name="front_camera">
 			<pose>0.15 0 0 0 0 0</pose>
 			<inertial>
@@ -64,9 +65,6 @@
 					</clip>
 					<noise>
 						<type>gaussian</type>
-						<!-- Noise is sampled independently per pixel on each frame. That pixel's 
-							noise value is added to each of its color channels, which at that point lie 
-							in the range [0,1]. -->
 						<mean>0.0</mean>
 						<stddev>0.007</stddev>
 					</noise>
@@ -78,6 +76,7 @@
 			<parent>chassis</parent>
 			<child>front_camera</child>
 		</joint>
+		-->
 		
 		<link name="bottom_camera">
 			<pose>0 0 -.06 0 1.57 3.1415</pose>
