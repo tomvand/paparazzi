@@ -152,6 +152,9 @@ void visualhoming_periodic(void) {
 		float angle_diff;
 		if (sqrt(trigger_vec_new.x * trigger_vec_new.x
 				+ trigger_vec_new.y * trigger_vec_new.y) > 0.05) {
+			if (trigger_vec.x == 0 && trigger_vec.y == 0) {
+				trigger_vec = trigger_vec_new; // Keep track of initial direction of travel.
+			}
 			float angle_new = atan2(trigger_vec_new.y, trigger_vec_new.x);
 			float angle_old = atan2(trigger_vec.y, trigger_vec.x);
 			angle_diff = angle_new - angle_old;
@@ -165,12 +168,14 @@ void visualhoming_periodic(void) {
 			}
 //		angle_diff = abs(angle_diff);
 		} else {
+			trigger_vec.x = 0;
+			trigger_vec.y = 0;
 			angle_diff = 0;
 		}
 		if (angle_diff < 0) angle_diff = -angle_diff;
 		printf("Angle dif: %+.2f\n", angle_diff);
 		tel_angle_diff = angle_diff;
-		trigger_vec = trigger_vec_new;
+//		trigger_vec = trigger_vec_new; // Uncomment for homing angle change
 	}
 
 	// Update guidance
