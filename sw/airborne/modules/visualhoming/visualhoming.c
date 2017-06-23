@@ -109,9 +109,6 @@ void visualhoming_periodic(void) {
 	current_ts = vh_get_current_timestamp();
 	if (current_ts == previous_ts) return; // Nothing to do if image hasn't been updated.
 
-	// Measure run-time of step
-	uint32_t start_ts = get_sys_time_usec();
-
 	// Get current snapshot
 	vh_get_current_horizon(horizon);
 	vh_snapshot_from_horizon(&current_snapshot, horizon);
@@ -189,8 +186,10 @@ void visualhoming_periodic(void) {
 	previous_ts = current_ts;
 
 	// Measure run-time of step
-	uint32_t end_ts = get_sys_time_usec();
-	printf("Step time = %u us\n", end_ts - start_ts);
+	printf("End time     = %u\n", get_sys_time_usec());
+	printf("Current time = %u\n", current_ts);
+	uint32_t step_time = get_sys_time_usec() - current_ts;
+	printf("Step time = %u us\n", step_time);
 }
 
 /* Static functions */
