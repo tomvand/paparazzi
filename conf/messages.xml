@@ -1746,6 +1746,7 @@
       <field name="ts" type="uint32" unit="us"/>
       <field name="dt" type="float" unit="s"/>
       <field name="step_time" type="uint32" unit="us"/>
+      <field name="angle_diff" type="float" unit="rad"/>
 	</message>
 
     <message name="ROTORCRAFT_STATUS" id="231">

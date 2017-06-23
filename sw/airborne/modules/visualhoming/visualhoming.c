@@ -69,9 +69,13 @@ static struct snapshot_t current_snapshot;
 static struct homingvector_t velocity;
 static int arrival_detected = 0;
 
+// Trigger variables
+static struct homingvector_t trigger_vec;
+
 // Miscellaneous telemetry data
 static uint32_t step_time;
 static float tel_dt;
+static float tel_angle_diff;
 
 /* Navigation functions for flightplan */
 bool VisualHomingTakeSnapshot(void) {
@@ -139,6 +143,34 @@ void visualhoming_periodic(void) {
 			break;
 		}
 		vh_mode_cmd = VH_MODE_NOCMD;
+	}
+
+	// Detect change in homing vector direction
+	if (vh_mode != VH_MODE_STOP) {
+		struct homingvector_t trigger_vec_new = vh_snapshot_homingvector(
+				&single_target_snapshot, &current_snapshot, NULL, NULL);
+		float angle_diff;
+		if (sqrt(trigger_vec_new.x * trigger_vec_new.x
+				+ trigger_vec_new.y * trigger_vec_new.y) > 0.05) {
+			float angle_new = atan2(trigger_vec_new.y, trigger_vec_new.x);
+			float angle_old = atan2(trigger_vec.y, trigger_vec.x);
+			angle_diff = angle_new - angle_old;
+			printf("Angle new: %+.2f\n", angle_new);
+			printf("Angle old: %+.2f\n", angle_old);
+			while (angle_diff > M_PI) {
+				angle_diff -= 2 * M_PI;
+			}
+			while (angle_diff < -M_PI) {
+				angle_diff += 2 * M_PI;
+			}
+//		angle_diff = abs(angle_diff);
+		} else {
+			angle_diff = 0;
+		}
+		if (angle_diff < 0) angle_diff = -angle_diff;
+		printf("Angle dif: %+.2f\n", angle_diff);
+		tel_angle_diff = angle_diff;
+		trigger_vec = trigger_vec_new;
 	}
 
 	// Update guidance
@@ -296,6 +328,7 @@ static void send_visualhoming(
 			&tel_ss_ref_odo.x, &tel_ss_ref_odo.y,
 			&enu->x, &enu->y, &psi,
 			&velocity.x, &velocity.y,
-			&current_ts, &tel_dt, &step_time);
+			&current_ts, &tel_dt, &step_time,
+			&tel_angle_diff);
 }
 
