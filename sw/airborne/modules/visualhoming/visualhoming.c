@@ -168,7 +168,11 @@ void visualhoming_periodic(void) {
 	// TODO move to correct place
 	// Detect snapshot trigger
 	if (vh_mode != VH_MODE_STOP) {
-		homingvector_difference();
+		float diff = homingvector_difference();
+		if (diff > 0.5) {
+			// XXX Store current snapshot in map
+			vh_map_push(&current_snapshot);
+		}
 	}
 
 	// Update guidance
@@ -288,7 +292,7 @@ static float homingvector_difference(void) {
 		angle_diff = 0;
 	}
 	if (angle_diff < 0) angle_diff = -angle_diff;
-	printf("Angle dif: %+.2f\n", angle_diff);
+//	printf("Angle dif: %+.2f\n", angle_diff);
 	tel_angle_diff = angle_diff;
 	if (!vh_snapshot_trigger_from_initial) {
 		// Compare to *previous* homing vector instead of initial vector.

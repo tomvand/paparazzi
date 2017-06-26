@@ -31,9 +31,12 @@
 #define VISUALHOMING_MAX_WAYPOINTS 512
 #endif
 
-// Map buffers
-extern struct snapshot_t vh_waypoints[VISUALHOMING_MAX_WAYPOINTS];
-extern int16_t vh_current_waypoint;
+// Map functions
+int vh_map_push(const struct snapshot_t *ss);
+const struct snapshot_t *vh_map_peek(void);
+int vh_map_pop(void);
+int vh_map_clear(void);
+int vh_map_get_index(void);
 
 // Telemetry callback
 void send_visualhoming_map_update(
