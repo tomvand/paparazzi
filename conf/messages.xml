@@ -1816,6 +1816,8 @@
     <message name="VISUALHOMING_MAP_UPDATE" id="239">
       <field name="waypoint_index" type="int16"/>
       <field name="snapshot" type="int8[]"/>
+      <field name="wp_x" type="float" unit="m"/>
+      <field name="wp_y" type="float" unit="m"/>
     </message>
 
     <message name="NPS_SPEED_POS" id="240">

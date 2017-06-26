@@ -20,11 +20,22 @@
 
 #include "visualhoming_map.h"
 
+#include "state.h"
+
 #include <stdio.h>
+
+#ifndef VISUALHOMING_LOG_WP_POS
+#define VISUALHOMING_LOG_WP_POS 1
+#endif
 
 // Map
 static struct snapshot_t vh_waypoints[VISUALHOMING_MAX_WAYPOINTS];
 static int16_t current_waypoint = -1; // Current homing target
+
+#if VISUALHOMING_LOG_WP_POS
+static float vh_waypoints_x[VISUALHOMING_MAX_WAYPOINTS];
+static float vh_waypoints_y[VISUALHOMING_MAX_WAYPOINTS];
+#endif
 
 // External functions
 int vh_map_push(const struct snapshot_t *ss) {
@@ -34,6 +45,13 @@ int vh_map_push(const struct snapshot_t *ss) {
 	} else {
 		printf("[VISUALHOMING] Warning: map buffer is full!\n");
 	}
+
+#if VISUALHOMING_LOG_WP_POS
+	struct EnuCoor_f *enu = stateGetPositionEnu_f();
+	vh_waypoints_x[current_waypoint] = enu->x;
+	vh_waypoints_y[current_waypoint] = enu->y;
+#endif
+
 	return current_waypoint;
 }
 
@@ -74,8 +92,17 @@ void send_visualhoming_map_update(
 		} else if (last_waypoint > current_waypoint) {
 			last_waypoint--;
 		}
+		float x, y;
+#if VISUALHOMING_LOG_WP_POS
+		x = vh_waypoints_x[last_waypoint];
+		y = vh_waypoints_y[last_waypoint];
+#else
+		x = 0;
+		y = 0;
+#endif
 		pprz_msg_send_VISUALHOMING_MAP_UPDATE(trans, dev, AC_ID,
 				&last_waypoint, (uint8_t)sizeof(struct snapshot_t),
-				(int8_t*)&vh_waypoints[last_waypoint]);
+				(int8_t*)&vh_waypoints[last_waypoint],
+				&x, &y);
 	}
 }
