@@ -32,15 +32,15 @@
 #include <stdio.h>
 
 /* Settings */
-#ifndef VISUALHOMING_ODOMETRY_THRESHOLD
-#define VISUALHOMING_ODOMETRY_THRESHOLD 0.0
+#ifndef VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD
+#define VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD 0.0
 #endif
-float vh_odometry_threshold = VISUALHOMING_ODOMETRY_THRESHOLD;
+float vh_odometry_arrival_threshold = VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD;
 
-#ifndef VISUALHOMING_SNAPSHOT_THRESHOLD
-#define VISUALHOMING_SNAPSHOT_THRESHOLD 0.0
+#ifndef VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD
+#define VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD 0.0
 #endif
-float vh_snapshot_threshold = VISUALHOMING_SNAPSHOT_THRESHOLD;
+float vh_snapshot_arrival_threshold = VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD;
 
 #ifndef VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD
 #define VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD 0.05
@@ -59,7 +59,7 @@ int vh_snapshot_trigger_from_initial =
 VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL;
 
 #ifndef VISUALHOMING_ENV_RADIUS
-#define VISUALHOMING_ENV_RADIUS 3.0
+#define VISUALHOMING_ENV_RADIUS 1.0
 #endif
 float vh_environment_radius = VISUALHOMING_ENV_RADIUS;
 
@@ -192,7 +192,7 @@ void visualhoming_periodic(void) {
 		vec.y *= -vh_environment_radius;
 		homingvector = vec; // Output telemetry data
 		visualhoming_guidance_set_PD(vec.x, vec.y, velocity.x, velocity.y);
-		if (sqrt(vec.x * vec.x + vec.y * vec.y) < vh_snapshot_threshold) {
+		if (sqrt(vec.x * vec.x + vec.y * vec.y) < vh_snapshot_arrival_threshold) {
 			arrival_detected = 1;
 		}
 		break;
@@ -205,10 +205,11 @@ void visualhoming_periodic(void) {
 		float odo_distance = sqrt(
 				single_target_odometry.x * single_target_odometry.x
 						+ single_target_odometry.y * single_target_odometry.y);
-		if (odo_distance > 1.2 * vh_odometry_threshold) {
+		if (odo_distance > 1.2 * vh_odometry_arrival_threshold) {
 			odometry_was_large = 1;
 		}
-		if (odo_distance < vh_odometry_threshold && odometry_was_large) {
+		if (odo_distance < vh_odometry_arrival_threshold
+				&& odometry_was_large) {
 			// Only trigger when odometric distance decreases below threshold
 			// after it has been above it.
 			odometry_was_large = 0;

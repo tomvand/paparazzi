@@ -25,8 +25,8 @@
 
 // Settings
 extern float vh_environment_radius;
-extern float vh_odometry_threshold;
-extern float vh_snapshot_threshold;
+extern float vh_odometry_arrival_threshold;
+extern float vh_snapshot_arrival_threshold;
 
 /* Control modes */
 enum visualhoming_mode_t {

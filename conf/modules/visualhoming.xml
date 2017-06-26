@@ -15,8 +15,8 @@
         <dl_setting shortname="radius_bottom" param="VISUALHOMING_RADIUS_BOTTOM" var="calibration.radius_bottom" min="0" step="0.01" max="0.5"/>
         <dl_setting shortname="env_radius" param="VISUALHOMING_ENV_RADIUS" var="vh_environment_radius" min="0.5" step="0.5" max="20"/>
         <dl_setting shortname="derotate_gain" param="VISUALHOMING_DEROTATE_GAIN" var="derotate_gain" min="-0.15" step="0.01" max="0.15"/>
-        <dl_setting shortname="ss_thres" param="VISUALHOMING_SNAPSHOT_THRESHOLD" var="vh_snapshot_threshold" min="0" step="0.1" max="2.0"/>
-        <dl_setting shortname="odo_thres" param="VISUALHOMING_ODOMETRY_THRESHOLD" var="vh_odometry_threshold" min="0" step="0.05" max="2.0"/>
+        <dl_setting shortname="ss_arr_thres" param="VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD" var="vh_snapshot_arrival_threshold" min="0" step="0.05" max="2.0"/>
+        <dl_setting shortname="odo_arr_thres" param="VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD" var="vh_odometry_arrival_threshold" min="0" step="0.05" max="2.0"/>
         <dl_setting shortname="odo_rebase_thres" var="vh_odo_update_threshold" min="0" step="0.05" max="1.0"/>
         <dl_setting shortname="mode_command" var="vh_mode_cmd" min="0" step="1" max="2">
           <strip_button name="STOP" value="0" group="visualhoming" icon="dcstop.png"/>
