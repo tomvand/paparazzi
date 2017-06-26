@@ -1813,7 +1813,10 @@
       <field name="asl"        type="float" unit="m"/>
     </message>
 
-    <!-- 239 is free -->
+    <message name="VISUALHOMING_MAP_UPDATE" id="239">
+      <field name="waypoint_index" type="int16"/>
+      <field name="snapshot" type="int8[]"/>
+    </message>
 
     <message name="NPS_SPEED_POS" id="240">
       <field name="ltpp_xdd" type="float" unit="m/s2"/>

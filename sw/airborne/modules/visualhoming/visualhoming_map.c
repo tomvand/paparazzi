@@ -20,7 +20,23 @@
 
 #include "visualhoming_map.h"
 
-struct snapshot_t vh_snapshots[VISUALHOMING_MAX_WAYPOINTS];
-struct odometry_t vh_vectors[VISUALHOMING_MAX_WAYPOINTS];
+struct snapshot_t vh_waypoints[VISUALHOMING_MAX_WAYPOINTS];
+int16_t vh_current_waypoint = -1; // Current homing target
 
-int vh_current_waypoint = 0;
+void send_visualhoming_map_update(
+		struct transport_tx *trans,
+		struct link_device *dev) {
+	// Keep track of last transmitted waypoint
+	static int16_t last_waypoint = -1;
+	// Transmit new snapshot if waypoint was added or removed
+	if (last_waypoint != vh_current_waypoint) {
+		if (last_waypoint < vh_current_waypoint) {
+			last_waypoint++;
+		} else if (last_waypoint > vh_current_waypoint) {
+			last_waypoint--;
+		}
+		pprz_msg_send_VISUALHOMING_MAP_UPDATE(trans, dev, AC_ID,
+				&last_waypoint, (uint8_t)sizeof(struct snapshot_t),
+				(int8_t*)&vh_waypoints[last_waypoint]);
+	}
+}

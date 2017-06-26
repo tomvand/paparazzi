@@ -48,6 +48,7 @@
     <file name="visualhoming_video.c"/>
     <file name="visualhoming_snapshot.c"/>
     <file name="visualhoming_odometry.c"/>
+    <file name="visualhoming_map.c"/>
     <file name="pffft.c" dir="modules/visualhoming/ext/pffft"/>
   </makefile>
 </module>

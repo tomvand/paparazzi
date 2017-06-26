@@ -24,15 +24,20 @@
 #include "visualhoming_snapshot.h"
 #include "visualhoming_odometry.h"
 
+#include "subsystems/datalink/telemetry.h"
+
 // Configuration
 #ifndef VISUALHOMING_MAX_WAYPOINTS
 #define VISUALHOMING_MAX_WAYPOINTS 512
 #endif
 
 // Map buffers
-extern struct snapshot_t vh_snapshots[VISUALHOMING_MAX_WAYPOINTS];
-extern struct odometry_t vh_vectors[VISUALHOMING_MAX_WAYPOINTS];
+extern struct snapshot_t vh_waypoints[VISUALHOMING_MAX_WAYPOINTS];
+extern int16_t vh_current_waypoint;
 
-extern int vh_current_waypoint;
+// Telemetry callback
+void send_visualhoming_map_update(
+		struct transport_tx *trans,
+		struct link_device *dev);
 
 #endif

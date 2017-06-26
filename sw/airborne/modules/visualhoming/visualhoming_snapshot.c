@@ -103,7 +103,7 @@ static void get_zk(
 // External functions
 void vh_snapshot_init(void) {
 	pffft_setup = pffft_new_setup(VISUALHOMING_HORIZON_RESOLUTION, PFFFT_REAL);
-	printf("Snapshot size: %u bytes.\n", sizeof(struct snapshot_t));
+	printf("Snapshot size: %zu bytes.\n", sizeof(struct snapshot_t));
 }
 
 void vh_snapshot_close(void) {

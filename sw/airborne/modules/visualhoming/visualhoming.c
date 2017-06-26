@@ -38,9 +38,25 @@
 float vh_odometry_threshold = VISUALHOMING_ODOMETRY_THRESHOLD;
 
 #ifndef VISUALHOMING_SNAPSHOT_THRESHOLD
-#define VISUALHOMING_SNAPSHOT_THRESHOLD 0.1
+#define VISUALHOMING_SNAPSHOT_THRESHOLD 0.0
 #endif
 float vh_snapshot_threshold = VISUALHOMING_SNAPSHOT_THRESHOLD;
+
+#ifndef VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD
+#define VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD 0.05
+#endif
+float vh_snapshot_initial_threshold = VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD;
+
+#ifndef VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD
+#define VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD 0.5
+#endif
+float vh_snapshot_trigger_threshold = VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD;
+
+#ifndef VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL
+#define VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL 1
+#endif
+int vh_snapshot_trigger_from_initial =
+VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL;
 
 #ifndef VISUALHOMING_ENV_RADIUS
 #define VISUALHOMING_ENV_RADIUS 3.0
@@ -96,6 +112,7 @@ bool NavVisualHoming(void) {
 /* Static functions */
 static struct homingvector_t estimate_velocity(
 		const struct snapshot_t *new_ss);
+static float homingvector_difference(void);
 static void draw_snapshots(struct image_t *img);
 static void send_visualhoming(
 		struct transport_tx *trans,
@@ -110,6 +127,9 @@ void visualhoming_init(void) {
 	// Register telemetry
 	register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_VISUALHOMING,
 			send_visualhoming);
+	register_periodic_telemetry(DefaultPeriodic,
+			PPRZ_MSG_ID_VISUALHOMING_MAP_UPDATE,
+			send_visualhoming_map_update);
 }
 
 void visualhoming_periodic(void) {
@@ -145,37 +165,10 @@ void visualhoming_periodic(void) {
 		vh_mode_cmd = VH_MODE_NOCMD;
 	}
 
-	// Detect change in homing vector direction
+	// TODO move to correct place
+	// Detect snapshot trigger
 	if (vh_mode != VH_MODE_STOP) {
-		struct homingvector_t trigger_vec_new = vh_snapshot_homingvector(
-				&single_target_snapshot, &current_snapshot, NULL, NULL);
-		float angle_diff;
-		if (sqrt(trigger_vec_new.x * trigger_vec_new.x
-				+ trigger_vec_new.y * trigger_vec_new.y) > 0.05) {
-			if (trigger_vec.x == 0 && trigger_vec.y == 0) {
-				trigger_vec = trigger_vec_new; // Keep track of initial direction of travel.
-			}
-			float angle_new = atan2(trigger_vec_new.y, trigger_vec_new.x);
-			float angle_old = atan2(trigger_vec.y, trigger_vec.x);
-			angle_diff = angle_new - angle_old;
-			printf("Angle new: %+.2f\n", angle_new);
-			printf("Angle old: %+.2f\n", angle_old);
-			while (angle_diff > M_PI) {
-				angle_diff -= 2 * M_PI;
-			}
-			while (angle_diff < -M_PI) {
-				angle_diff += 2 * M_PI;
-			}
-//		angle_diff = abs(angle_diff);
-		} else {
-			trigger_vec.x = 0;
-			trigger_vec.y = 0;
-			angle_diff = 0;
-		}
-		if (angle_diff < 0) angle_diff = -angle_diff;
-		printf("Angle dif: %+.2f\n", angle_diff);
-		tel_angle_diff = angle_diff;
-//		trigger_vec = trigger_vec_new; // Uncomment for homing angle change
+		homingvector_difference();
 	}
 
 	// Update guidance
@@ -266,6 +259,42 @@ static struct homingvector_t estimate_velocity(
 	vh_snapshot_copy(&previous_snapshot, new_ss);
 
 	return velocity;
+}
+
+static float homingvector_difference(void) {
+	struct homingvector_t trigger_vec_new = vh_snapshot_homingvector(
+			&single_target_snapshot, &current_snapshot, NULL, NULL);
+	float angle_diff;
+	if (sqrt(trigger_vec_new.x * trigger_vec_new.x
+			+ trigger_vec_new.y * trigger_vec_new.y) > 0.05) {
+		if (trigger_vec.x == 0 && trigger_vec.y == 0) {
+			trigger_vec = trigger_vec_new; // Keep track of initial direction of travel.
+		}
+		float angle_new = atan2(trigger_vec_new.y, trigger_vec_new.x);
+		float angle_old = atan2(trigger_vec.y, trigger_vec.x);
+		angle_diff = angle_new - angle_old;
+		printf("Angle new: %+.2f\n", angle_new);
+		printf("Angle old: %+.2f\n", angle_old);
+		while (angle_diff > M_PI) {
+			angle_diff -= 2 * M_PI;
+		}
+		while (angle_diff < -M_PI) {
+			angle_diff += 2 * M_PI;
+		}
+		//		angle_diff = abs(angle_diff);
+	} else {
+		trigger_vec.x = 0;
+		trigger_vec.y = 0;
+		angle_diff = 0;
+	}
+	if (angle_diff < 0) angle_diff = -angle_diff;
+	printf("Angle dif: %+.2f\n", angle_diff);
+	tel_angle_diff = angle_diff;
+	if (!vh_snapshot_trigger_from_initial) {
+		// Compare to *previous* homing vector instead of initial vector.
+		trigger_vec = trigger_vec_new;
+	}
+	return angle_diff;
 }
 
 static void draw_snapshots(struct image_t *img) {
