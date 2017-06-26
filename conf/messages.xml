@@ -1747,6 +1747,7 @@
       <field name="dt" type="float" unit="s"/>
       <field name="step_time" type="uint32" unit="us"/>
       <field name="angle_diff" type="float" unit="rad"/>
+      <field name="in_control" type="int8"/>
 	</message>
 
     <message name="ROTORCRAFT_STATUS" id="231">

@@ -133,6 +133,16 @@ void visualhoming_guidance_update_nav(void) {
 	nav_pitch = rpy.theta;
 }
 
+/**
+ * Check whether the visualhoming module is currently controlling the UAV.
+ * @return TRUE if controlling, FALSE if not.
+ */
+int visualhoming_guidance_in_control(void) {
+	return (guidance_h.mode == GUIDANCE_H_MODE_MODULE)
+			|| (guidance_h.mode == GUIDANCE_H_MODE_NAV
+					&& horizontal_mode == HORIZONTAL_MODE_ATTITUDE);
+}
+
 void guidance_h_module_init(void) {
 	// Do nothing
 }

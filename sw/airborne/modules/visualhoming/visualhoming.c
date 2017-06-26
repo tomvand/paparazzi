@@ -359,6 +359,7 @@ static void send_visualhoming(
 		struct transport_tx *trans,
 		struct link_device *dev) {
 	int8_t m = vh_mode;
+	int8_t in_control = visualhoming_guidance_in_control();
 	struct EnuCoor_f *enu = stateGetPositionEnu_f();
 	float psi = stateGetNedToBodyEulers_f()->psi;
 	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &m, &homingvector.x,
@@ -368,6 +369,7 @@ static void send_visualhoming(
 			&enu->x, &enu->y, &psi,
 			&velocity.x, &velocity.y,
 			&current_ts, &tel_dt, &step_time,
-			&tel_angle_diff);
+			&tel_angle_diff,
+			&in_control);
 }
 

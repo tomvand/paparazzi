@@ -35,6 +35,8 @@ void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy);
 void visualhoming_guidance_set_heading_error(float dpsi);
 void visualhoming_guidance_update_nav(void);
 
+int visualhoming_guidance_in_control(void);
+
 void guidance_h_module_init(void);
 void guidance_h_module_enter(void);
 void guidance_h_module_read_rc(void);
