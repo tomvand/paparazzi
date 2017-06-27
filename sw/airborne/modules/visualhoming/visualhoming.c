@@ -68,9 +68,10 @@ enum visualhoming_mode_t vh_mode_cmd = VH_MODE_NOCMD;
 static enum visualhoming_mode_t vh_mode = VH_MODE_STOP;
 
 /* Static variables */
-// Snapshot mode buffers
-static struct snapshot_t *current_warped_snapshot = NULL;
-static struct snapshot_t *target_rotated_snapshot = NULL;
+// Snapshot buffers
+static struct snapshot_t current_snapshot;
+static struct snapshot_t current_warped_snapshot;
+static struct snapshot_t target_rotated_snapshot;
 static struct homingvector_t homingvector;
 static uint32_t current_ts;
 static uint32_t previous_ts;
@@ -80,7 +81,6 @@ static struct odometry_t single_target_odometry;
 
 // Shared measurements
 static horizon_t horizon;
-static struct snapshot_t current_snapshot;
 static struct homingvector_t velocity;
 static int arrival_detected = 0;
 
@@ -184,41 +184,23 @@ void visualhoming_periodic(void) {
 				&target_rotated_snapshot);
 		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
 				velocity.x, velocity.y);
+		// Position in snapshot frame
+		struct homingvector_t vec_inverse;
+		vec_inverse.x = -homingvector.x * cos(homingvector.sigma)
+				- homingvector.y * sin(homingvector.sigma);
+		vec_inverse.y = homingvector.x * sin(homingvector.sigma)
+				- homingvector.y * cos(homingvector.sigma);
+		vec_inverse.sigma = -homingvector.sigma;
 		// Waypoint sequencing
 		if (visualhoming_guidance_in_control()) {
 			// Inbound flight, detect arrivals
-
-//			static struct homingvector_t vec_prev;
-//			if (vec_prev.x * homingvector.x + vec_prev.y * homingvector.y < 0) {
-//				// Arrival detected
-//				if (vh_map_get_index() > 0) {
-//					vh_map_pop();
-//				}
-//			}
-//			vec_prev = homingvector;
-
-//			float remaining;
-//			remaining = sqrt(
-//					homingvector.x * homingvector.x
-//							+ homingvector.y * homingvector.y);
-//			printf("Remaining: %+.2f\n", remaining);
-//			if (remaining < vh_snapshot_arrival_threshold) {
-//				// Arrival detected
-//				if (vh_map_get_index() > 0) {
-//					vh_map_pop();
-//				} else {
-//					// Final waypoint reached
-////					arrival_detected = 1;
-//				}
-//			}
-
 			static struct homingvector_t vec_prev;
 			if (vec_prev.x == 0 && vec_prev.y == 0) {
 				// Set initial homing vector
-				vec_prev = homingvector;
+				vec_prev = vec_inverse;
 			}
 			// Check for reverse direction of homing vector
-			if (homingvector.x * vec_prev.x + homingvector.y * vec_prev.y < 0) {
+			if (vec_inverse.x * vec_prev.x + vec_inverse.y * vec_prev.y < 0) {
 				// Arrival detected
 				if (vh_map_get_index() > 0) {
 					vh_map_pop();
@@ -229,7 +211,7 @@ void visualhoming_periodic(void) {
 
 		} else {
 			// Outbound flight, detect edge of catchment area
-			float diff = homingvector_difference(homingvector);
+			float diff = homingvector_difference(vec_inverse);
 			if (diff > vh_snapshot_trigger_threshold) {
 				// Reached edge of catchment area
 				vh_map_push(&current_snapshot);
@@ -361,32 +343,28 @@ static void draw_snapshots(struct image_t *img) {
 		}
 	}
 	if (vh_mode == VH_MODE_SNAPSHOT) {
-		// Draw warped current snapshot
-		if (current_warped_snapshot != NULL) {
-			vh_snapshot_to_horizon(current_warped_snapshot, hor);
+		const struct snapshot_t *target_snapshot;
+		target_snapshot = vh_map_peek();
+		if (target_snapshot) {
+			// Draw target snapshot
+			vh_snapshot_to_horizon(target_snapshot, hor);
+			for (int y = img->h / 5 * 4; y < img->h / 5 * 5; y++) {
+				for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
+					PIXEL_UV(img, x, y) = 127;
+					PIXEL_Y(img, x, y) = hor[x];
+				}
+			}
+			// Draw warped current snapshot
+			vh_snapshot_to_horizon(&current_warped_snapshot, hor);
 			for (int y = img->h / 5 * 2; y < img->h / 5 * 3; y++) {
 				for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
 					PIXEL_UV(img, x, y) = 127;
 					PIXEL_Y(img, x, y) = hor[x];
 				}
 			}
-		}
-		// Draw rotated target snapshot
-		if (target_rotated_snapshot != NULL) {
-			vh_snapshot_to_horizon(target_rotated_snapshot, hor);
+			// Draw rotated target snapshot
+			vh_snapshot_to_horizon(&target_rotated_snapshot, hor);
 			for (int y = img->h / 5 * 3; y < img->h / 5 * 4; y++) {
-				for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
-					PIXEL_UV(img, x, y) = 127;
-					PIXEL_Y(img, x, y) = hor[x];
-				}
-			}
-		}
-		// Draw target snapshot
-		const struct snapshot_t *target_snapshot;
-		target_snapshot = vh_map_peek();
-		if (target_snapshot) {
-			vh_snapshot_to_horizon(target_snapshot, hor);
-			for (int y = img->h / 5 * 4; y < img->h / 5 * 5; y++) {
 				for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
 					PIXEL_UV(img, x, y) = 127;
 					PIXEL_Y(img, x, y) = hor[x];

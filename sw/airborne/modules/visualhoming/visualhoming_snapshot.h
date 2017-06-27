@@ -50,7 +50,7 @@ void vh_snapshot_copy(struct snapshot_t *dst, const struct snapshot_t *src);
 struct homingvector_t vh_snapshot_homingvector(
 		const struct snapshot_t * current,
 		const struct snapshot_t * target,
-		struct snapshot_t **c_warped,
-		struct snapshot_t **t_rotated);
+		struct snapshot_t *c_warped,
+		struct snapshot_t *t_rotated);
 
 #endif

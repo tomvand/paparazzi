@@ -190,8 +190,8 @@ void vh_snapshot_copy(struct snapshot_t *dst, const struct snapshot_t *src) {
 struct homingvector_t vh_snapshot_homingvector(
 		const struct snapshot_t * current,
 		const struct snapshot_t * target,
-		struct snapshot_t **c_warped,
-		struct snapshot_t **t_rotated) {
+		struct snapshot_t *c_warped,
+		struct snapshot_t *t_rotated) {
 	// Temporary snapshot buffers
 	static struct snapshot_t target_rotated;
 	static struct snapshot_t current_warped;
@@ -222,10 +222,10 @@ struct homingvector_t vh_snapshot_homingvector(
 
 	// Output temporary snapshots if requested
 	if (c_warped != NULL) {
-		*c_warped = &current_warped;
+		vh_snapshot_copy(c_warped, &current_warped);
 	}
 	if (t_rotated != NULL) {
-		*t_rotated = &target_rotated;
+		vh_snapshot_copy(t_rotated, &target_rotated);
 	}
 
 	return vec;
