@@ -25,7 +25,7 @@
 
 // Configuration
 #ifndef VISUALHOMING_SNAPSHOT_K
-#define VISUALHOMING_SNAPSHOT_K 10
+#define VISUALHOMING_SNAPSHOT_K 8
 #endif
 
 struct snapshot_t {

@@ -187,14 +187,16 @@ void visualhoming_periodic(void) {
 		// Waypoint sequencing
 		if (visualhoming_guidance_in_control()) {
 			// Inbound flight, detect arrivals
-			static struct homingvector_t vec_prev;
-			if (vec_prev.x * homingvector.x + vec_prev.y * homingvector.y < 0) {
-				// Arrival detected
-				if (vh_map_get_index() > 0) {
-					vh_map_pop();
-				}
-			}
-			vec_prev = homingvector;
+
+//			static struct homingvector_t vec_prev;
+//			if (vec_prev.x * homingvector.x + vec_prev.y * homingvector.y < 0) {
+//				// Arrival detected
+//				if (vh_map_get_index() > 0) {
+//					vh_map_pop();
+//				}
+//			}
+//			vec_prev = homingvector;
+
 //			float remaining;
 //			remaining = sqrt(
 //					homingvector.x * homingvector.x
@@ -209,6 +211,22 @@ void visualhoming_periodic(void) {
 ////					arrival_detected = 1;
 //				}
 //			}
+
+			static struct homingvector_t vec_prev;
+			if (vec_prev.x == 0 && vec_prev.y == 0) {
+				// Set initial homing vector
+				vec_prev = homingvector;
+			}
+			// Check for reverse direction of homing vector
+			if (homingvector.x * vec_prev.x + homingvector.y * vec_prev.y < 0) {
+				// Arrival detected
+				if (vh_map_get_index() > 0) {
+					vh_map_pop();
+				}
+				vec_prev.x = 0;
+				vec_prev.y = 0;
+			}
+
 		} else {
 			// Outbound flight, detect edge of catchment area
 			float diff = homingvector_difference(homingvector);
