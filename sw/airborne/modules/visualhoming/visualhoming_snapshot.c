@@ -248,6 +248,14 @@ static float relative_orientation(
 		if ((w + w_k) == 0) {
 			printf("Error: w+w_k = 0!\n");
 		}
+		if (magn_c == 0) {
+			printf("Error: magn_c = 0!\n");
+			printf("phase_c = %+.2f\n", phase_c);
+		}
+		if (magn_t == 0) {
+			printf("Error: magn_t = 0!\n");
+			printf("phase_t = %+.2f\n", phase_t);
+		}
 
 		sigma = (w * sigma + w_k * sigma_k) / (w + w_k);
 		w = w + w_k;
