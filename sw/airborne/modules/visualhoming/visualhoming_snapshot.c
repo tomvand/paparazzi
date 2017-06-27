@@ -23,6 +23,7 @@
 #include "ext/pffft/pffft.h"
 
 #include "math/pprz_algebra_float.h"
+#include "state.h"
 
 #include <stdio.h>
 
@@ -31,6 +32,10 @@
 // Configuration
 #ifndef VISUALHOMING_SNAPSHOT_N_IT
 #define VISUALHOMING_SNAPSHOT_N_IT 1 /**< Number of iterations for homing vector estimation */
+#endif
+
+#ifndef VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT
+#define VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT 1.0
 #endif
 
 // Macros for 1-based indexing of Fourier coefficients
@@ -145,6 +150,17 @@ void vh_snapshot_from_horizon(struct snapshot_t *ss, const horizon_t hor) {
 		SS_BK(ss, k) = -bk;
 //		printf("K=%2d: %+3d %+3d\n", k, SS_AK(ss, k), SS_BK(ss, k));
 	}
+	// Store estimated heading in snapshot coordinate frame
+	// (i.e. counterclockwise positive)
+	struct FloatEulers *eul = stateGetNedToBodyEulers_f();
+	float heading = -eul->psi;
+	while (heading > M_PI) {
+		heading -= 2 * M_PI;
+	}
+	while (heading < -M_PI) {
+		heading += 2 * M_PI;
+	}
+	ss->heading = heading / M_PI * INT8_MAX;
 }
 
 void vh_snapshot_to_horizon(const struct snapshot_t *ss, horizon_t hor) {
@@ -223,6 +239,18 @@ static float relative_orientation(
 	// Fourier transformed panoramic images." section 2.4.
 	float sigma = 0.0;
 	float w = 0.0;
+
+	// Use magnetometer for an initial guess
+	// Should fix divide-by-zero problems when w_k << 1
+	sigma = (target->heading - current->heading) / INT8_MAX * M_PI;
+	while (sigma > M_PI) {
+		sigma -= 2 * M_PI;
+	}
+	while (sigma < -M_PI) {
+		sigma += 2 * M_PI;
+	}
+	w = VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT;
+
 	for (int k = 1; k <= VISUALHOMING_SNAPSHOT_K; k++) {
 		float ac, bc, at, bt;
 		float magn_c, phase_c;
@@ -268,12 +296,22 @@ static void snapshot_rotate(
 		const struct snapshot_t* ss,
 		struct snapshot_t * ss_rotated,
 		float angle) {
+	// Rotate snapshot
 	for (int k = 1; k <= VISUALHOMING_SNAPSHOT_K; k++) {
 		SS_AK(ss_rotated, k) = SS_AK(ss, k) * cos(k * angle)
 				+ SS_BK(ss, k) * sin(k * angle);
 		SS_BK(ss_rotated, k) = SS_BK(ss, k) * cos(k * angle)
 				- SS_AK(ss, k) * sin(k * angle);
 	}
+	// Rotate estimated heading
+	float new_heading = ss->heading / INT8_MAX * M_PI + angle;
+	while (new_heading > M_PI) {
+		new_heading -= 2 * M_PI;
+	}
+	while (new_heading < M_PI) {
+		new_heading += 2 * M_PI;
+	}
+	ss_rotated->heading = new_heading / M_PI * INT8_MAX;
 }
 
 static struct FloatVect3 relative_pose(

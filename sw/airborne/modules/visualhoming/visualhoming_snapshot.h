@@ -31,6 +31,7 @@
 struct snapshot_t {
 	int8_t ak[VISUALHOMING_SNAPSHOT_K];
 	int8_t bk[VISUALHOMING_SNAPSHOT_K];
+	int8_t heading; // Heading as estimated by magnetometer
 };
 
 struct homingvector_t {
