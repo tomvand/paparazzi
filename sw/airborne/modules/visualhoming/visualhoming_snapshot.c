@@ -236,14 +236,18 @@ static float relative_orientation(
 		at = SS_AK(target, k);
 		bt = SS_BK(target, k);
 
-		magn_c = sqrtf(ac * ac + bc * bc);
-		phase_c = atan2f(bc, ac);
-		magn_t = sqrtf(at * at + bt * bt);
-		phase_t = atan2f(bt, at);
+		magn_c = sqrt(ac * ac + bc * bc);
+		phase_c = atan2(bc, ac);
+		magn_t = sqrt(at * at + bt * bt);
+		phase_t = atan2(bt, at);
 
-		nk = roundf((phase_t - phase_c + k * sigma) / (2 * M_PI));
+		nk = round((phase_t - phase_c + k * sigma) / (2 * M_PI));
 		sigma_k = (phase_c - phase_t + 2 * M_PI * nk) / k;
 		w_k = magn_c * magn_t * k * k;
+
+		if ((w + w_k) == 0) {
+			printf("Error: w+w_k = 0!\n");
+		}
 
 		sigma = (w * sigma + w_k * sigma_k) / (w + w_k);
 		w = w + w_k;

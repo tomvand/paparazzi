@@ -1,0 +1,24 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+  <model name='AE_test'>
+    <link name='link_0'>
+      <visual name='visual'>
+        <geometry>
+          <mesh>
+            <uri>/home/tom/Dropbox/AFSTUDEREN/Environments/AEv2/AE.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <cast_shadows>0</cast_shadows>
+      </visual>
+      <collision name='collision'>
+        <geometry>
+          <mesh>
+            <uri>/home/tom/Dropbox/AFSTUDEREN/Environments/AEv2/AE.dae</uri>
+          </mesh>
+        </geometry>
+      </collision>
+    </link>
+    <static>1</static>
+  </model>
+</sdf>

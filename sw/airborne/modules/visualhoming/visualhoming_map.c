@@ -56,7 +56,7 @@ int vh_map_push(const struct snapshot_t *ss) {
 }
 
 const struct snapshot_t *vh_map_peek(void) {
-	if (current_waypoint > 0) {
+	if (current_waypoint >= 0) {
 		return &vh_waypoints[current_waypoint];
 	} else {
 		return NULL;

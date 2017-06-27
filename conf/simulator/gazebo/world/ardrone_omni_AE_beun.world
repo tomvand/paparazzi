@@ -42,7 +42,8 @@
 			<pose>0 0 -0.1 0 0 0</pose>
 		</include>
 		<include>
-			<uri>model://cafe</uri>
+			<uri>model://AE_test</uri>
+			<pose>-9 -22 0 0 0 0</pose>
 		</include>
 		<include>
 			<uri>model://ardrone_omni</uri>

@@ -38,17 +38,17 @@
 float vh_odometry_arrival_threshold = VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD;
 
 #ifndef VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD
-#define VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD 0.0
+#define VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD 0.01
 #endif
 float vh_snapshot_arrival_threshold = VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD;
 
 #ifndef VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD
-#define VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD 0.05
+#define VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD 0.01
 #endif
 float vh_snapshot_initial_threshold = VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD;
 
 #ifndef VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD
-#define VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD 0.5
+#define VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD 0.2
 #endif
 float vh_snapshot_trigger_threshold = VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD;
 
@@ -69,7 +69,6 @@ static enum visualhoming_mode_t vh_mode = VH_MODE_STOP;
 
 /* Static variables */
 // Snapshot mode buffers
-static struct snapshot_t single_target_snapshot;
 static struct snapshot_t *current_warped_snapshot = NULL;
 static struct snapshot_t *target_rotated_snapshot = NULL;
 static struct homingvector_t homingvector;
@@ -84,9 +83,6 @@ static horizon_t horizon;
 static struct snapshot_t current_snapshot;
 static struct homingvector_t velocity;
 static int arrival_detected = 0;
-
-// Trigger variables
-static struct homingvector_t trigger_vec;
 
 // Miscellaneous telemetry data
 static uint32_t step_time;
@@ -147,14 +143,15 @@ void visualhoming_periodic(void) {
 	if (vh_mode_cmd != VH_MODE_NOCMD) {
 		switch (vh_mode_cmd) {
 		case VH_MODE_STOP:
+			vh_map_clear();
 			vh_mode = VH_MODE_STOP;
 			break;
 		case VH_MODE_SNAPSHOT:
-			vh_snapshot_copy(&single_target_snapshot, &current_snapshot);
+			vh_map_clear();
+			vh_map_push(&current_snapshot);
 			vh_mode = VH_MODE_SNAPSHOT;
 			break;
 		case VH_MODE_ODOMETRY:
-			vh_snapshot_copy(&single_target_snapshot, &current_snapshot); // Return after odometry is completed!
 			vh_odometry_reset(&single_target_odometry, &current_snapshot);
 			vh_mode = VH_MODE_ODOMETRY;
 			break;
@@ -165,57 +162,73 @@ void visualhoming_periodic(void) {
 		vh_mode_cmd = VH_MODE_NOCMD;
 	}
 
-	// TODO move to correct place
-	// Detect snapshot trigger
-	if (vh_mode != VH_MODE_STOP) {
-		float diff = homingvector_difference();
-		if (diff > 0.5) {
-			// XXX Store current snapshot in map
-			vh_map_push(&current_snapshot);
-		}
+	// Update guidance
+	const struct snapshot_t *target_snapshot;
+	target_snapshot = vh_map_peek();
+	if (vh_mode == VH_MODE_SNAPSHOT && !target_snapshot) {
+		vh_mode = VH_MODE_STOP;
 	}
 
-	// Update guidance
-	arrival_detected = 0;
-	struct homingvector_t vec;
-	static int odometry_was_large = 0;
+	arrival_detected = 0; // Signal to NAV routine to continue flightplan
+
 	switch (vh_mode) {
 	case VH_MODE_STOP:
+		// Maintain zero velocity
 		visualhoming_guidance_set_PD(0, 0, velocity.x, velocity.y);
 		break;
+
 	case VH_MODE_SNAPSHOT:
-		vec = vh_snapshot_homingvector(&current_snapshot,
-				&single_target_snapshot,
-				&current_warped_snapshot,
+		// Home towards current snapshot
+		homingvector = vh_snapshot_homingvector(&current_snapshot,
+				target_snapshot, &current_warped_snapshot,
 				&target_rotated_snapshot);
-		vec.x *= vh_environment_radius;
-		vec.y *= -vh_environment_radius;
-		homingvector = vec; // Output telemetry data
-		visualhoming_guidance_set_PD(vec.x, vec.y, velocity.x, velocity.y);
-		if (sqrt(vec.x * vec.x + vec.y * vec.y) < vh_snapshot_arrival_threshold) {
-			arrival_detected = 1;
+		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
+				velocity.x, velocity.y);
+		// Waypoint sequencing
+		if (visualhoming_guidance_in_control()) {
+			// Inbound flight, detect arrivals
+			float remaining;
+			remaining = sqrt(
+					homingvector.x * homingvector.x
+							+ homingvector.y * homingvector.y);
+			printf("Remaining: %+.2f\n", remaining);
+			if (remaining < vh_snapshot_arrival_threshold) {
+				// Arrival detected
+				if (vh_map_get_index() > 0) {
+					vh_map_pop();
+				} else {
+					// Final waypoint reached
+//					arrival_detected = 1;
+				}
+			}
+		} else {
+			// Outbound flight, detect edge of catchment area
+			float diff;
+			diff = homingvector_difference();
+			if (diff > vh_snapshot_trigger_threshold) {
+				// Reached edge of catchment area
+				vh_map_push(&current_snapshot);
+			}
 		}
 		break;
+
 	case VH_MODE_ODOMETRY:
+		// Follow odometric vector
 		vh_odometry_update(&single_target_odometry, &current_snapshot);
 		visualhoming_guidance_set_PD(single_target_odometry.x,
-				-single_target_odometry.y, velocity.x, velocity.y); // TODO check sign...
-//		printf("[VISUALHOMING] Odometry x = %+.1f, y = %+.1f\n",
-//				single_target_odometry.x, single_target_odometry.y);
-		float odo_distance = sqrt(
-				single_target_odometry.x * single_target_odometry.x
-						+ single_target_odometry.y * single_target_odometry.y);
-		if (odo_distance > 1.2 * vh_odometry_arrival_threshold) {
-			odometry_was_large = 1;
-		}
-		if (odo_distance < vh_odometry_arrival_threshold
-				&& odometry_was_large) {
-			// Only trigger when odometric distance decreases below threshold
-			// after it has been above it.
-			odometry_was_large = 0;
-			vh_mode = VH_MODE_SNAPSHOT;
+				-single_target_odometry.y, velocity.x, velocity.y);
+		// Detect arrival
+		if (visualhoming_guidance_in_control()) {
+			float odo_distance = sqrt(
+					single_target_odometry.x * single_target_odometry.x
+							+ single_target_odometry.y
+									* single_target_odometry.y);
+			if (odo_distance < vh_odometry_arrival_threshold) {
+				arrival_detected = 1;
+			}
 		}
 		break;
+
 	default:
 		printf("[VISUALHOMING] Invalid mode: %d!\n", vh_mode);
 		break;
@@ -267,9 +280,25 @@ static struct homingvector_t estimate_velocity(
 }
 
 static float homingvector_difference(void) {
+	static const struct snapshot_t *target_snapshot;
+	static struct homingvector_t trigger_vec;
+
+	const struct snapshot_t *new_target_snapshot;
+	new_target_snapshot = vh_map_peek();
+	if (new_target_snapshot != target_snapshot) {
+		// New reference snapshot, reset detection
+		trigger_vec.x = 0;
+		trigger_vec.y = 0;
+	}
+	target_snapshot = new_target_snapshot;
+	if (!target_snapshot) {
+		return 0;
+	}
+
 	struct homingvector_t trigger_vec_new = vh_snapshot_homingvector(
-			&single_target_snapshot, &current_snapshot, NULL, NULL);
+			target_snapshot, &current_snapshot, NULL, NULL);
 	float angle_diff;
+
 	if (sqrt(trigger_vec_new.x * trigger_vec_new.x
 			+ trigger_vec_new.y * trigger_vec_new.y) > 0.05) {
 		if (trigger_vec.x == 0 && trigger_vec.y == 0) {
@@ -278,21 +307,20 @@ static float homingvector_difference(void) {
 		float angle_new = atan2(trigger_vec_new.y, trigger_vec_new.x);
 		float angle_old = atan2(trigger_vec.y, trigger_vec.x);
 		angle_diff = angle_new - angle_old;
-		printf("Angle new: %+.2f\n", angle_new);
-		printf("Angle old: %+.2f\n", angle_old);
+//		printf("Angle new: %+.2f\n", angle_new);
+//		printf("Angle old: %+.2f\n", angle_old);
 		while (angle_diff > M_PI) {
 			angle_diff -= 2 * M_PI;
 		}
 		while (angle_diff < -M_PI) {
 			angle_diff += 2 * M_PI;
 		}
-		//		angle_diff = abs(angle_diff);
+		if (angle_diff < 0) angle_diff = -angle_diff;
 	} else {
 		trigger_vec.x = 0;
 		trigger_vec.y = 0;
 		angle_diff = 0;
 	}
-	if (angle_diff < 0) angle_diff = -angle_diff;
 //	printf("Angle dif: %+.2f\n", angle_diff);
 	tel_angle_diff = angle_diff;
 	if (!vh_snapshot_trigger_from_initial) {
@@ -345,11 +373,15 @@ static void draw_snapshots(struct image_t *img) {
 			}
 		}
 		// Draw target snapshot
-		vh_snapshot_to_horizon(&single_target_snapshot, hor);
-		for (int y = img->h / 5 * 4; y < img->h / 5 * 5; y++) {
-			for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
-				PIXEL_UV(img, x, y) = 127;
-				PIXEL_Y(img, x, y) = hor[x];
+		const struct snapshot_t *target_snapshot;
+		target_snapshot = vh_map_peek();
+		if (target_snapshot) {
+			vh_snapshot_to_horizon(target_snapshot, hor);
+			for (int y = img->h / 5 * 4; y < img->h / 5 * 5; y++) {
+				for (int x = 0; x < VISUALHOMING_HORIZON_RESOLUTION; x++) {
+					PIXEL_UV(img, x, y) = 127;
+					PIXEL_Y(img, x, y) = hor[x];
+				}
 			}
 		}
 	}
