@@ -108,7 +108,7 @@ bool NavVisualHoming(void) {
 /* Static functions */
 static struct homingvector_t estimate_velocity(
 		const struct snapshot_t *new_ss);
-static float homingvector_difference(void);
+static float homingvector_difference(struct homingvector_t vec);
 static void draw_snapshots(struct image_t *img);
 static void send_visualhoming(
 		struct transport_tx *trans,
@@ -187,24 +187,31 @@ void visualhoming_periodic(void) {
 		// Waypoint sequencing
 		if (visualhoming_guidance_in_control()) {
 			// Inbound flight, detect arrivals
-			float remaining;
-			remaining = sqrt(
-					homingvector.x * homingvector.x
-							+ homingvector.y * homingvector.y);
-			printf("Remaining: %+.2f\n", remaining);
-			if (remaining < vh_snapshot_arrival_threshold) {
+			static struct homingvector_t vec_prev;
+			if (vec_prev.x * homingvector.x + vec_prev.y * homingvector.y < 0) {
 				// Arrival detected
 				if (vh_map_get_index() > 0) {
 					vh_map_pop();
-				} else {
-					// Final waypoint reached
-//					arrival_detected = 1;
 				}
 			}
+			vec_prev = homingvector;
+//			float remaining;
+//			remaining = sqrt(
+//					homingvector.x * homingvector.x
+//							+ homingvector.y * homingvector.y);
+//			printf("Remaining: %+.2f\n", remaining);
+//			if (remaining < vh_snapshot_arrival_threshold) {
+//				// Arrival detected
+//				if (vh_map_get_index() > 0) {
+//					vh_map_pop();
+//				} else {
+//					// Final waypoint reached
+////					arrival_detected = 1;
+//				}
+//			}
 		} else {
 			// Outbound flight, detect edge of catchment area
-			float diff;
-			diff = homingvector_difference();
+			float diff = homingvector_difference(homingvector);
 			if (diff > vh_snapshot_trigger_threshold) {
 				// Reached edge of catchment area
 				vh_map_push(&current_snapshot);
@@ -279,24 +286,8 @@ static struct homingvector_t estimate_velocity(
 	return velocity;
 }
 
-static float homingvector_difference(void) {
-	static const struct snapshot_t *target_snapshot;
+static float homingvector_difference(struct homingvector_t trigger_vec_new) {
 	static struct homingvector_t trigger_vec;
-
-	const struct snapshot_t *new_target_snapshot;
-	new_target_snapshot = vh_map_peek();
-	if (new_target_snapshot != target_snapshot) {
-		// New reference snapshot, reset detection
-		trigger_vec.x = 0;
-		trigger_vec.y = 0;
-	}
-	target_snapshot = new_target_snapshot;
-	if (!target_snapshot) {
-		return 0;
-	}
-
-	struct homingvector_t trigger_vec_new = vh_snapshot_homingvector(
-			target_snapshot, &current_snapshot, NULL, NULL);
 	float angle_diff;
 
 	if (sqrt(trigger_vec_new.x * trigger_vec_new.x
