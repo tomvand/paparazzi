@@ -48,7 +48,7 @@ float vh_snapshot_arrival_threshold = VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD;
 float vh_snapshot_initial_threshold = VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD;
 
 #ifndef VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD
-#define VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD 0.2
+#define VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD 0.1
 #endif
 float vh_snapshot_trigger_threshold = VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD;
 
@@ -183,8 +183,10 @@ void visualhoming_periodic(void) {
 		homingvector = vh_snapshot_homingvector(&current_snapshot,
 				target_snapshot, &current_warped_snapshot,
 				&target_rotated_snapshot);
-		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
-				velocity.x, velocity.y);
+//		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
+//				velocity.x, velocity.y);
+		visualhoming_guidance_set_constant_pitch(homingvector.x,
+				-homingvector.y);
 		// Position in snapshot frame
 		struct homingvector_t vec_inverse;
 		vec_inverse.x = -homingvector.x * cos(homingvector.sigma)

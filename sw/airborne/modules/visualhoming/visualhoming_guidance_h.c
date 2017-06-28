@@ -41,6 +41,9 @@
 #ifndef VISUALHOMING_GUIDANCE_MAX_BANK
 #define VISUALHOMING_GUIDANCE_MAX_BANK 0.18 // rad
 #endif
+#ifndef VISUALHOMING_CONSTANT_PITCH
+#define VISUALHOMING_CONSTANT_PITCH 0.05 // rad
+#endif
 
 struct vh_guidance_tuning_t vh_guidance_tuning = {
 		.Kp = VISUALHOMING_GUIDANCE_P,
@@ -104,6 +107,22 @@ void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
 	BoundAbs(vh_cmd.cmd_phi, VISUALHOMING_GUIDANCE_MAX_BANK);
 	// Final bound
 	BoundAbs(vh_cmd.cmd_theta, VISUALHOMING_GUIDANCE_MAX_BANK);
+}
+
+/**
+ * Move with constant pitch/roll along the homing vector
+ * @param dx
+ * @param dy
+ */
+void visualhoming_guidance_set_constant_pitch(float dx, float dy) {
+	float magn = sqrt(dx * dx + dy * dy);
+	if (magn != 0) {
+	vh_cmd.cmd_theta = -dx / magn * VISUALHOMING_CONSTANT_PITCH;
+		vh_cmd.cmd_phi = dy / magn * VISUALHOMING_CONSTANT_PITCH;
+	} else {
+		vh_cmd.cmd_theta = 0;
+		vh_cmd.cmd_phi = 0;
+	}
 }
 
 void visualhoming_guidance_set_heading_error(float dpsi __attribute__((unused))) {
