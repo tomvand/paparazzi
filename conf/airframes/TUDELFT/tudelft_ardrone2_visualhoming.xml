@@ -12,7 +12,6 @@
       <define name="VISUALHOMING_CENTER_Y" value="0.47"/>
       <define name="VISUALHOMING_RADIUS_TOP" value="0.25"/>
       <define name="VISUALHOMING_RADIUS_BOTTOM" value="0.27"/>
-      
     </target>
 
     <target name="nps" board="pc">
@@ -20,6 +19,8 @@
       <define name="USE_SONAR" value="TRUE"/>
       <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_NAV"/>
     </target>
+
+    <define name="ARRIVED_AT_WAYPOINT" value="0.2"/>
 
     <!--  Optitrack -->
     <configure name="USE_MAGNETOMETER" value="0"/>
