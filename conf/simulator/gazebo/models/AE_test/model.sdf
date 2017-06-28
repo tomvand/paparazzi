@@ -5,7 +5,7 @@
       <visual name='visual'>
         <geometry>
           <mesh>
-            <uri>/home/tom/Dropbox/AFSTUDEREN/Environments/AEv2/AE.dae</uri>
+            <uri>model://AE_test/AE_v2.dae</uri>
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
@@ -14,7 +14,7 @@
       <collision name='collision'>
         <geometry>
           <mesh>
-            <uri>/home/tom/Dropbox/AFSTUDEREN/Environments/AEv2/AE.dae</uri>
+            <uri>model://AE_test/AE_v2.dae</uri>
           </mesh>
         </geometry>
       </collision>

@@ -60,7 +60,6 @@
       <while cond="!VisualHomingCompleted()"/>
     </block>
     <block name="NAV Return to goal">
-      <go wp="GOAL"/>
       <call_once fun="ModuleToNav()"/>
       <deroute block="Stay at goal"/>
     </block>
