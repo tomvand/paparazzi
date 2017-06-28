@@ -48,7 +48,7 @@ extern enum visualhoming_mode_t vh_mode_cmd;
 /* Navigation functions for flightplan */
 bool VisualHomingTakeSnapshot(void);
 bool VisualHomingRecordOdometry(void);
-bool NavVisualHoming(void);
+bool VisualHomingCompleted(void);
 
 /* Module functions */
 void visualhoming_init(void);

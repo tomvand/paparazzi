@@ -100,9 +100,10 @@ bool VisualHomingRecordOdometry(void) {
 	return FALSE; // Return immediately
 }
 
-bool NavVisualHoming(void) {
-	visualhoming_guidance_update_nav();
-	return !arrival_detected;
+
+
+bool VisualHomingCompleted(void) {
+	return arrival_detected;
 }
 
 /* Static functions */

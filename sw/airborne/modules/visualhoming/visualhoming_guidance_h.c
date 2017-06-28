@@ -22,6 +22,7 @@
 
 #include "firmwares/rotorcraft/navigation.h"
 #include "firmwares/rotorcraft/guidance/guidance_h.h"
+#include "firmwares/rotorcraft/autopilot_static.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude.h"
 #include "mcu_periph/sys_time.h"
 
@@ -116,21 +117,25 @@ void visualhoming_guidance_set_heading_error(float dpsi __attribute__((unused)))
 }
 
 /**
- * Write attitude setpoints in NAV mode.
+ * Switch to MODULE mode and update AUTO2 accordingly.
+ * @return
  */
-void visualhoming_guidance_update_nav(void) {
-	struct Int32Eulers rpy = {
-			.theta = ANGLE_BFP_OF_REAL(vh_cmd.cmd_theta),
-			.phi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_phi),
-			.psi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_psi) };
-	if (horizontal_mode != HORIZONTAL_MODE_ATTITUDE) {
-		horizontal_mode = HORIZONTAL_MODE_ATTITUDE;
-		// Reset stabilization
-		guidance_h_nav_enter();
-		stabilization_attitude_enter();
-	}
-	nav_roll = rpy.phi;
-	nav_pitch = rpy.theta;
+bool NavToModule(void) {
+	printf("Autopilot to MODULE mode\n");
+	autopilot_mode_auto2 = AP_MODE_MODULE;
+	autopilot_set_mode(AP_MODE_MODULE);
+	return FALSE; // Return immediately
+}
+
+/**
+ * Switch to NAV mode and update AUTO2 accordingly.
+ * @return
+ */
+bool ModuleToNav(void) {
+	printf("Autopilot to NAV mode\n");
+	autopilot_mode_auto2 = AP_MODE_NAV;
+	autopilot_set_mode(AP_MODE_NAV);
+	return FALSE; // Return immediately
 }
 
 /**

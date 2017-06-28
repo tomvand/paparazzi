@@ -55,8 +55,14 @@
     <block name="Stay at standby">
       <stay wp="STDBY"/>
     </block>
-    <block name="Home towards snapshot">
-      <call fun="NavVisualHoming()"/>
+    <block name="MODULE Home towards snapshot">
+      <call_once fun="NavToModule()"/>
+      <while cond="!VisualHomingCompleted()"/>
+    </block>
+    <block name="NAV Return to goal">
+      <go wp="GOAL"/>
+      <call_once fun="ModuleToNav()"/>
+      <deroute block="Stay at goal"/>
     </block>
   </blocks>
 </flight_plan>
