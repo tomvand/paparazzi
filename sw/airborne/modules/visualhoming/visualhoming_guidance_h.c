@@ -32,14 +32,17 @@
 #ifndef VISUALHOMING_GUIDANCE_P
 #define VISUALHOMING_GUIDANCE_P 1.00
 #endif
-#ifndef VISUALHOMING_GUIDANCE_D
-#define VISUALHOMING_GUIDANCE_D 0.10
+#ifndef VISUALHOMING_GUIDANCE_TD
+#define VISUALHOMING_GUIDANCE_TD 0.10
 #endif
 #ifndef VISUALHOMING_GUIDANCE_FILTER_GAIN
 #define VISUALHOMING_GUIDANCE_FILTER_GAIN 1.00
 #endif
 #ifndef VISUALHOMING_GUIDANCE_MAX_BANK
 #define VISUALHOMING_GUIDANCE_MAX_BANK 0.18 // rad
+#endif
+#ifndef VISUALHOMING_VECTOR_SATURATE
+#define VISUALHOMING_VECTOR_SATURATE 0.10
 #endif
 #ifndef VISUALHOMING_CONSTANT_PITCH
 #define VISUALHOMING_CONSTANT_PITCH 0.10 // rad
@@ -50,7 +53,7 @@
 
 struct vh_guidance_tuning_t vh_guidance_tuning = {
 		.Kp = VISUALHOMING_GUIDANCE_P,
-		.Kd = VISUALHOMING_GUIDANCE_D,
+		.Td = VISUALHOMING_GUIDANCE_TD,
 		.Kf = VISUALHOMING_GUIDANCE_FILTER_GAIN };
 
 static struct vh_guidance_cmd_t {
@@ -99,18 +102,25 @@ void visualhoming_guidance_set_pos_error(float dx, float dy) {
  * @param vy Current velocity [m/s]
  */
 void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
-	// FIXME Do not individually saturate roll and pitch! Leads to 45 degree trajectories!
-	// Bounded P action
-	vh_cmd.cmd_theta = -vh_guidance_tuning.Kp * dx;
-	vh_cmd.cmd_phi = vh_guidance_tuning.Kp * dy;
-	BoundAbs(vh_cmd.cmd_phi, VISUALHOMING_GUIDANCE_MAX_BANK);
-	BoundAbs(vh_cmd.cmd_theta, VISUALHOMING_GUIDANCE_MAX_BANK);
-	// D action
-	vh_cmd.cmd_theta += vh_guidance_tuning.Kd * vx;
-	vh_cmd.cmd_phi += -vh_guidance_tuning.Kd * vy;
-	BoundAbs(vh_cmd.cmd_phi, VISUALHOMING_GUIDANCE_MAX_BANK);
-	// Final bound
-	BoundAbs(vh_cmd.cmd_theta, VISUALHOMING_GUIDANCE_MAX_BANK);
+	// Saturate homing vector
+	float magn = sqrt(dx * dx + dy * dy);
+	if (magn > VISUALHOMING_VECTOR_SATURATE) {
+		dx = dx / magn * VISUALHOMING_VECTOR_SATURATE;
+		dy = dy / magn * VISUALHOMING_VECTOR_SATURATE;
+	}
+	// Calculate desired angles
+	float ax, ay;
+	ax = vh_guidance_tuning.Kp * (dx - vh_guidance_tuning.Td * vx);
+	ay = vh_guidance_tuning.Kp * (dy - vh_guidance_tuning.Td * vy);
+	// Saturate angles
+	magn = sqrt(ax * ax + ay * ay);
+	if (magn > VISUALHOMING_GUIDANCE_MAX_BANK) {
+		ax = ax / magn * VISUALHOMING_GUIDANCE_MAX_BANK;
+		ay = ay / magn * VISUALHOMING_GUIDANCE_MAX_BANK;
+	}
+	// Write commands
+	vh_cmd.cmd_theta = -ax;
+	vh_cmd.cmd_phi = ay;
 }
 
 /**

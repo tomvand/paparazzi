@@ -25,7 +25,7 @@
 
 struct vh_guidance_tuning_t {
 	float Kp; // P-gain [rad/m]
-	float Kd; // D-gain [rad/(m/s)]
+	float Td; // D-gain [rad/(m/s)]
 	float Kf; // Filter gain [0..1], where 1 does not use old estimates
 };
 extern struct vh_guidance_tuning_t vh_guidance_tuning;

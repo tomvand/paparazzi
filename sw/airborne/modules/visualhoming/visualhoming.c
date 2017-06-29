@@ -183,10 +183,10 @@ void visualhoming_periodic(void) {
 		homingvector = vh_snapshot_homingvector(&current_snapshot,
 				target_snapshot, &current_warped_snapshot,
 				&target_rotated_snapshot);
-//		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
-//				velocity.x, velocity.y);
-		visualhoming_guidance_set_constant_pitch(homingvector.x,
-				-homingvector.y);
+		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
+				velocity.x, velocity.y);
+//		visualhoming_guidance_set_constant_pitch(homingvector.x,
+//				-homingvector.y);
 //		visualhoming_guidance_set_heading_rate(homingvector.x, -homingvector.y,
 //				(current_ts - previous_ts) / 1e6);
 		// Position in snapshot frame
@@ -256,6 +256,7 @@ void visualhoming_periodic(void) {
 /* Static functions */
 /**
  * Estimate velocity. Should be called every run with the current snapshot.
+ * Velocity is in front,right coordinates.
  * @param new_ss
  * @return
  */

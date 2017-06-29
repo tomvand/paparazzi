@@ -29,7 +29,7 @@
       </dl_settings>
       <dl_settings name="vh_guidance">
         <dl_setting shortname="p_gain" param="VISUALHOMING_GUIDANCE_P" var="vh_guidance_tuning.Kp" min="0" step="0.01" max="5"/>
-        <dl_setting shortname="d_gain" param="VISUALHOMING_GUIDANCE_D" var="vh_guidance_tuning.Kd" min="0" step="0.01" max="1"/>
+        <dl_setting shortname="d_time" param="VISUALHOMING_GUIDANCE_TD" var="vh_guidance_tuning.Td" min="0" step="0.01" max="0.5"/>
         <dl_setting shortname="f_gain" param="VISUALHOMING_GUIDANCE_FILTER_GAIN" var="vh_guidance_tuning.Kf" min="0" step="0.01" max="1"/>
       </dl_settings>
     </dl_settings>
