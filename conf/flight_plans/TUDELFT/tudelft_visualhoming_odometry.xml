@@ -49,14 +49,17 @@
     <block name="Stay at goal">
       <stay wp="GOAL"/>
     </block>
-    <block name="Start odometry recording">
+    <block name="Record outbound trajectory">
       <call_once fun="VisualHomingRecordOdometry()"/>
-    </block>
-    <block name="Go to standby">
       <stay wp="STDBY"/>
     </block>
-    <block name="Return with odometry">
-      <call fun="NavVisualHoming()"/>
+    <block name="MODULE Return using odometry">
+      <call_once fun="NavToModule()"/>
+      <while cond="!VisualHomingCompleted()"/>
+    </block>
+    <block name="NAV Return to goal">
+      <call fun="ModuleToNav()"/>
+      <deroute block="Stay at goal"/>
     </block>
   </blocks>
 </flight_plan>
