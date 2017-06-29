@@ -42,7 +42,10 @@
 #define VISUALHOMING_GUIDANCE_MAX_BANK 0.18 // rad
 #endif
 #ifndef VISUALHOMING_CONSTANT_PITCH
-#define VISUALHOMING_CONSTANT_PITCH 0.05 // rad
+#define VISUALHOMING_CONSTANT_PITCH 0.10 // rad
+#endif
+#ifndef VISUALHOMING_GUIDANCE_HEADING_RATE
+#define VISUALHOMING_GUIDANCE_HEADING_RATE 10.0 // rad/s
 #endif
 
 struct vh_guidance_tuning_t vh_guidance_tuning = {
@@ -96,6 +99,7 @@ void visualhoming_guidance_set_pos_error(float dx, float dy) {
  * @param vy Current velocity [m/s]
  */
 void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
+	// FIXME Do not individually saturate roll and pitch! Leads to 45 degree trajectories!
 	// Bounded P action
 	vh_cmd.cmd_theta = -vh_guidance_tuning.Kp * dx;
 	vh_cmd.cmd_phi = vh_guidance_tuning.Kp * dy;
@@ -117,12 +121,22 @@ void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
 void visualhoming_guidance_set_constant_pitch(float dx, float dy) {
 	float magn = sqrt(dx * dx + dy * dy);
 	if (magn != 0) {
-	vh_cmd.cmd_theta = -dx / magn * VISUALHOMING_CONSTANT_PITCH;
+		vh_cmd.cmd_theta = -dx / magn * VISUALHOMING_CONSTANT_PITCH;
 		vh_cmd.cmd_phi = dy / magn * VISUALHOMING_CONSTANT_PITCH;
 	} else {
 		vh_cmd.cmd_theta = 0;
 		vh_cmd.cmd_phi = 0;
 	}
+}
+
+void visualhoming_guidance_set_heading_rate(float dx, float dy, float dt) {
+	float dpsi = visualhoming_guidance_point_at_homingvector(dx, dy);
+	if (dpsi > -0.5 && dpsi < 0.5) {
+		vh_cmd.cmd_theta = -VISUALHOMING_CONSTANT_PITCH;
+	} else {
+		vh_cmd.cmd_theta = 0;
+	}
+	vh_cmd.cmd_phi = 0;
 }
 
 void visualhoming_guidance_set_heading_error(float dpsi __attribute__((unused))) {
@@ -133,6 +147,18 @@ void visualhoming_guidance_set_heading_error(float dpsi __attribute__((unused)))
 //		vh_cmd.cmd_psi -= 2. * M_PI;
 //	while (vh_cmd.cmd_psi < 0)
 //		vh_cmd.cmd_psi += 2. * M_PI;
+}
+
+float visualhoming_guidance_point_at_homingvector(float dx, float dy) {
+	float dpsi = atan2(dy, dx);
+	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi + dpsi;
+	while (vh_cmd.cmd_psi > 2 * M_PI) {
+		vh_cmd.cmd_psi -= 2 * M_PI;
+	}
+	while (vh_cmd.cmd_psi < 0) {
+		vh_cmd.cmd_psi += 2 * M_PI;
+	}
+	return dpsi;
 }
 
 /**

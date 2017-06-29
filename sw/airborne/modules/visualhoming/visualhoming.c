@@ -187,6 +187,8 @@ void visualhoming_periodic(void) {
 //				velocity.x, velocity.y);
 		visualhoming_guidance_set_constant_pitch(homingvector.x,
 				-homingvector.y);
+//		visualhoming_guidance_set_heading_rate(homingvector.x, -homingvector.y,
+//				(current_ts - previous_ts) / 1e6);
 		// Position in snapshot frame
 		struct homingvector_t vec_inverse;
 		vec_inverse.x = -homingvector.x * cos(homingvector.sigma)

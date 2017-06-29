@@ -35,7 +35,7 @@
 #endif
 
 #ifndef VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT
-#define VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT 300.0
+#define VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT 10000.0
 #endif
 
 // Macros for 1-based indexing of Fourier coefficients

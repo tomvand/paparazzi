@@ -33,7 +33,9 @@ extern struct vh_guidance_tuning_t vh_guidance_tuning;
 void visualhoming_guidance_set_pos_error(float dx, float dy);
 void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy);
 void visualhoming_guidance_set_constant_pitch(float dx, float dy);
+void visualhoming_guidance_set_heading_rate(float dx, float dy, float dt);
 void visualhoming_guidance_set_heading_error(float dpsi);
+float visualhoming_guidance_point_at_homingvector(float dx, float dy);
 
 /* Mode switching functions for flightplan */
 bool NavToModule(void);
