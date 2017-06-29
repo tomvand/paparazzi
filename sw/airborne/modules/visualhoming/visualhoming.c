@@ -185,10 +185,6 @@ void visualhoming_periodic(void) {
 				&target_rotated_snapshot);
 		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
 				velocity.x, velocity.y);
-//		visualhoming_guidance_set_constant_pitch(homingvector.x,
-//				-homingvector.y);
-//		visualhoming_guidance_set_heading_rate(homingvector.x, -homingvector.y,
-//				(current_ts - previous_ts) / 1e6);
 		// Position in snapshot frame
 		struct homingvector_t vec_inverse;
 		vec_inverse.x = -homingvector.x * cos(homingvector.sigma)
@@ -199,6 +195,16 @@ void visualhoming_periodic(void) {
 		// Waypoint sequencing
 		if (visualhoming_guidance_in_control()) {
 			// Inbound flight, detect arrivals
+//			float diss = vh_snapshot_dissimilarity(&target_rotated_snapshot,
+//					&current_snapshot);
+//			printf("DIS: %+.2f\n", diss);
+//			if (diss < 300) {
+//				// Arrival detected
+//				if (vh_map_get_index() > 0) {
+//					vh_map_pop();
+//				}
+//			}
+
 			static struct homingvector_t vec_prev;
 			if (vec_prev.x == 0 && vec_prev.y == 0) {
 				// Set initial homing vector
@@ -213,7 +219,6 @@ void visualhoming_periodic(void) {
 				vec_prev.x = 0;
 				vec_prev.y = 0;
 			}
-
 		} else {
 			// Outbound flight, detect edge of catchment area
 			float diff = homingvector_difference(vec_inverse);

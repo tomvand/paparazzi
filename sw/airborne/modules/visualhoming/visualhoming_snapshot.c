@@ -231,6 +231,17 @@ struct homingvector_t vh_snapshot_homingvector(
 	return vec;
 }
 
+float vh_snapshot_dissimilarity(
+		const struct snapshot_t *ss1,
+		const struct snapshot_t *ss2) {
+	float diss = 0;
+	for (int k = 1; k <= VISUALHOMING_SNAPSHOT_K; k++) {
+		diss += pow(SS_AK(ss1,k) - SS_AK(ss2, k), 2)
+				+ pow(SS_BK(ss1,k) - SS_BK(ss2, k), 2);
+	}
+	return diss;
+}
+
 // Static functions
 static float relative_orientation(
 		const struct snapshot_t * current,

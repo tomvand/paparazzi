@@ -52,5 +52,8 @@ struct homingvector_t vh_snapshot_homingvector(
 		const struct snapshot_t * target,
 		struct snapshot_t *c_warped,
 		struct snapshot_t *t_rotated);
+float vh_snapshot_dissimilarity(
+		const struct snapshot_t *ss1,
+		const struct snapshot_t *ss2);
 
 #endif
