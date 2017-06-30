@@ -22,7 +22,9 @@
 
 #include "firmwares/rotorcraft/navigation.h"
 #include "firmwares/rotorcraft/guidance/guidance_h.h"
+#include "firmwares/rotorcraft/guidance/guidance_v.h"
 #include "firmwares/rotorcraft/autopilot_static.h"
+#include "firmwares/rotorcraft/autopilot_guided.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude.h"
 #include "mcu_periph/sys_time.h"
 
@@ -63,6 +65,17 @@ static struct vh_guidance_cmd_t {
 	float vx; // Last estimated velocity [m/s]
 	float vy; // Last estimated velocity [m/s]
 } vh_cmd;
+
+/**
+ * Set position setpoint for use in GUIDED mode.
+ * @param dx
+ * @param dy
+ */
+void visualhoming_guidance_set_pos_setpoint(float dx, float dy) {
+//	autopilot_guided_goto_body_relative(10.0 * dx, 10.0 * dy, 0, 0);
+	guidance_h_set_guided_body_vel(3.0 * dx, 3.0 * dy);
+	guidance_v_from_nav(1);
+}
 
 /**
  * Set new position error.
@@ -199,6 +212,7 @@ bool ModuleToNav(void) {
  */
 int visualhoming_guidance_in_control(void) {
 	return (guidance_h.mode == GUIDANCE_H_MODE_MODULE)
+			|| (guidance_h.mode == GUIDANCE_H_MODE_GUIDED)
 			|| (guidance_h.mode == GUIDANCE_H_MODE_NAV
 					&& horizontal_mode == HORIZONTAL_MODE_ATTITUDE);
 }

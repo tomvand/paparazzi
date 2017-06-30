@@ -30,6 +30,7 @@ struct vh_guidance_tuning_t {
 };
 extern struct vh_guidance_tuning_t vh_guidance_tuning;
 
+void visualhoming_guidance_set_pos_setpoint(float dx, float dy);
 void visualhoming_guidance_set_pos_error(float dx, float dy);
 void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy);
 void visualhoming_guidance_set_constant_pitch(float dx, float dy);

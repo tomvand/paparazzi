@@ -183,6 +183,7 @@ void visualhoming_periodic(void) {
 		homingvector = vh_snapshot_homingvector(&current_snapshot,
 				target_snapshot, &current_warped_snapshot,
 				&target_rotated_snapshot);
+		visualhoming_guidance_set_pos_setpoint(homingvector.x, -homingvector.y);
 		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
 				velocity.x, velocity.y);
 		// Position in snapshot frame
