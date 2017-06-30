@@ -35,7 +35,7 @@
 #endif
 
 #ifndef VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT
-#define VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT 10000.0
+#define VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT 0.1
 #endif
 
 // Macros for 1-based indexing of Fourier coefficients
@@ -216,7 +216,7 @@ struct homingvector_t vh_snapshot_homingvector(
 		// Update homing vector and warp current snapshot accordingly
 		vec.x += pose.x;
 		vec.y += pose.y;
-		vec.sigma = sigma;
+		vec.sigma = sigma; // XXX + pose.sigma?
 		snapshot_warp(&current_warped, pose);
 	}
 
