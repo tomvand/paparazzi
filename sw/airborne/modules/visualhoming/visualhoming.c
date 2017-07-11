@@ -58,6 +58,14 @@ float vh_snapshot_trigger_threshold = VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD;
 int vh_snapshot_trigger_from_initial =
 VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL;
 
+#ifndef VISUALHOMING_RECORD_PERIOD
+#define VISUALHOMING_RECORD_PERIOD 0.5
+#endif
+
+#ifndef VISUALHOMING_REPLAY_PERIOD
+#define VISUALHOMING_REPLAY_PERIOD 2.0
+#endif
+
 #ifndef VISUALHOMING_ENV_RADIUS
 #define VISUALHOMING_ENV_RADIUS 1.0
 #endif
@@ -172,6 +180,9 @@ void visualhoming_periodic(void) {
 
 	arrival_detected = 0; // Signal to NAV routine to continue flightplan
 
+	static uint32_t last_record_ts = 0;
+	static uint32_t last_replay_ts = 0;
+
 	switch (vh_mode) {
 	case VH_MODE_STOP:
 		// Maintain zero velocity
@@ -186,47 +197,21 @@ void visualhoming_periodic(void) {
 		visualhoming_guidance_set_pos_setpoint(homingvector.x, -homingvector.y);
 		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
 				velocity.x, velocity.y);
-		// Position in snapshot frame
-		struct homingvector_t vec_inverse;
-		vec_inverse.x = -homingvector.x * cos(homingvector.sigma)
-				- homingvector.y * sin(homingvector.sigma);
-		vec_inverse.y = homingvector.x * sin(homingvector.sigma)
-				- homingvector.y * cos(homingvector.sigma);
-		vec_inverse.sigma = -homingvector.sigma;
 		// Waypoint sequencing
 		if (visualhoming_guidance_in_control()) {
-			// Inbound flight, detect arrivals
-//			float diss = vh_snapshot_dissimilarity(&target_rotated_snapshot,
-//					&current_snapshot);
-//			printf("DIS: %+.2f\n", diss);
-//			if (diss < 300) {
-//				// Arrival detected
-//				if (vh_map_get_index() > 0) {
-//					vh_map_pop();
-//				}
-//			}
-
-			static struct homingvector_t vec_prev;
-			if (vec_prev.x == 0 && vec_prev.y == 0) {
-				// Set initial homing vector
-				vec_prev = vec_inverse;
+			if (current_ts
+					> last_replay_ts + VISUALHOMING_REPLAY_PERIOD * 1e6) {
+				if (vh_map_get_index() > 0) vh_map_pop();
+				last_replay_ts = current_ts;
 			}
-			// Check for reverse direction of homing vector
-			if (vec_inverse.x * vec_prev.x + vec_inverse.y * vec_prev.y < 0) {
-				// Arrival detected
-				if (vh_map_get_index() > 0) {
-					vh_map_pop();
-				}
-				vec_prev.x = 0;
-				vec_prev.y = 0;
-			}
+			last_record_ts = current_ts;
 		} else {
-			// Outbound flight, detect edge of catchment area
-			float diff = homingvector_difference(vec_inverse);
-			if (diff > vh_snapshot_trigger_threshold) {
-				// Reached edge of catchment area
+			if (current_ts
+					> last_record_ts + VISUALHOMING_RECORD_PERIOD * 1e6) {
 				vh_map_push(&current_snapshot);
+				last_record_ts = current_ts;
 			}
+			last_replay_ts = current_ts;
 		}
 		break;
 
