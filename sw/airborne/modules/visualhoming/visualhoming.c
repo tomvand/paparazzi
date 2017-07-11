@@ -63,7 +63,7 @@ VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL;
 #endif
 
 #ifndef VISUALHOMING_REPLAY_PERIOD
-#define VISUALHOMING_REPLAY_PERIOD 0.50
+#define VISUALHOMING_REPLAY_PERIOD 1.00
 #endif
 
 #ifndef VISUALHOMING_ENV_RADIUS
@@ -211,7 +211,7 @@ void visualhoming_periodic(void) {
 				vh_map_push(&current_snapshot);
 				last_record_ts = current_ts;
 			}
-			last_replay_ts = current_ts;
+			last_replay_ts = current_ts + 5e6;
 		}
 		break;
 
