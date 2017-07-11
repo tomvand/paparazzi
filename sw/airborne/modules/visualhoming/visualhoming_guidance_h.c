@@ -152,7 +152,10 @@ void visualhoming_guidance_set_constant_pitch(float dx, float dy) {
 	}
 }
 
-void visualhoming_guidance_set_heading_rate(float dx, float dy, float dt) {
+void visualhoming_guidance_set_heading_rate(
+		float dx,
+		float dy,
+		float dt __attribute__((unused))) {
 	float dpsi = visualhoming_guidance_point_at_homingvector(dx, dy);
 	if (dpsi > -0.5 && dpsi < 0.5) {
 		vh_cmd.cmd_theta = -VISUALHOMING_CONSTANT_PITCH;

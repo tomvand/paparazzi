@@ -22,8 +22,8 @@
 #define VISUALHOMING_MAP_H
 
 #include "visualhoming_snapshot.h"
-#include "visualhoming_odometry.h"
 
+#include "math/pprz_algebra_float.h"
 #include "subsystems/datalink/telemetry.h"
 
 // Configuration
@@ -34,6 +34,7 @@
 // Map functions
 int vh_map_push(const struct snapshot_t *ss);
 const struct snapshot_t *vh_map_peek(void);
+struct FloatVect2 *vh_map_odometry(void);
 int vh_map_pop(void);
 int vh_map_clear(void);
 int vh_map_get_index(void);

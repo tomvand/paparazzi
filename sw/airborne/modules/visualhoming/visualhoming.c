@@ -84,9 +84,6 @@ static struct homingvector_t homingvector;
 static uint32_t current_ts;
 static uint32_t previous_ts;
 
-// Odometry mode buffers
-static struct odometry_t single_target_odometry;
-
 // Shared measurements
 static horizon_t horizon;
 static struct homingvector_t velocity;
@@ -161,7 +158,6 @@ void visualhoming_periodic(void) {
 			vh_mode = VH_MODE_SNAPSHOT;
 			break;
 		case VH_MODE_ODOMETRY:
-			vh_odometry_reset(&single_target_odometry, &current_snapshot);
 			vh_mode = VH_MODE_ODOMETRY;
 			break;
 		default:
@@ -216,20 +212,7 @@ void visualhoming_periodic(void) {
 		break;
 
 	case VH_MODE_ODOMETRY:
-		// Follow odometric vector
-		vh_odometry_update(&single_target_odometry, &current_snapshot);
-		visualhoming_guidance_set_PD(single_target_odometry.x,
-				-single_target_odometry.y, velocity.x, velocity.y);
-		// Detect arrival
-		if (visualhoming_guidance_in_control()) {
-			float odo_distance = sqrt(
-					single_target_odometry.x * single_target_odometry.x
-							+ single_target_odometry.y
-									* single_target_odometry.y);
-			if (odo_distance < vh_odometry_arrival_threshold) {
-				arrival_detected = 1;
-			}
-		}
+		// TODO
 		break;
 
 	default:
@@ -378,10 +361,13 @@ static void send_visualhoming(
 	int8_t in_control = visualhoming_guidance_in_control();
 	struct EnuCoor_f *enu = stateGetPositionEnu_f();
 	float psi = stateGetNedToBodyEulers_f()->psi;
+
+	float dummy = 0;
+
 	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &m, &homingvector.x,
 			&homingvector.y, &homingvector.sigma,
-			&single_target_odometry.x, &single_target_odometry.y,
-			&tel_ss_ref_odo.x, &tel_ss_ref_odo.y,
+			&dummy, &dummy,
+			&dummy, &dummy,
 			&enu->x, &enu->y, &psi,
 			&velocity.x, &velocity.y,
 			&current_ts, &tel_dt, &step_time,

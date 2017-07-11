@@ -30,6 +30,7 @@
 
 // Map
 static struct snapshot_t vh_waypoints[VISUALHOMING_MAX_WAYPOINTS];
+static struct FloatVect2 vh_odometry[VISUALHOMING_MAX_WAYPOINTS];
 static int16_t current_waypoint = -1; // Current homing target
 
 #if VISUALHOMING_LOG_WP_POS
@@ -58,6 +59,14 @@ int vh_map_push(const struct snapshot_t *ss) {
 const struct snapshot_t *vh_map_peek(void) {
 	if (current_waypoint >= 0) {
 		return &vh_waypoints[current_waypoint];
+	} else {
+		return NULL;
+	}
+}
+
+struct FloatVect2 *vh_map_odometry(void) {
+	if (current_waypoint >= 0) {
+		return &vh_odometry[current_waypoint];
 	} else {
 		return NULL;
 	}
