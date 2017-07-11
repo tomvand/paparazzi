@@ -22,8 +22,8 @@
     <waypoint name="EI12" x="9.0" y="-15.6"/>
     <waypoint name="EI13" x="3.6" y="-15.5"/>
     <waypoint name="EI14" x="0" y="-14.4"/>
-    <waypoint name="EI15" x="-2.5" y="-11.4"/>
-    <waypoint name="EI16" x="-3.0" y="-8.5"/>
+    <waypoint name="EI15" x="-2.3" y="-11.4"/>
+    <waypoint name="EI16" x="-2.8" y="-8.5"/>
     <waypoint name="EI17" x="-2.8" y="-5.9"/>
     <waypoint name="EI18" x="-1.9" y="-2.6"/>
   </waypoints>
