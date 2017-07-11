@@ -60,11 +60,11 @@ int vh_snapshot_trigger_from_initial =
 VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL;
 
 #ifndef VISUALHOMING_RECORD_PERIOD
-#define VISUALHOMING_RECORD_PERIOD 0.25e6 // us
+#define VISUALHOMING_RECORD_PERIOD 1.0e6 // us
 #endif
 
 #ifndef VISUALHOMING_REPLAY_PERIOD
-#define VISUALHOMING_REPLAY_PERIOD 1.00e6 // us
+#define VISUALHOMING_REPLAY_PERIOD 2.0e6 // us
 #endif
 
 #ifndef VISUALHOMING_ENV_RADIUS
@@ -222,7 +222,7 @@ void visualhoming_periodic(void) {
 		struct FloatVect2 *odo = vh_map_odometry();
 		visualhoming_guidance_set_pos_setpoint(odo->x, odo->y);
 		// Detect arrival
-		if (sqrt(odo->x * odo->x + odo->y * odo->y) < 0.1) {
+		if (sqrt(odo->x * odo->x + odo->y * odo->y) < 0.2) {
 			odo_reqd = 0;
 		}
 		// Reset snapshot timer
@@ -233,7 +233,9 @@ void visualhoming_periodic(void) {
 		homingvector = vh_snapshot_homingvector(&current_snapshot,
 				target_snapshot, &current_warped_snapshot,
 				&target_rotated_snapshot);
-		visualhoming_guidance_set_pos_setpoint(homingvector.x, -homingvector.y);
+		visualhoming_guidance_set_pos_setpoint(3.0 * homingvector.x,
+				-3.0 * homingvector.y);
+		visualhoming_guidance_set_heading_error(homingvector.sigma);
 		// Waypoint sequencing in route mode
 		if (vh_seq_mode == VH_SEQ_ROUTE) {
 			if (visualhoming_guidance_in_control()) {

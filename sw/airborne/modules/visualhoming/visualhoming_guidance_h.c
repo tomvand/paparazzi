@@ -73,7 +73,7 @@ static struct vh_guidance_cmd_t {
  */
 void visualhoming_guidance_set_pos_setpoint(float dx, float dy) {
 //	autopilot_guided_goto_body_relative(10.0 * dx, 10.0 * dy, 0, 0);
-	guidance_h_set_guided_body_vel(3.0 * dx, 3.0 * dy);
+	guidance_h_set_guided_body_vel(0.5 * dx, 0.5 * dy);
 	guidance_v_from_nav(1);
 }
 
