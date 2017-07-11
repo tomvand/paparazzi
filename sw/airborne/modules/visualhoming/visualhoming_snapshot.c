@@ -35,7 +35,7 @@
 #endif
 
 #ifndef VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT
-#define VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT 0.1
+#define VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT 50 // w_1 is approximately 200-300 in Gazebo
 #endif
 
 // Macros for 1-based indexing of Fourier coefficients
@@ -253,7 +253,7 @@ static float relative_orientation(
 
 	// Use magnetometer for an initial guess
 	// Should fix divide-by-zero problems when w_k << 1
-	sigma = (target->heading - current->heading) / INT8_MAX * M_PI;
+	sigma = (float)(target->heading - current->heading) / INT8_MAX * M_PI;
 	while (sigma > M_PI) {
 		sigma -= 2 * M_PI;
 	}
