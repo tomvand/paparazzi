@@ -20,11 +20,15 @@
         <dl_setting shortname="ss_trig_thres" param="VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD" var="vh_snapshot_trigger_threshold" min="0" step="0.1" max="3.14"/>
         <dl_setting shortname="ss_diff_init" param="VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL" var="vh_snapshot_trigger_from_initial" min="0" step="1" max="1"/>
         <dl_setting shortname="odo_arr_thres" param="VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD" var="vh_odometry_arrival_threshold" min="0" step="0.01" max="1.0"/>
-        <dl_setting shortname="mode_command" var="vh_mode_cmd" min="0" step="1" max="2">
-          <strip_button name="STOP" value="0" group="visualhoming" icon="dcstop.png"/>
-          <strip_button name="Snapshot" value="1" group="visualhoming" icon="digital-camera.png"/>
-          <strip_button name="Odometry" value="2" group="visualhoming" icon="line.png"/>
-        </dl_setting> 
+        <dl_setting shortname="input_mode" var="vh_gcs_input_mode" min="0" step="1" max="2" values="Snapshot|Odometry|-">
+          <strip_button name="Snapshot" value="0" group="vh_input" icon="digital-camera.png"/>
+          <strip_button name="Odometry" value="1" group="vh_input" icon="survey_we.png"/>
+        </dl_setting>
+        <dl_setting shortname="sequencer_mode" var="vh_gcs_seq_mode" min="0" step="1" max="3" values="Stop|Single|Route|-">
+          <strip_button name="Stop" value="0" group="vh_seq" icon="off.png"/>
+          <strip_button name="Single" value="1" group="vh_seq" icon="line.png"/>
+          <strip_button name="Route" value="2" group="vh_seq" icon="path.png"/>
+        </dl_setting>
       </dl_settings>
       <dl_settings name="vh_guidance">
         <dl_setting shortname="p_gain" param="VISUALHOMING_GUIDANCE_P" var="vh_guidance_tuning.Kp" min="0" step="0.01" max="5"/>

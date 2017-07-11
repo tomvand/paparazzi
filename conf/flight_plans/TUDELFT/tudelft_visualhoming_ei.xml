@@ -50,7 +50,7 @@
       <stay wp="GOAL"/>
     </block>
     <block name="Record trajectory">
-      <call_once fun="VisualHomingTakeSnapshot()"/>
+      <call_once fun="VisualHomingRecordRoute()"/>
       <path wpts="EI1,EI2,EI3,EI4,EI5,EI6,EI7,EI8,EI9,EI10,EI11,EI12,EI13,EI14,EI15,EI16,EI17,EI18,GOAL" approaching_time="0"/>
       <stay wp="GOAL"/>
     </block>

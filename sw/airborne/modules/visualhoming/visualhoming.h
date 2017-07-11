@@ -32,22 +32,26 @@ extern float vh_snapshot_trigger_threshold;
 extern int vh_snapshot_trigger_from_initial;
 
 /* Control modes */
-enum visualhoming_mode_t {
-	VH_MODE_STOP,
-	VH_MODE_SNAPSHOT,
-	VH_MODE_ODOMETRY,
-	VH_RECORD_ROUTE,
-	VH_FOLLOW_ROUTE,
-	VH_MODE_NOCMD,
+enum vh_sequencer_mode_t {
+	VH_SEQ_STOP,
+	VH_SEQ_SINGLE,
+	VH_SEQ_ROUTE,
+	VH_SEQ_NOCMD
 };
-// TODO Add separate return modes!
+enum vh_input_mode_t {
+	VH_IN_SNAPSHOT,
+	VH_IN_ODO,
+	VH_IN_NOCMD
+};
 
 /* GCS buttons */
-extern enum visualhoming_mode_t vh_mode_cmd;
+extern enum vh_sequencer_mode_t vh_gcs_seq_mode;
+extern enum vh_input_mode_t vh_gcs_input_mode;
 
 /* Navigation functions for flightplan */
 bool VisualHomingTakeSnapshot(void);
 bool VisualHomingRecordOdometry(void);
+bool VisualHomingRecordRoute(void);
 bool VisualHomingCompleted(void);
 
 /* Module functions */

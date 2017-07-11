@@ -60,11 +60,11 @@ int vh_snapshot_trigger_from_initial =
 VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL;
 
 #ifndef VISUALHOMING_RECORD_PERIOD
-#define VISUALHOMING_RECORD_PERIOD 0.25
+#define VISUALHOMING_RECORD_PERIOD 0.25e6 // us
 #endif
 
 #ifndef VISUALHOMING_REPLAY_PERIOD
-#define VISUALHOMING_REPLAY_PERIOD 1.00
+#define VISUALHOMING_REPLAY_PERIOD 1.00e6 // us
 #endif
 
 #ifndef VISUALHOMING_ENV_RADIUS
@@ -73,8 +73,13 @@ VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL;
 float vh_environment_radius = VISUALHOMING_ENV_RADIUS;
 
 /* Control mode */
-enum visualhoming_mode_t vh_mode_cmd = VH_MODE_NOCMD;
-static enum visualhoming_mode_t vh_mode = VH_MODE_STOP;
+enum vh_sequencer_mode_t vh_gcs_seq_mode = VH_SEQ_NOCMD;
+enum vh_input_mode_t vh_gcs_input_mode = VH_IN_NOCMD;
+
+static enum vh_sequencer_mode_t vh_seq_mode = VH_SEQ_STOP;
+static enum vh_input_mode_t vh_input_mode = VH_IN_SNAPSHOT;
+
+static int odo_reqd = 0;
 
 /* Static variables */
 // Snapshot buffers
@@ -97,13 +102,20 @@ static float tel_angle_diff;
 
 /* Navigation functions for flightplan */
 bool VisualHomingTakeSnapshot(void) {
-	vh_mode_cmd = VH_MODE_SNAPSHOT;
+	vh_gcs_input_mode = VH_IN_SNAPSHOT;
+	vh_gcs_seq_mode = VH_SEQ_SINGLE;
 	return FALSE; // Return immediately
 }
 
 bool VisualHomingRecordOdometry(void) {
-	vh_mode_cmd = VH_MODE_ODOMETRY;
+	vh_gcs_input_mode = VH_IN_ODO;
+	vh_gcs_seq_mode = VH_SEQ_SINGLE;
 	return FALSE; // Return immediately
+}
+
+bool VisualHomingRecordRoute(void) {
+	vh_gcs_seq_mode = VH_SEQ_ROUTE;
+	return FALSE;
 }
 
 bool VisualHomingCompleted(void) {
@@ -145,27 +157,28 @@ void visualhoming_periodic(void) {
 	velocity = estimate_velocity(&current_snapshot);
 
 	// Handle commands
-	if (vh_mode_cmd != VH_MODE_NOCMD) {
-		switch (vh_mode_cmd) {
-		case VH_MODE_STOP:
+	if (vh_gcs_input_mode != VH_IN_NOCMD) {
+		// Input mode button pressed
+		vh_input_mode = vh_gcs_input_mode;
+		vh_gcs_input_mode = VH_IN_NOCMD;
+	}
+	if (vh_gcs_seq_mode != VH_SEQ_NOCMD) {
+		// Sequencer mode button pressed
+		switch (vh_gcs_seq_mode) {
+		case VH_SEQ_STOP:
 			vh_map_clear();
-			vh_mode = VH_MODE_STOP;
 			break;
-		case VH_MODE_SNAPSHOT:
+		case VH_SEQ_SINGLE:
+			case VH_SEQ_ROUTE:
 			vh_map_clear();
 			vh_map_push(&current_snapshot);
-			vh_mode = VH_MODE_SNAPSHOT;
-			break;
-		case VH_MODE_ODOMETRY:
-			vh_map_clear();
-			vh_map_push(&current_snapshot);
-			vh_mode = VH_MODE_ODOMETRY;
+			vh_odometry_reset(vh_map_odometry());
 			break;
 		default:
-			printf("[VISUALHOMING] Invalid mode command: %d!\n", vh_mode_cmd);
-			break;
+			printf("Error: Invalid sequencer command: %d!\n", vh_gcs_seq_mode);
 		}
-		vh_mode_cmd = VH_MODE_NOCMD;
+		vh_seq_mode = vh_gcs_seq_mode;
+		vh_gcs_seq_mode = VH_SEQ_NOCMD;
 	}
 
 	// Update odometry
@@ -194,57 +207,58 @@ void visualhoming_periodic(void) {
 	// Update guidance
 	const struct snapshot_t *target_snapshot;
 	target_snapshot = vh_map_peek();
-	if (vh_mode == VH_MODE_SNAPSHOT && !target_snapshot) {
-		vh_mode = VH_MODE_STOP;
-	}
 
 	arrival_detected = 0; // Signal to NAV routine to continue flightplan
 
 	static uint32_t last_record_ts = 0;
 	static uint32_t last_replay_ts = 0;
 
-	switch (vh_mode) {
-	case VH_MODE_STOP:
-		// Maintain zero velocity
-		visualhoming_guidance_set_PD(0, 0, velocity.x, velocity.y);
-		break;
-
-	case VH_MODE_SNAPSHOT:
-		// Home towards current snapshot
+	if (vh_seq_mode != VH_SEQ_STOP && vh_input_mode == VH_IN_ODO
+			&& visualhoming_guidance_in_control()
+			&& !(vh_seq_mode == VH_SEQ_ROUTE && !odo_reqd)
+			&& vh_map_odometry()) {
+		// Use ODOMETRY as guidance vector
+		odo_reqd = 1;
+		struct FloatVect2 *odo = vh_map_odometry();
+		visualhoming_guidance_set_pos_setpoint(odo->x, odo->y);
+		// Detect arrival
+		if (sqrt(odo->x * odo->x + odo->y * odo->y) < 0.1) {
+			odo_reqd = 0;
+		}
+		// Reset snapshot timer
+		last_replay_ts = current_ts;
+	} else if (vh_seq_mode != VH_SEQ_STOP && target_snapshot) {
+		// Use SNAPSHOT homing vector for guidance
+		odo_reqd = 0;
 		homingvector = vh_snapshot_homingvector(&current_snapshot,
 				target_snapshot, &current_warped_snapshot,
 				&target_rotated_snapshot);
 		visualhoming_guidance_set_pos_setpoint(homingvector.x, -homingvector.y);
-		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
-				velocity.x, velocity.y);
-		// Waypoint sequencing
-		if (visualhoming_guidance_in_control()) {
-			if (current_ts
-					> last_replay_ts + VISUALHOMING_REPLAY_PERIOD * 1e6) {
-				if (vh_map_get_index() > 0) vh_map_pop();
-				last_replay_ts = current_ts;
-			}
-			last_record_ts = current_ts;
-		} else {
-			if (current_ts
-					> last_record_ts + VISUALHOMING_RECORD_PERIOD * 1e6) {
-				vh_map_push(&current_snapshot);
+		// Waypoint sequencing in route mode
+		if (vh_seq_mode == VH_SEQ_ROUTE) {
+			if (visualhoming_guidance_in_control()) {
+				// Inbound flight
+				if (current_ts > last_replay_ts + VISUALHOMING_REPLAY_PERIOD) {
+					if (vh_map_get_index() > 0) {
+						vh_map_pop();
+						odo_reqd = 1;
+					}
+					last_replay_ts = current_ts;
+				}
 				last_record_ts = current_ts;
+			} else {
+				// Outbound flight
+				if (current_ts > last_record_ts + VISUALHOMING_RECORD_PERIOD) {
+					vh_map_push(&current_snapshot);
+					vh_odometry_reset(vh_map_odometry());
+					last_record_ts = current_ts;
+				}
+				last_replay_ts = current_ts + 5e6;
 			}
-			last_replay_ts = current_ts + 5e6;
 		}
-		break;
-
-	case VH_MODE_ODOMETRY:
-		if (vh_map_odometry()) {
-			struct FloatVect2 *odo = vh_map_odometry();
-			visualhoming_guidance_set_pos_setpoint(odo->x, odo->y);
-		}
-		break;
-
-	default:
-		printf("[VISUALHOMING] Invalid mode: %d!\n", vh_mode);
-		break;
+	} else {
+		// Maintain zero velocity
+		visualhoming_guidance_set_PD(0, 0, velocity.x, velocity.y);
 	}
 
 	// Update timestamps
@@ -349,7 +363,7 @@ static void draw_snapshots(struct image_t *img) {
 			PIXEL_Y(img, x, y) = hor[x];
 		}
 	}
-	if (vh_mode == VH_MODE_SNAPSHOT) {
+	if (!odo_reqd) {
 		const struct snapshot_t *target_snapshot;
 		target_snapshot = vh_map_peek();
 		if (target_snapshot) {
@@ -384,16 +398,26 @@ static void draw_snapshots(struct image_t *img) {
 static void send_visualhoming(
 		struct transport_tx *trans,
 		struct link_device *dev) {
-	int8_t m = vh_mode;
+	int8_t input_mode = vh_input_mode;
+	int8_t sequencer_mode = vh_seq_mode;
+
+	struct FloatVect2 odo;
+	if (vh_map_odometry()) {
+		odo = *vh_map_odometry();
+	} else {
+		odo.x = 0;
+		odo.y = 0;
+	}
+
 	int8_t in_control = visualhoming_guidance_in_control();
 	struct EnuCoor_f *enu = stateGetPositionEnu_f();
 	float psi = stateGetNedToBodyEulers_f()->psi;
 
 	float dummy = 0;
 
-	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &m, &homingvector.x,
-			&homingvector.y, &homingvector.sigma,
-			&dummy, &dummy,
+	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &input_mode, &sequencer_mode,
+			&homingvector.x, &homingvector.y, &homingvector.sigma,
+			&odo.x, &odo.y,
 			&dummy, &dummy,
 			&enu->x, &enu->y, &psi,
 			&velocity.x, &velocity.y,
