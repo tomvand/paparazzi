@@ -28,6 +28,7 @@
 #include "generated/modules.h"
 #include "subsystems/datalink/telemetry.h"
 #include "mcu_periph/sys_time.h"
+#include "state.h"
 
 #include <stdio.h>
 
@@ -105,8 +106,6 @@ bool VisualHomingRecordOdometry(void) {
 	return FALSE; // Return immediately
 }
 
-
-
 bool VisualHomingCompleted(void) {
 	return arrival_detected;
 }
@@ -158,6 +157,8 @@ void visualhoming_periodic(void) {
 			vh_mode = VH_MODE_SNAPSHOT;
 			break;
 		case VH_MODE_ODOMETRY:
+			vh_map_clear();
+			vh_map_push(&current_snapshot);
 			vh_mode = VH_MODE_ODOMETRY;
 			break;
 		default:
@@ -165,6 +166,29 @@ void visualhoming_periodic(void) {
 			break;
 		}
 		vh_mode_cmd = VH_MODE_NOCMD;
+	}
+
+	// Update odometry
+	struct FloatVect2 *odo = vh_map_odometry();
+	if (odo) {
+		static float previous_heading = 0.0;
+
+		float heading = stateGetNedToBodyEulers_f()->psi;
+		float dpsi = heading - previous_heading;
+		previous_heading = heading;
+
+		struct NedCoor_f *spd = stateGetSpeedNed_f();
+		float dx = (spd->x * cos(previous_heading)
+				+ spd->y * sin(previous_heading)) * (current_ts - previous_ts)
+				/ 1.0e6;
+		float dy = (-spd->x * sin(previous_heading)
+				+ spd->y * cos(previous_heading)) * (current_ts - previous_ts)
+				/ 1.0e6;
+
+		vh_odometry_update(odo, dx, dy, dpsi);
+		printf("Odo update: dx = %+.2f, dy = %+.2f, dpsi = %+.2f\n", dx, dy,
+				dpsi);
+		printf("Odo: x = %+.2f, y = %+.2f\n", odo->x, odo->y);
 	}
 
 	// Update guidance
@@ -212,7 +236,10 @@ void visualhoming_periodic(void) {
 		break;
 
 	case VH_MODE_ODOMETRY:
-		// TODO
+		if (vh_map_odometry()) {
+			struct FloatVect2 *odo = vh_map_odometry();
+			visualhoming_guidance_set_pos_setpoint(odo->x, odo->y);
+		}
 		break;
 
 	default:
