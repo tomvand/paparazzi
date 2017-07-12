@@ -13,7 +13,9 @@
 #ifndef DEAD_RECKONING_H
 #define DEAD_RECKONING_H
 
-// extern void dr_init;
+extern float dr_mu_over_m;
+
+extern void dr_init(void);
 
 #endif
 

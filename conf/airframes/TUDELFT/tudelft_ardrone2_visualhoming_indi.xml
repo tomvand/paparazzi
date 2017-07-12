@@ -48,6 +48,7 @@
     <!--module name="logger_file"/-->
     <module name="video_thread"/>
     <module name="visualhoming"/>
+    <module name="dead_reckoning"/>
     <module name="video_rtp_stream">
       <define name="VIEWVIDEO_CAMERA" value="bottom_camera"/>
       <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="1"/>

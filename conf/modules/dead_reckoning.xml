@@ -7,7 +7,7 @@
   <header>
     <file name="dead_reckoning.h"/>
   </header>
-  <init fun="dr_init"/>
+  <init fun="dr_init()"/>
   <makefile>
     <file name="dead_reckoning.c"/>
   </makefile>
