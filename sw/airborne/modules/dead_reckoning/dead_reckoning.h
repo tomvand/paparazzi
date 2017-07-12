@@ -16,6 +16,7 @@
 extern float dr_mu_over_m;
 
 extern void dr_init(void);
+extern void dr_periodic(void);
 
 #endif
 

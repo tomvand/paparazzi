@@ -7,6 +7,9 @@
       <configure name="PREFIX" value="/opt/arm-2012.03/bin/arm-none-linux-gnueabi"/>
       <define name="USE_SONAR" value="FALSE"/><!-- Sonar on this drone is broken :( -->
       <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_RC_DIRECT"/>
+      <define name="IMU_BODY_TO_IMU_PHI" value="-2.70" unit="deg"/>
+      <define name="IMU_BODY_TO_IMU_THETA" value="-3.05" unit="deg"/>
+      <define name="IMU_BODY_TO_IMU_PSI" value="0." unit="deg"/>
       <!-- Aircraft specific tuning for visual homing -->
       <define name="VISUALHOMING_CENTER_X" value="0.55"/>
       <define name="VISUALHOMING_CENTER_Y" value="0.47"/>
@@ -105,10 +108,6 @@
     <define name="MAG_X_CURRENT_COEF" value="0.0"/>
     <define name="MAG_Y_CURRENT_COEF" value="0.0"/>
     <define name="MAG_Z_CURRENT_COEF" value="0.0"/>
-
-    <define name="BODY_TO_IMU_PHI" value="-2.70" unit="deg"/>
-    <define name="BODY_TO_IMU_THETA" value="-3.05" unit="deg"/>
-    <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
   </section>
 
   <!-- local magnetic field -->

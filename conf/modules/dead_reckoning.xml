@@ -8,6 +8,7 @@
     <file name="dead_reckoning.h"/>
   </header>
   <init fun="dr_init()"/>
+  <periodic fun="dr_periodic()" freq="50" autorun="TRUE"/>
   <makefile>
     <file name="dead_reckoning.c"/>
   </makefile>
