@@ -21,6 +21,8 @@
 #include "subsystems/abi.h"
 #include "subsystems/datalink/telemetry.h"
 
+#include <stdio.h>
+
 
 /* ABI IDs */
 #ifndef DR_GYRO_ID
@@ -77,23 +79,29 @@ void dr_init(void) {
 }
 
 static void cb_gyro(uint8_t sender_id, uint32_t stamp, struct Int32Rates * gyro) {
+	printf("cb_gyro enter phi=%+.2f theta=%+.2f u=%+.2f v=%+.2f\n", dr.phi,
+			dr.theta, dr.u, dr.v);
 	// Propagate internal state
 	float dt = (float)(stamp - dr.last_gyro_ts) / 1e6;
 	if (dt < 0) return;
 	dr.phi += RATE_FLOAT_OF_BFP(gyro->p) * dt;
 	dr.theta += RATE_FLOAT_OF_BFP(gyro->q) * dt;
-	dr.u += -DR_G * dr.theta - dr_mu_over_m * dr.u;
-	dr.v += DR_G * dr.phi - dr_mu_over_m * dr.v;
+	dr.u += (-DR_G * dr.theta - dr_mu_over_m * dr.u) * dt;
+	dr.v += (DR_G * dr.phi - dr_mu_over_m * dr.v) * dt;
 	dr.last_gyro_ts = stamp;
 	// Save gyro values for telemetry
 	gyro_p = RATE_FLOAT_OF_BFP(gyro->p);
 	gyro_q = RATE_FLOAT_OF_BFP(gyro->q);
+	printf("cb_gyro leave phi=%+.2f theta=%+.2f u=%+.2f v=%+.2f dt=%+.3f\n",
+			dr.phi, dr.theta, dr.u, dr.v);
 }
 
 static void cb_accel(
 		uint8_t sender_id,
 		uint32_t stamp,
 		struct Int32Vect3 * accel) {
+	printf("cb_accel enter phi=%+.2f theta=%+.2f u=%+.2f v=%+.2f\n", dr.phi,
+			dr.theta, dr.u, dr.v);
 	// Update with latest measurement
 	// Find error in estimated accelerations
 	float ax = ACCEL_FLOAT_OF_BFP(accel->x);
@@ -111,6 +119,8 @@ static void cb_accel(
 	// Save accel values for telemetry
 	accel_x = ax;
 	accel_y = ay;
+	printf("cb_accel leave phi=%+.2f theta=%+.2f u=%+.2f v=%+.2f\n", dr.phi,
+			dr.theta, dr.u, dr.v);
 }
 
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
