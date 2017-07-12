@@ -1849,7 +1849,17 @@
       <field name="br"     type="float" unit="deg/s"/>
     </message>
 
-    <!-- 243 is free -->
+    <message name="DEAD_RECKONING" id="243">
+      <field name="phi"		type="float"	unit="rad"/>
+      <field name="theta"	type="float"	unit="rad"/>
+      <field name="u"		type="float"	unit="m/s"/>
+      <field name="v"		type="float"	unit="m/s"/>
+      <field name="mu_over_m"	type="float"	unit="1/s"/>
+      <field name="gyro_p"	type="float"	unit="rad/s"/>
+      <field name="gyro_q"	type="float"	unit="rad/s"/>
+      <field name="accel_x"	type="float"	unit="m/s/s"/>
+      <field name="accel_y"	type="float"	unit="m/s/s"/>
+    </message>
 
     <message name="NPS_WIND" id="244">
       <field name="vx"   type="float" unit="m/s"/>

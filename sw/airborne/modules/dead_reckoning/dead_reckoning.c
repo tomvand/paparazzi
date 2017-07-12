@@ -17,7 +17,10 @@
 #include "modules/dead_reckoning/dead_reckoning.h"
 
 #include "math/pprz_algebra_int.h"
+
 #include "subsystems/abi.h"
+#include "subsystems/datalink/telemetry.h"
+
 
 /* ABI IDs */
 #ifndef DR_GYRO_ID
@@ -59,12 +62,21 @@ struct dr_state_t {
 };
 static struct dr_state_t dr; // Note: all values initialized to 0.
 
+/* Telemetry */
+static float gyro_p;
+static float gyro_q;
+static float accel_x;
+static float accel_y;
+static void send_telemetry(struct transport_tx *trans, struct link_device *dev);
+
 void dr_init(void) {
 	AbiBindMsgIMU_GYRO_INT32(DR_GYRO_ID, &ev_gyro, cb_gyro);
 	AbiBindMsgIMU_ACCEL_INT32(DR_ACCEL_ID, &ev_accel, cb_accel);
+	register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_DEAD_RECKONING,
+			send_telemetry);
 }
 
-void cb_gyro(uint8_t sender_id, uint32_t stamp, struct Int32Rates * gyro) {
+static void cb_gyro(uint8_t sender_id, uint32_t stamp, struct Int32Rates * gyro) {
 	// Propagate internal state
 	float dt = (float)(stamp - dr.last_gyro_ts) / 1e6;
 	if (dt < 0) return;
@@ -73,9 +85,15 @@ void cb_gyro(uint8_t sender_id, uint32_t stamp, struct Int32Rates * gyro) {
 	dr.u += -DR_G * dr.theta - dr_mu_over_m * dr.u;
 	dr.v += DR_G * dr.phi - dr_mu_over_m * dr.v;
 	dr.last_gyro_ts = stamp;
+	// Save gyro values for telemetry
+	gyro_p = RATE_FLOAT_OF_BFP(gyro->p);
+	gyro_q = RATE_FLOAT_OF_BFP(gyro->q);
 }
 
-void cb_accel(uint8_t sender_id, uint32_t stamp, struct Int32Vect3 * accel) {
+static void cb_accel(
+		uint8_t sender_id,
+		uint32_t stamp,
+		struct Int32Vect3 * accel) {
 	// Update with latest measurement
 	// Find error in estimated accelerations
 	float ax = ACCEL_FLOAT_OF_BFP(accel->x);
@@ -90,5 +108,16 @@ void cb_accel(uint8_t sender_id, uint32_t stamp, struct Int32Vect3 * accel) {
 	dr.theta += L[1][0] * ax_error + L[1][1] * ay_error;
 	dr.u += L[2][0] * ax_error + L[2][1] * ay_error;
 	dr.v += L[3][0] * ax_error + L[3][1] * ay_error;
+	// Save accel values for telemetry
+	accel_x = ax;
+	accel_y = ay;
+}
+
+static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
+{
+	pprz_msg_send_DEAD_RECKONING(trans, dev, AC_ID,
+			&dr.phi, &dr.theta, &dr.u, &dr.v,
+			&dr_mu_over_m,
+			&gyro_p, &gyro_q, &accel_x, &accel_y);
 }
 
