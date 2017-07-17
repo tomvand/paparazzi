@@ -130,9 +130,15 @@ static void measurement_accel(struct Int32Vect3 * accel) {
 
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
 {
+	struct FloatEulers *att = stateGetNedToBodyEulers_f();
+	struct NedCoor_f *pos = stateGetPositionNed_f();
+	struct NedCoor_f *vel = stateGetSpeedNed_f();
 	pprz_msg_send_DEAD_RECKONING(trans, dev, AC_ID,
 			&dr.phi, &dr.theta, &dr.u, &dr.v,
 			&dr_mu_over_m,
-			&gyro_p, &gyro_q, &accel_x, &accel_y);
+			&gyro_p, &gyro_q, &accel_x, &accel_y,
+			&att->phi, &att->theta, &att->psi,
+			&pos->x, &pos->y,
+			&vel->x, &vel->y);
 }
 

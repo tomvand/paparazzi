@@ -1859,6 +1859,13 @@
       <field name="gyro_q"	type="float"	unit="rad/s"/>
       <field name="accel_x"	type="float"	unit="m/s/s"/>
       <field name="accel_y"	type="float"	unit="m/s/s"/>
+      <field name="ahrs_phi"	type="float"	unit="rad"/>
+      <field name="ahrs_theta"	type="float"	unit="rad"/>
+      <field name="ahrs_psi"	type="float"	unit="rad"/>
+      <field name="ins_x"	type="float"	unit="m"/>
+      <field name="ins_y"	type="float"	unit="m"/>
+      <field name="ins_vx"	type="float"	unit="m/s"/>
+      <field name="ins_vy"	type="float"	unit="m/s"/>
     </message>
 
     <message name="NPS_WIND" id="244">
