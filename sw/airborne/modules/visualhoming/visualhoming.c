@@ -30,6 +30,8 @@
 #include "mcu_periph/sys_time.h"
 #include "state.h"
 
+#include "modules/dead_reckoning/dead_reckoning.h"
+
 #include <stdio.h>
 
 /* Settings */
@@ -186,17 +188,14 @@ void visualhoming_periodic(void) {
 	if (odo) {
 		static float previous_heading = 0.0;
 
-		float heading = stateGetNedToBodyEulers_f()->psi;
+		float heading = dr_getHeading();
 		float dpsi = heading - previous_heading;
 		previous_heading = heading;
 
-		struct NedCoor_f *spd = stateGetSpeedNed_f();
-		float dx = (spd->x * cos(previous_heading)
-				+ spd->y * sin(previous_heading)) * (current_ts - previous_ts)
-				/ 1.0e6;
-		float dy = (-spd->x * sin(previous_heading)
-				+ spd->y * cos(previous_heading)) * (current_ts - previous_ts)
-				/ 1.0e6;
+		float dt = (float)(current_ts - previous_ts) / 1e6;
+		struct FloatVect2 vel = dr_getBodyVel();
+		float dx = vel.x * dt;
+		float dy = vel.y * dt;
 
 		vh_odometry_update(odo, dx, dy, dpsi);
 		printf("Odo update: dx = %+.2f, dy = %+.2f, dpsi = %+.2f\n", dx, dy,
