@@ -13,7 +13,10 @@
 #ifndef DEAD_RECKONING_H
 #define DEAD_RECKONING_H
 
-extern float dr_mu_over_m;
+#include "math/pprz_algebra_float.h"
+
+extern struct FloatVect2 dr_getBodyVel(void);
+extern float dr_getHeading(void);
 
 extern void dr_init(void);
 extern void dr_periodic(void);

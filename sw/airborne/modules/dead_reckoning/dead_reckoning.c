@@ -79,6 +79,14 @@ static float accel_x;
 static float accel_y;
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev);
 
+struct FloatVect2 dr_getBodyVel(void) {
+	return dr_state.v;
+}
+
+float dr_getHeading(void) {
+	return dr_state.psi;
+}
+
 void dr_init(void) {
 	register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_DEAD_RECKONING,
 			send_telemetry);
