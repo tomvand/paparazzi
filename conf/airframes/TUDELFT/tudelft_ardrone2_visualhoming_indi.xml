@@ -31,6 +31,10 @@
       <define name="DR_DRAG2" value="0.0735"/>
       <define name="DR_THRUST" value="0.0010"/>
       <define name="DR_GAIN" value="0.0038"/>
+      <define name="DR_BIAS_PHI" value="0"/>
+      <define name="DR_BIAS_THETA" value="0"/>
+      <define name="DR_BIAS_AX" value="0.0011"/>
+      <define name="DR_BIAS_AY" value="0.4580"/>
     </target>
 
     <define name="ARRIVED_AT_WAYPOINT" value="0.2"/>
