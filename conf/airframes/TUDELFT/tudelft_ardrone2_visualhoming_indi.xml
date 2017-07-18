@@ -12,6 +12,15 @@
       <define name="VISUALHOMING_CENTER_Y" value="0.47"/>
       <define name="VISUALHOMING_RADIUS_TOP" value="0.25"/>
       <define name="VISUALHOMING_RADIUS_BOTTOM" value="0.27"/>
+      <!-- Aircraft speific tuning for dead reckoning -->
+      <define name="DR_DRAG1" value="0.6396"/>
+      <define name="DR_DRAG2" value="0.0186"/>
+      <define name="DR_THRUST" value="0.0012"/>
+      <define name="DR_GAIN" value="-0.0827"/>
+      <define name="DR_BIAS_PHI" value="0.0239"/>
+      <define name="DR_BIAS_THETA" value="-0.1352"/>
+      <define name="DR_BIAS_AX" value="0.2924"/>
+      <define name="DR_BIAS_AY" value="0.0754"/>
     </target>
 
     <target name="nps" board="pc">
@@ -110,8 +119,8 @@
     <define name="MAG_Y_CURRENT_COEF" value="0.0"/>
     <define name="MAG_Z_CURRENT_COEF" value="0.0"/>
 
-    <define name="BODY_TO_IMU_PHI" value="0." unit="deg"/><!-- -2.47 -->
-    <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/><!-- -1.69 -->
+    <define name="BODY_TO_IMU_PHI" value="-2.47" unit="deg"/><!-- -2.47 -->
+    <define name="BODY_TO_IMU_THETA" value="-1.69" unit="deg"/><!-- -1.69 -->
     <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
   </section>
 

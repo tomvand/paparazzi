@@ -52,10 +52,19 @@ float dr_thrust = DR_THRUST;
 #endif
 float dr_gain = DR_GAIN;
 
-#ifndef DR_BIAS
-#define DR_BIAS { 0.0, 0.0, 0.0, 0.0 }
+#ifndef DR_BIAS_PHI
+#define DR_BIAS_PHI 0.0
 #endif
-float dr_bias[] = DR_BIAS;
+#ifndef DR_BIAS_THETA
+#define DR_BIAS_THETA 0.0
+#endif
+#ifndef DR_BIAS_AX
+#define DR_BIAS_AX 0.0
+#endif
+#ifndef DR_BIAS_AY
+#define DR_BIAS_AY 0.0
+#endif
+float dr_bias[] = { DR_BIAS_PHI, DR_BIAS_THETA, DR_BIAS_AX, DR_BIAS_AY };
 
 /* Observer state */
 struct dr_state_t {
