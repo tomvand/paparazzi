@@ -29,6 +29,10 @@
 
 #include <stdio.h>
 
+#ifndef DR_SEND_ABI
+#define DR_SEND_ABI 0
+#endif
+
 #ifndef DR_VEL_ID
 #define DR_VEL_ID ABI_BROADCAST
 #endif
@@ -72,6 +76,12 @@ struct dr_state_t {
 	float psi;
 } dr_state;
 
+/* Calibration */
+int dr_calibrate = 0;
+static int dr_calibrate_prev = 0;
+static int calibration_samples = 0;
+static void calibrate(void);
+
 /* Telemetry */
 static float gyro_p;
 static float gyro_q;
@@ -93,11 +103,17 @@ void dr_init(void) {
 }
 
 void dr_periodic(void) {
+	// Zero estimator when landed
 	if (!autopilot_in_flight()) {
 		dr_state.v.x = 0;
 		dr_state.v.y = 0;
 		return;
 	}
+	// Calibrate if set by user
+	if (dr_calibrate) {
+		calibrate();
+	}
+	dr_calibrate_prev = dr_calibrate;
 	// State observer with single gain and quadratic drag model
 	// Timestep
 	float dt = DR_PERIODIC_PERIOD;
@@ -143,9 +159,11 @@ void dr_periodic(void) {
 	dr_state.v.y += dr_gain * (a_meas.y - a_pred.y);
 
 	// Output velocity estimate ABI message for use in INS
+#if DR_SEND_ABI
 	uint32_t stamp = get_sys_time_usec();
 	AbiSendMsgVELOCITY_ESTIMATE(DR_VEL_ID, stamp, dr_state.v.x, dr_state.v.y, 0,
 			0);
+#endif
 	// Output measurements to telemetry
 	struct Int32Rates *gyro = stateGetBodyRates_i();
 	gyro_p = RATE_FLOAT_OF_BFP(gyro->p);
@@ -153,6 +171,30 @@ void dr_periodic(void) {
 	accel_x = a_meas.x;
 	accel_y = a_meas.y;
 
+}
+
+static void calibrate(void) {
+	// Average attitude values and accelerometer readings during stationary
+	// hover, in order to find their biases.
+	struct FloatEulers *att = stateGetNedToBodyEulers_f();
+	struct Int32Vect3 *acc = stateGetAccelBody_i();
+	struct FloatVect2 a_meas = {
+			.x = ACCEL_FLOAT_OF_BFP(acc->x),
+			.y = ACCEL_FLOAT_OF_BFP(acc->y)
+	};
+	if (dr_calibrate_prev == 0) {
+		// Just started new calibration
+		calibration_samples = 0;
+	}
+	dr_bias[0] = (dr_bias[0] * calibration_samples + -att->phi)
+			/ (calibration_samples + 1);
+	dr_bias[1] = (dr_bias[1] * calibration_samples + -att->theta)
+			/ (calibration_samples + 1);
+	dr_bias[2] = (dr_bias[2] * calibration_samples + -a_meas.x)
+			/ (calibration_samples + 1);
+	dr_bias[3] = (dr_bias[3] * calibration_samples + -a_meas.y)
+			/ (calibration_samples + 1);
+	calibration_samples++;
 }
 
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
