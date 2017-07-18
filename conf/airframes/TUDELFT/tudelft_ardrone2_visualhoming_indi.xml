@@ -18,6 +18,10 @@
       <module name="fdm" type="gazebo"/>
       <define name="USE_SONAR" value="TRUE"/>
       <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_NAV"/>
+      <define name="DR_DRAG1" value="0.6579"/>
+      <define name="DR_DRAG2" value="0.0735"/>
+      <define name="DR_THRUST" value="0.0010"/>
+      <define name="DR_GAIN" value="0.0038"/>
     </target>
 
     <define name="ARRIVED_AT_WAYPOINT" value="0.2"/>
@@ -106,8 +110,8 @@
     <define name="MAG_Y_CURRENT_COEF" value="0.0"/>
     <define name="MAG_Z_CURRENT_COEF" value="0.0"/>
 
-    <define name="BODY_TO_IMU_PHI" value="-2.47" unit="deg"/>
-    <define name="BODY_TO_IMU_THETA" value="-1.69" unit="deg"/>
+    <define name="BODY_TO_IMU_PHI" value="0." unit="deg"/><!-- -2.47 -->
+    <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/><!-- -1.69 -->
     <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
   </section>
 

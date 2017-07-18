@@ -22,35 +22,39 @@
 #include "autopilot.h"
 #include "generated/modules.h"
 #include "subsystems/datalink/telemetry.h"
+#include "firmwares/rotorcraft/stabilization.h"
 
 #include <stdio.h>
 
 /* Tuning */
-#ifndef DR_G
-#define DR_G 9.81
+#ifndef DR_DRAG1
+#define DR_DRAG1 0.9388
 #endif
+#ifndef DR_DRAG2
+#define DR_DRAG2 0.0
+#endif
+float dr_drag[] = { DR_DRAG1, DR_DRAG2 };
 
-#ifndef DR_MU_OVER_M
-#define DR_MU_OVER_M 0.5
+#ifndef DR_THRUST
+#define DR_THRUST 0.0011
 #endif
-float dr_mu_over_m = DR_MU_OVER_M;
+float dr_thrust = DR_THRUST;
 
-#ifndef DR_L
-#define DR_L {{0.0, -0.1}, {0.1, 0.0}, {-0.53, 0.0}, {0.0, -0.53}}
+#ifndef DR_GAIN
+#define DR_GAIN 0.0
 #endif
+float dr_gain = DR_GAIN;
+
+#ifndef DR_BIAS
+#define DR_BIAS { 0.0, 0.0, 0.0, 0.0 }
+#endif
+float dr_bias[] = DR_BIAS;
 
 /* Observer state */
 struct dr_state_t {
-	float phi;
-	float theta;
-	float u;
-	float v;
-};
-static struct dr_state_t dr; // Note: all values initialized to 0.
-
-/* Update functions */
-static void propagate(struct Int32Rates * gyro, float dt);
-static void measurement_accel(struct Int32Vect3 * accel);
+	struct FloatVect2 v;
+	float psi;
+} dr_state;
 
 /* Telemetry */
 static float gyro_p;
@@ -65,77 +69,69 @@ void dr_init(void) {
 }
 
 void dr_periodic(void) {
-	// Get sensor data
-	// The data should NOT assume a body attitude (as that is part of the
-	// filter here). According to the AHRS (rates) and INS (accel) sources,
-	// it seems that these measurements have not been processed apart from
-	// Reset if not in flight
-	if (!autopilot_in_flight()) {
-		dr.phi = 0;
-		dr.theta = 0;
-		dr.u = 0;
-		dr.v = 0;
-		return;
+	// State observer with single gain and quadratic drag model
+	// Timestep
+	float dt = DR_PERIODIC_PERIOD;
+	// Rotation
+	struct FloatEulers *att = stateGetNedToBodyEulers_f();
+	float new_psi = att->psi;
+	float dpsi = new_psi - dr_state.psi;
+	dr_state.psi = new_psi;
+	struct FloatVect2 v_prev = dr_state.v;
+	dr_state.v.x = cos(dpsi) * v_prev.x + sin(dpsi) * v_prev.y;
+	dr_state.v.y = -sin(dpsi) * v_prev.x + cos(dpsi) * v_prev.y;
+	// Quadratic drag model
+	float speed = FLOAT_VECT2_NORM(dr_state.v);
+	float Fdm;
+	struct FloatVect2 dir;
+	if (speed != 0) {
+		Fdm = dr_drag[0] * speed + dr_drag[1] * speed * speed;
+		dir.x = -dr_state.v.x / speed;
+		dir.y = -dr_state.v.y / speed;
+	} else {
+		Fdm = 0;
+		dir.x = 0;
+		dir.y = 0;
 	}
-	// bias/orientation corrections, which is ok.
-	struct Int32Rates *rates = stateGetBodyRates_i();
-	struct Int32Vect3 *accel = stateGetAccelBody_i();
-	// Propagate
-	propagate(rates, DR_PERIODIC_PERIOD);
+	// Acceleration
+	float phi = att->phi + dr_bias[0];
+	float theta = att->theta + dr_bias[1];
+	float Ftm = stabilization_cmd[COMMAND_THRUST] * dr_thrust;
+	// Time update
+	dr_state.v.x += (Ftm * -theta + Fdm * dir.x) * dt;
+	dr_state.v.y += (Ftm * phi + Fdm * dir.y) * dt;
 	// Measurement update
-	measurement_accel(accel);
-}
+	struct FloatVect2 a_pred = {
+			.x = Fdm * dir.x,
+			.y = Fdm * dir.y
+	};
+	struct Int32Vect3 *acc = stateGetAccelBody_i();
+	struct FloatVect2 a_meas = {
+			.x = ACCEL_FLOAT_OF_BFP(acc->x) + dr_bias[2],
+			.y = ACCEL_FLOAT_OF_BFP(acc->y) + dr_bias[3]
+	};
+	dr_state.v.x += dr_gain * (a_meas.x - a_pred.x);
+	dr_state.v.y += dr_gain * (a_meas.y - a_pred.y);
 
-
-static void propagate(struct Int32Rates * gyro, float dt) {
-	printf("cb_gyro enter phi=%+.2f theta=%+.2f u=%+.2f v=%+.2f\n", dr.phi,
-			dr.theta, dr.u, dr.v);
-	// Propagate internal state
-	dr.phi += RATE_FLOAT_OF_BFP(gyro->p) * dt;
-	dr.theta += RATE_FLOAT_OF_BFP(gyro->q) * dt;
-	dr.u += (-DR_G * dr.theta - dr_mu_over_m * dr.u) * dt;
-	dr.v += (DR_G * dr.phi - dr_mu_over_m * dr.v) * dt;
-	// Save gyro values for telemetry
+	// Output measurements to telemetry
+	struct Int32Rates *gyro = stateGetBodyRates_i();
 	gyro_p = RATE_FLOAT_OF_BFP(gyro->p);
 	gyro_q = RATE_FLOAT_OF_BFP(gyro->q);
-	printf("cb_gyro leave phi=%+.2f theta=%+.2f u=%+.2f v=%+.2f\n",
-			dr.phi, dr.theta, dr.u, dr.v);
-}
+	accel_x = a_meas.x;
+	accel_y = a_meas.y;
 
-static void measurement_accel(struct Int32Vect3 * accel) {
-	printf("cb_accel enter phi=%+.2f theta=%+.2f u=%+.2f v=%+.2f\n", dr.phi,
-			dr.theta, dr.u, dr.v);
-	// Update with latest measurement
-	// Find error in estimated accelerations
-	float ax = ACCEL_FLOAT_OF_BFP(accel->x);
-	float ay = ACCEL_FLOAT_OF_BFP(accel->y);
-	float ax_est = -dr_mu_over_m * dr.u;
-	float ay_est = -dr_mu_over_m * dr.v;
-	float ax_error = ax - ax_est;
-	float ay_error = ay - ay_est;
-	printf("ax  = %+.2f   ay  = %+.2f\n", ax, ay);
-	printf("axe = %+.2f   aye = %+.2f\n", ax_est, ay_est);
-	// Update estimated state
-	static const float L[4][2] = DR_L;
-	dr.phi += L[0][0] * ax_error + L[0][1] * ay_error;
-	dr.theta += L[1][0] * ax_error + L[1][1] * ay_error;
-	dr.u += L[2][0] * ax_error + L[2][1] * ay_error;
-	dr.v += L[3][0] * ax_error + L[3][1] * ay_error;
-	// Save accel values for telemetry
-	accel_x = ax;
-	accel_y = ay;
-	printf("cb_accel leave phi=%+.2f theta=%+.2f u=%+.2f v=%+.2f\n", dr.phi,
-			dr.theta, dr.u, dr.v);
 }
 
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
 {
+	float dummy = 0;
 	struct FloatEulers *att = stateGetNedToBodyEulers_f();
 	struct NedCoor_f *pos = stateGetPositionNed_f();
 	struct NedCoor_f *vel = stateGetSpeedNed_f();
 	pprz_msg_send_DEAD_RECKONING(trans, dev, AC_ID,
-			&dr.phi, &dr.theta, &dr.u, &dr.v,
-			&dr_mu_over_m,
+			&dummy, &dummy,
+			&dr_state.v.x, &dr_state.v.y,
+			&dummy,
 			&gyro_p, &gyro_q, &accel_x, &accel_y,
 			&att->phi, &att->theta, &att->psi,
 			&pos->x, &pos->y,
