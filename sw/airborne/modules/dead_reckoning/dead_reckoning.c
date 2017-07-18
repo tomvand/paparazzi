@@ -69,6 +69,11 @@ void dr_init(void) {
 }
 
 void dr_periodic(void) {
+	if (!autopilot_in_flight()) {
+		dr_state.v.x = 0;
+		dr_state.v.y = 0;
+		return;
+	}
 	// State observer with single gain and quadratic drag model
 	// Timestep
 	float dt = DR_PERIODIC_PERIOD;
