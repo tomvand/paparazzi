@@ -24,7 +24,14 @@
 #include "subsystems/datalink/telemetry.h"
 #include "firmwares/rotorcraft/stabilization.h"
 
+#include "subsystems/abi.h"
+#include "mcu_periph/sys_time.h"
+
 #include <stdio.h>
+
+#ifndef DR_VEL_ID
+#define DR_VEL_ID ABI_BROADCAST
+#endif
 
 /* Tuning */
 #ifndef DR_DRAG1
@@ -118,6 +125,10 @@ void dr_periodic(void) {
 	dr_state.v.x += dr_gain * (a_meas.x - a_pred.x);
 	dr_state.v.y += dr_gain * (a_meas.y - a_pred.y);
 
+	// Output velocity estimate ABI message for use in INS
+	uint32_t stamp = get_sys_time_usec();
+	AbiSendMsgVELOCITY_ESTIMATE(DR_VEL_ID, stamp, dr_state.v.x, dr_state.v.y, 0,
+			0);
 	// Output measurements to telemetry
 	struct Int32Rates *gyro = stateGetBodyRates_i();
 	gyro_p = RATE_FLOAT_OF_BFP(gyro->p);
