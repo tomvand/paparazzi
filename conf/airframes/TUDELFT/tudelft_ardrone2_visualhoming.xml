@@ -12,12 +12,29 @@
       <define name="VISUALHOMING_CENTER_Y" value="0.47"/>
       <define name="VISUALHOMING_RADIUS_TOP" value="0.25"/>
       <define name="VISUALHOMING_RADIUS_BOTTOM" value="0.27"/>
+      <!-- Aircraft specific tuning for dead reckoning -->
+      <define name="DR_DRAG1" value="0.5784"/>
+      <define name="DR_DRAG2" value="0.0000"/>
+      <define name="DR_THRUST" value="0.0013"/>
+      <define name="DR_GAIN" value="0.0038"/>
+      <define name="DR_BIAS_PHI" value="0.006"/>
+      <define name="DR_BIAS_THETA" value="-0.003"/>
+      <define name="DR_BIAS_AX" value="-0.043"/>
+      <define name="DR_BIAS_AY" value="-0.105"/>
     </target>
 
     <target name="nps" board="pc">
       <module name="fdm" type="gazebo"/>
       <define name="USE_SONAR" value="TRUE"/>
       <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_NAV"/>
+      <define name="DR_DRAG1" value="0.6579"/>
+      <define name="DR_DRAG2" value="0.0735"/>
+      <define name="DR_THRUST" value="0.0010"/>
+      <define name="DR_GAIN" value="0.0038"/>
+      <define name="DR_BIAS_PHI" value="0"/>
+      <define name="DR_BIAS_THETA" value="0"/>
+      <define name="DR_BIAS_AX" value="0.0011"/>
+      <define name="DR_BIAS_AY" value="0.4580"/>
     </target>
 
     <define name="ARRIVED_AT_WAYPOINT" value="0.2"/>
@@ -48,6 +65,7 @@
     <!--module name="logger_file"/-->
     <module name="video_thread"/>
     <module name="visualhoming"/>
+    <module name="dead_reckoning"/>
     <module name="video_rtp_stream">
       <define name="VIEWVIDEO_CAMERA" value="bottom_camera"/>
       <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="1"/>
@@ -105,8 +123,8 @@
     <define name="MAG_Y_CURRENT_COEF" value="0.0"/>
     <define name="MAG_Z_CURRENT_COEF" value="0.0"/>
 
-    <define name="BODY_TO_IMU_PHI" value="-2.70" unit="deg"/>
-    <define name="BODY_TO_IMU_THETA" value="-3.05" unit="deg"/>
+    <define name="BODY_TO_IMU_PHI" value="-2.39" unit="deg"/>
+    <define name="BODY_TO_IMU_THETA" value="-1.87" unit="deg"/>
     <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
   </section>
 
@@ -199,7 +217,7 @@
   </section>
 
   <section name="SIMULATOR" prefix="NPS_">
-    <define name="GAZEBO_WORLD" value='"ardrone_omni_AE_beun.world"'/>
+    <define name="GAZEBO_WORLD" value='"ardrone_omni.world"'/>
     <define name="ACTUATOR_NAMES" value="nw_motor, ne_motor, se_motor, sw_motor" type="string[]"/>
     <define name="ACTUATOR_THRUSTS" value="1.55, 1.55, 1.55, 1.55" type="double[]"/>
     <define name="ACTUATOR_TORQUES" value="0.155, -0.155, 0.155, -0.155" type="double[]"/>

@@ -66,45 +66,45 @@ static struct vh_guidance_cmd_t {
 	float vy; // Last estimated velocity [m/s]
 } vh_cmd;
 
-/**
- * Set position setpoint for use in GUIDED mode.
- * @param dx
- * @param dy
- */
-void visualhoming_guidance_set_pos_setpoint(float dx, float dy) {
-//	autopilot_guided_goto_body_relative(10.0 * dx, 10.0 * dy, 0, 0);
-	guidance_h_set_guided_body_vel(0.5 * dx, 0.5 * dy);
-	guidance_v_from_nav(1);
-}
+///**
+// * Set position setpoint for use in GUIDED mode.
+// * @param dx
+// * @param dy
+// */
+//void visualhoming_guidance_set_pos_setpoint(float dx, float dy) {
+////	autopilot_guided_goto_body_relative(10.0 * dx, 10.0 * dy, 0, 0);
+//	guidance_h_set_guided_body_vel(0.5 * dx, 0.5 * dy);
+//	guidance_v_from_nav(1);
+//}
 
-/**
- * Set new position error.
- *
- * This function estimates the current velocity using the change in position
- * error and updates the PD controller accordingly.
- * @param dx Position error [m]
- * @param dy Position error [m]
- */
-void visualhoming_guidance_set_pos_error(float dx, float dy) {
-	static uint32_t prev_ts = 0;
-	static float prev_dx = 0;
-	static float prev_dy = 0;
-
-	// Estimate current velocity
-	uint32_t now_ts = get_sys_time_usec();
-	float dt = (now_ts - prev_ts) / 1.0e6;
-	if (dt > 0.01 && prev_ts != 0) { // Prevent too small timesteps.
-		vh_cmd.vx = vh_guidance_tuning.Kf * ((prev_dx - dx) / dt)
-				+ (1 - vh_guidance_tuning.Kf) * vh_cmd.vx;
-		vh_cmd.vy = vh_guidance_tuning.Kf * ((prev_dy - dy) / dt)
-				+ (1 - vh_guidance_tuning.Kf) * vh_cmd.vy;
-		prev_dx = dx;
-		prev_dy = dy;
-	}
-
-	// Update PD controller
-	visualhoming_guidance_set_PD(dx, dy, vh_cmd.vx, vh_cmd.vy);
-}
+///**
+// * Set new position error.
+// *
+// * This function estimates the current velocity using the change in position
+// * error and updates the PD controller accordingly.
+// * @param dx Position error [m]
+// * @param dy Position error [m]
+// */
+//void visualhoming_guidance_set_pos_error(float dx, float dy) {
+//	static uint32_t prev_ts = 0;
+//	static float prev_dx = 0;
+//	static float prev_dy = 0;
+//
+//	// Estimate current velocity
+//	uint32_t now_ts = get_sys_time_usec();
+//	float dt = (now_ts - prev_ts) / 1.0e6;
+//	if (dt > 0.01 && prev_ts != 0) { // Prevent too small timesteps.
+//		vh_cmd.vx = vh_guidance_tuning.Kf * ((prev_dx - dx) / dt)
+//				+ (1 - vh_guidance_tuning.Kf) * vh_cmd.vx;
+//		vh_cmd.vy = vh_guidance_tuning.Kf * ((prev_dy - dy) / dt)
+//				+ (1 - vh_guidance_tuning.Kf) * vh_cmd.vy;
+//		prev_dx = dx;
+//		prev_dy = dy;
+//	}
+//
+//	// Update PD controller
+//	visualhoming_guidance_set_PD(dx, dy, vh_cmd.vx, vh_cmd.vy);
+//}
 
 /**
  * Set new position error and update PD controller. Unlike _set_pos_error(),
@@ -115,7 +115,10 @@ void visualhoming_guidance_set_pos_error(float dx, float dy) {
  * @param vy Current velocity [m/s]
  */
 void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
-	// Saturate homing vector
+	// Write setpoint for guided mode
+	autopilot_guided_goto_body_relative(dx, dy, 0, 0);
+	guidance_v_from_nav(true);
+	// Saturate position error
 	float magn = sqrt(dx * dx + dy * dy);
 	if (magn > VISUALHOMING_VECTOR_SATURATE) {
 		dx = dx / magn * VISUALHOMING_VECTOR_SATURATE;
@@ -131,61 +134,64 @@ void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
 		ax = ax / magn * VISUALHOMING_GUIDANCE_MAX_BANK;
 		ay = ay / magn * VISUALHOMING_GUIDANCE_MAX_BANK;
 	}
-	// Write commands
+	// Write commands for module mode
 	vh_cmd.cmd_theta = -ax;
 	vh_cmd.cmd_phi = ay;
+	// XXX DEBUG
+	printf("dx = %+.2f,\tdy = %+.2f\n", dx, dy);
+	printf("-ax = %+.2f,\tay = %+.2f\n", -ax, ay);
+	printf("theta = %+.2f,\tphi = %+.2f,\tpsi = %+.2f\n", vh_cmd.cmd_theta,
+			vh_cmd.cmd_phi, vh_cmd.cmd_psi);
 }
 
-/**
- * Move with constant pitch/roll along the homing vector
- * @param dx
- * @param dy
- */
-void visualhoming_guidance_set_constant_pitch(float dx, float dy) {
-	float magn = sqrt(dx * dx + dy * dy);
-	if (magn != 0) {
-		vh_cmd.cmd_theta = -dx / magn * VISUALHOMING_CONSTANT_PITCH;
-		vh_cmd.cmd_phi = dy / magn * VISUALHOMING_CONSTANT_PITCH;
-	} else {
-		vh_cmd.cmd_theta = 0;
-		vh_cmd.cmd_phi = 0;
-	}
-}
+///**
+// * Move with constant pitch/roll along the homing vector
+// * @param dx
+// * @param dy
+// */
+//void visualhoming_guidance_set_constant_pitch(float dx, float dy) {
+//	float magn = sqrt(dx * dx + dy * dy);
+//	if (magn != 0) {
+//		vh_cmd.cmd_theta = -dx / magn * VISUALHOMING_CONSTANT_PITCH;
+//		vh_cmd.cmd_phi = dy / magn * VISUALHOMING_CONSTANT_PITCH;
+//	} else {
+//		vh_cmd.cmd_theta = 0;
+//		vh_cmd.cmd_phi = 0;
+//	}
+//}
 
-void visualhoming_guidance_set_heading_rate(
-		float dx,
-		float dy,
-		float dt __attribute__((unused))) {
-	float dpsi = visualhoming_guidance_point_at_homingvector(dx, dy);
-	if (dpsi > -0.5 && dpsi < 0.5) {
-		vh_cmd.cmd_theta = -VISUALHOMING_CONSTANT_PITCH;
-	} else {
-		vh_cmd.cmd_theta = 0;
-	}
-	vh_cmd.cmd_phi = 0;
-}
+//void visualhoming_guidance_set_heading_rate(
+//		float dx,
+//		float dy,
+//		float dt __attribute__((unused))) {
+//	float dpsi = visualhoming_guidance_point_at_homingvector(dx, dy);
+//	if (dpsi > -0.5 && dpsi < 0.5) {
+//		vh_cmd.cmd_theta = -VISUALHOMING_CONSTANT_PITCH;
+//	} else {
+//		vh_cmd.cmd_theta = 0;
+//	}
+//	vh_cmd.cmd_phi = 0;
+//}
 
-void visualhoming_guidance_set_heading_error(float dpsi __attribute__((unused))) {
-	// XXX Fix strange rotation bug
-//	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi + dpsi;
-//	// Normalize heading
-//	while (vh_cmd.cmd_psi > 2 * M_PI)
-//		vh_cmd.cmd_psi -= 2. * M_PI;
-//	while (vh_cmd.cmd_psi < 0)
-//		vh_cmd.cmd_psi += 2. * M_PI;
-}
-
-float visualhoming_guidance_point_at_homingvector(float dx, float dy) {
-	float dpsi = atan2(dy, dx);
+void visualhoming_guidance_set_heading_error(float dpsi) {
+	// Limit dpsi
+	if (dpsi > 0.1) dpsi = 0.1;
+	if (dpsi < -0.1) dpsi = -0.1;
+	// Calculate heading setpoint
 	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi + dpsi;
-	while (vh_cmd.cmd_psi > 2 * M_PI) {
-		vh_cmd.cmd_psi -= 2 * M_PI;
-	}
-	while (vh_cmd.cmd_psi < 0) {
-		vh_cmd.cmd_psi += 2 * M_PI;
-	}
-	return dpsi;
 }
+
+//float visualhoming_guidance_point_at_homingvector(float dx, float dy) {
+//	float dpsi = atan2(dy, dx);
+//	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi + dpsi;
+//	while (vh_cmd.cmd_psi > 2 * M_PI) {
+//		vh_cmd.cmd_psi -= 2 * M_PI;
+//	}
+//	while (vh_cmd.cmd_psi < 0) {
+//		vh_cmd.cmd_psi += 2 * M_PI;
+//	}
+//	return dpsi;
+//}
 
 /**
  * Switch to MODULE mode and update AUTO2 accordingly.

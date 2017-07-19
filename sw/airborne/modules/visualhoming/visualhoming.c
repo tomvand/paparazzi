@@ -70,7 +70,7 @@ VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL;
 #endif
 
 #ifndef VISUALHOMING_ENV_RADIUS
-#define VISUALHOMING_ENV_RADIUS 1.0
+#define VISUALHOMING_ENV_RADIUS 3.0
 #endif
 float vh_environment_radius = VISUALHOMING_ENV_RADIUS;
 
@@ -94,7 +94,7 @@ static uint32_t previous_ts;
 
 // Shared measurements
 static horizon_t horizon;
-static struct homingvector_t velocity;
+static struct FloatVect2 velocity;
 static int arrival_detected = 0;
 
 // Miscellaneous telemetry data
@@ -156,7 +156,8 @@ void visualhoming_periodic(void) {
 	vh_get_current_horizon(horizon);
 	vh_snapshot_from_horizon(&current_snapshot, horizon);
 	// Estimate velocity
-	velocity = estimate_velocity(&current_snapshot);
+//	velocity = estimate_velocity(&current_snapshot);
+	velocity = dr_getBodyVel();
 
 	// Handle commands
 	if (vh_gcs_input_mode != VH_IN_NOCMD) {
@@ -193,9 +194,8 @@ void visualhoming_periodic(void) {
 		previous_heading = heading;
 
 		float dt = (float)(current_ts - previous_ts) / 1e6;
-		struct FloatVect2 vel = dr_getBodyVel();
-		float dx = vel.x * dt;
-		float dy = vel.y * dt;
+		float dx = velocity.x * dt;
+		float dy = velocity.y * dt;
 
 		vh_odometry_update(odo, dx, dy, dpsi);
 		printf("Odo update: dx = %+.2f, dy = %+.2f, dpsi = %+.2f\n", dx, dy,
@@ -212,14 +212,16 @@ void visualhoming_periodic(void) {
 	static uint32_t last_record_ts = 0;
 	static uint32_t last_replay_ts = 0;
 
-	if (vh_seq_mode != VH_SEQ_STOP && vh_input_mode == VH_IN_ODO
-			&& visualhoming_guidance_in_control()
-			&& !(vh_seq_mode == VH_SEQ_ROUTE && !odo_reqd)
-			&& vh_map_odometry()) {
+	if (vh_seq_mode != VH_SEQ_STOP
+			&& vh_input_mode == VH_IN_ODO
+			&& vh_map_odometry()
+			&& (vh_seq_mode == VH_SEQ_SINGLE
+					|| (visualhoming_guidance_in_control() && odo_reqd))) {
 		// Use ODOMETRY as guidance vector
 		odo_reqd = 1;
 		struct FloatVect2 *odo = vh_map_odometry();
-		visualhoming_guidance_set_pos_setpoint(odo->x, odo->y);
+		printf("odo->x = %+.2f,\todo->y = %+.2f\n", odo->x, odo->y);
+		visualhoming_guidance_set_PD(odo->x, odo->y, velocity.x, velocity.y);
 		// Detect arrival
 		if (sqrt(odo->x * odo->x + odo->y * odo->y) < 0.2) {
 			odo_reqd = 0;
@@ -232,9 +234,10 @@ void visualhoming_periodic(void) {
 		homingvector = vh_snapshot_homingvector(&current_snapshot,
 				target_snapshot, &current_warped_snapshot,
 				&target_rotated_snapshot);
-		visualhoming_guidance_set_pos_setpoint(3.0 * homingvector.x,
-				-3.0 * homingvector.y);
-		visualhoming_guidance_set_heading_error(homingvector.sigma);
+		// Set guidance setpoints
+		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
+				velocity.x, velocity.y);
+		visualhoming_guidance_set_heading_error(-homingvector.sigma);
 		// Waypoint sequencing in route mode
 		if (vh_seq_mode == VH_SEQ_ROUTE) {
 			if (visualhoming_guidance_in_control()) {
