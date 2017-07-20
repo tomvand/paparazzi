@@ -16,7 +16,10 @@
 #include "math/pprz_algebra_float.h"
 
 extern int dr_calibrate;
-extern float dr_bias[];
+extern float dr_drag1;
+extern float dr_filter;
+extern float dr_bias_x;
+extern float dr_bias_y;
 
 extern struct FloatVect2 dr_getBodyVel(void);
 extern float dr_getHeading(void);

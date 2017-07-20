@@ -2,16 +2,16 @@
 
 <module name="dead_reckoning">
   <doc>
-    <description>Estimate quadrotor position from IMU data.</description>
+    <description>Estimate quadrotor velocity from IMU data.</description>
   </doc>
   <settings>
     <dl_settings>
       <dl_settings name="dead_reckoning">
-        <dl_setting shortname="bias_phi" var="dr_bias[0]" min="-0.1" step="0.01" max="0.1"/>
-        <dl_setting shortname="bias_theta" var="dr_bias[1]" min="-0.1" step="0.01" max="0.1"/>
-        <dl_setting shortname="bias_ax" var="dr_bias[2]" min="-5" step="0.1" max="5"/>
-        <dl_setting shortname="bias_ay" var="dr_bias[3]" min="-5" step="0.1" max="5"/>
+        <dl_setting shortname="bias_ax" var="dr_bias_x" min="-5" step="0.1" max="5"/>
+        <dl_setting shortname="bias_ay" var="dr_bias_y" min="-5" step="0.1" max="5"/>
         <dl_setting shortname="calibrate" var="dr_calibrate" min="0" step="1" max="1"/>
+        <dl_setting shortname="drag1" var="dr_drag1" min="0" step="0.01" max="1.5"/>
+        <dl_setting shortname="filter" var="dr_filter" min="0" step="0.1" max="1.0"/>
       </dl_settings>
     </dl_settings>
   </settings>
