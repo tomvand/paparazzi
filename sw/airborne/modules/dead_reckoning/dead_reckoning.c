@@ -44,9 +44,9 @@
 float dr_drag1 = DR_DRAG1;
 
 #ifndef DR_FILTER
-#define DR_FILTER 0.5
+#define DR_FILTER 0.1
 #endif
-float dr_filter = 0.5;
+float dr_filter = DR_FILTER;
 
 #ifndef DR_BIAS_X
 #define DR_BIAS_X 0.0
