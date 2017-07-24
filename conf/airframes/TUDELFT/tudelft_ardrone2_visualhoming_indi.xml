@@ -23,6 +23,11 @@
       <module name="fdm" type="gazebo"/>
       <define name="USE_SONAR" value="TRUE"/>
       <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_NAV"/>
+      <!-- Aircraft specific tuning for velocity estimation -->
+      <define name="DR_DRAG1" value="0.1107"/>
+      <define name="DR_FILTER" value="0.1267"/>
+      <define name="DR_BIAS_X" value="0.0"/>
+      <define name="DR_BIAS_Y" value="0.0"/>
     </target>
 
     <define name="ARRIVED_AT_WAYPOINT" value="0.2"/>
@@ -234,7 +239,7 @@
   </section>
 
   <section name="SIMULATOR" prefix="NPS_">
-    <define name="GAZEBO_WORLD" value='"ardrone_omni_AE_beun.world"'/>
+    <define name="GAZEBO_WORLD" value='"ardrone_omni.world"'/>
     <define name="ACTUATOR_NAMES" value="nw_motor, ne_motor, se_motor, sw_motor" type="string[]"/>
     <define name="ACTUATOR_THRUSTS" value="1.55, 1.55, 1.55, 1.55" type="double[]"/>
     <define name="ACTUATOR_TORQUES" value="0.155, -0.155, 0.155, -0.155" type="double[]"/>
