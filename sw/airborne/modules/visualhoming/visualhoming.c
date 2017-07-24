@@ -235,7 +235,8 @@ void visualhoming_periodic(void) {
 				target_snapshot, &current_warped_snapshot,
 				&target_rotated_snapshot);
 		// Set guidance setpoints
-		visualhoming_guidance_set_PD(homingvector.x, -homingvector.y,
+		visualhoming_guidance_set_PD(vh_environment_radius * homingvector.x,
+				vh_environment_radius * -homingvector.y,
 				velocity.x, velocity.y);
 		visualhoming_guidance_set_heading_error(-homingvector.sigma);
 		// Waypoint sequencing in route mode
