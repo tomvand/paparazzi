@@ -1866,6 +1866,8 @@
       <field name="ins_y"	type="float"	unit="m"/>
       <field name="ins_vx"	type="float"	unit="m/s"/>
       <field name="ins_vy"	type="float"	unit="m/s"/>
+      <field name="ins_u"	type="float"	unit="m/s"/>
+      <field name="ins_v"	type="float"	unit="m/s"/>
     </message>
 
     <message name="NPS_WIND" id="244">

@@ -39,36 +39,24 @@
 
 /* Tuning */
 #ifndef DR_DRAG1
-#define DR_DRAG1 0.9388
+#define DR_DRAG1 0.80
 #endif
-#ifndef DR_DRAG2
-#define DR_DRAG2 0.0
-#endif
-float dr_drag[] = { DR_DRAG1, DR_DRAG2 };
+float dr_drag1 = DR_DRAG1;
 
-#ifndef DR_THRUST
-#define DR_THRUST 0.0011
+#ifndef DR_FILTER
+#define DR_FILTER 0.1
 #endif
-float dr_thrust = DR_THRUST;
+float dr_filter = DR_FILTER;
 
-#ifndef DR_GAIN
-#define DR_GAIN 0.0
+#ifndef DR_BIAS_X
+#define DR_BIAS_X 0.0
 #endif
-float dr_gain = DR_GAIN;
+float dr_bias_x = DR_BIAS_X;
 
-#ifndef DR_BIAS_PHI
-#define DR_BIAS_PHI 0.0
+#ifndef DR_BIAS_Y
+#define DR_BIAS_Y 0.0
 #endif
-#ifndef DR_BIAS_THETA
-#define DR_BIAS_THETA 0.0
-#endif
-#ifndef DR_BIAS_AX
-#define DR_BIAS_AX 0.0
-#endif
-#ifndef DR_BIAS_AY
-#define DR_BIAS_AY 0.0
-#endif
-float dr_bias[] = { DR_BIAS_PHI, DR_BIAS_THETA, DR_BIAS_AX, DR_BIAS_AY };
+float dr_bias_y = DR_BIAS_Y;
 
 /* Observer state */
 struct dr_state_t {
@@ -114,49 +102,18 @@ void dr_periodic(void) {
 		calibrate();
 	}
 	dr_calibrate_prev = dr_calibrate;
-	// State observer with single gain and quadratic drag model
-	// Timestep
-	float dt = DR_PERIODIC_PERIOD;
-	// Rotation
-	struct FloatEulers *att = stateGetNedToBodyEulers_f();
-	float new_psi = att->psi;
-	float dpsi = new_psi - dr_state.psi;
-	dr_state.psi = new_psi;
-	struct FloatVect2 v_prev = dr_state.v;
-	dr_state.v.x = cos(dpsi) * v_prev.x + sin(dpsi) * v_prev.y;
-	dr_state.v.y = -sin(dpsi) * v_prev.x + cos(dpsi) * v_prev.y;
-	// Quadratic drag model
-	float speed = FLOAT_VECT2_NORM(dr_state.v);
-	float Fdm;
-	struct FloatVect2 dir;
-	if (speed != 0) {
-		Fdm = dr_drag[0] * speed + dr_drag[1] * speed * speed;
-		dir.x = -dr_state.v.x / speed;
-		dir.y = -dr_state.v.y / speed;
-	} else {
-		Fdm = 0;
-		dir.x = 0;
-		dir.y = 0;
-	}
-	// Acceleration
-	float phi = att->phi + dr_bias[0];
-	float theta = att->theta + dr_bias[1];
-	float Ftm = stabilization_cmd[COMMAND_THRUST] * dr_thrust;
-	// Time update
-	dr_state.v.x += (Ftm * -theta + Fdm * dir.x) * dt;
-	dr_state.v.y += (Ftm * phi + Fdm * dir.y) * dt;
-	// Measurement update
-	struct FloatVect2 a_pred = {
-			.x = Fdm * dir.x,
-			.y = Fdm * dir.y
-	};
+
+	// Estimate speed directly from accelerometer
+	// Get new measurement
 	struct Int32Vect3 *acc = stateGetAccelBody_i();
-	struct FloatVect2 a_meas = {
-			.x = ACCEL_FLOAT_OF_BFP(acc->x) + dr_bias[2],
-			.y = ACCEL_FLOAT_OF_BFP(acc->y) + dr_bias[3]
-	};
-	dr_state.v.x += dr_gain * (a_meas.x - a_pred.x);
-	dr_state.v.y += dr_gain * (a_meas.y - a_pred.y);
+	float ax = ACCEL_FLOAT_OF_BFP(acc->x) + dr_bias_x;
+	float ay = ACCEL_FLOAT_OF_BFP(acc->y) + dr_bias_y;
+	// Get velocity measurement from drag
+	float vx = -ax / dr_drag1;
+	float vy = -ay / dr_drag1;
+	// Low-pass filter
+	dr_state.v.x += dr_filter * (vx - dr_state.v.x);
+	dr_state.v.y += dr_filter * (vy - dr_state.v.y);
 
 	// Output velocity estimate ABI message for use in INS
 #if DR_SEND_ABI
@@ -168,15 +125,14 @@ void dr_periodic(void) {
 	struct Int32Rates *gyro = stateGetBodyRates_i();
 	gyro_p = RATE_FLOAT_OF_BFP(gyro->p);
 	gyro_q = RATE_FLOAT_OF_BFP(gyro->q);
-	accel_x = a_meas.x;
-	accel_y = a_meas.y;
+	accel_x = ACCEL_FLOAT_OF_BFP(acc->x);
+	accel_y = ACCEL_FLOAT_OF_BFP(acc->y);
 
 }
 
 static void calibrate(void) {
 	// Average attitude values and accelerometer readings during stationary
 	// hover, in order to find their biases.
-	struct FloatEulers *att = stateGetNedToBodyEulers_f();
 	struct Int32Vect3 *acc = stateGetAccelBody_i();
 	struct FloatVect2 a_meas = {
 			.x = ACCEL_FLOAT_OF_BFP(acc->x),
@@ -186,13 +142,9 @@ static void calibrate(void) {
 		// Just started new calibration
 		calibration_samples = 0;
 	}
-	dr_bias[0] = (dr_bias[0] * calibration_samples + -att->phi)
+	dr_bias_x = (dr_bias_x * calibration_samples - a_meas.x)
 			/ (calibration_samples + 1);
-	dr_bias[1] = (dr_bias[1] * calibration_samples + -att->theta)
-			/ (calibration_samples + 1);
-	dr_bias[2] = (dr_bias[2] * calibration_samples + -a_meas.x)
-			/ (calibration_samples + 1);
-	dr_bias[3] = (dr_bias[3] * calibration_samples + -a_meas.y)
+	dr_bias_y = (dr_bias_y * calibration_samples - a_meas.y)
 			/ (calibration_samples + 1);
 	calibration_samples++;
 }
@@ -203,6 +155,10 @@ static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
 	struct FloatEulers *att = stateGetNedToBodyEulers_f();
 	struct NedCoor_f *pos = stateGetPositionNed_f();
 	struct NedCoor_f *vel = stateGetSpeedNed_f();
+	float ins_u, ins_v;
+	ins_u = cos(att->psi) * vel->x + sin(att->psi) * vel->y;
+	ins_v = -sin(att->psi) * vel->x + cos(att->psi) * vel->y;
+
 	pprz_msg_send_DEAD_RECKONING(trans, dev, AC_ID,
 			&dummy, &dummy,
 			&dr_state.v.x, &dr_state.v.y,
@@ -210,6 +166,7 @@ static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
 			&gyro_p, &gyro_q, &accel_x, &accel_y,
 			&att->phi, &att->theta, &att->psi,
 			&pos->x, &pos->y,
-			&vel->x, &vel->y);
+			&vel->x, &vel->y,
+			&ins_u, &ins_v);
 }
 

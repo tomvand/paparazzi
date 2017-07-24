@@ -362,7 +362,7 @@ static void gazebo_read(void)
   fdm.ltpprz_ecef_accel = fdm.ltp_ecef_accel; // ???
   fdm.body_inertial_accel = fdm.body_ecef_accel; // Approximate, unused.
   fdm.body_accel = to_pprz_body(
-                     pose.rot.RotateVectorReverse(accel.Ign() - world->Gravity()));
+			-pose.rot.RotateVectorReverse(accel.Ign() - world->Gravity()));
 
   /* attitude */
   // ecef_to_body_quat: unused
