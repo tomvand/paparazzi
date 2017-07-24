@@ -30,6 +30,7 @@
       <message name="VISUALHOMING" 			 period="0.1"/>
       <message name="VISUALHOMING_MAP_UPDATE" period="0.1"/>
       <message name="DEAD_RECKONING" period="0.02"/>
+      <message name="ARDRONE_NAVDATA" period="1.0"/>
     </mode>
 
     <mode name="ppm">
