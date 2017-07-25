@@ -149,6 +149,11 @@ static void calibrate(void) {
 			.x = ACCEL_FLOAT_OF_BFP(acc->x),
 			.y = ACCEL_FLOAT_OF_BFP(acc->y)
 	};
+#if DR_TEMP_BIAS
+	uint16_t temp = navdata.measure.temperature_acc;
+	a_meas.x -= bias_x(temp);
+	a_meas.y -= bias_y(temp);
+#endif
 	if (dr_calibrate_prev == 0) {
 		// Just started new calibration
 		calibration_samples = 0;
