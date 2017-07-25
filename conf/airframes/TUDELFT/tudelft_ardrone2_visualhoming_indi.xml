@@ -15,8 +15,9 @@
       <!-- Aircraft specific tuning for velocity estimation -->
       <define name="DR_DRAG1" value="0.7506"/>
       <define name="DR_FILTER" value="0.1145"/>
-      <define name="DR_BIAS_X" value="-0.0446"/>
-      <define name="DR_BIAS_Y" value="0.0285"/>
+      <define name="DR_BIAS_X" value="0.0"/>
+      <define name="DR_BIAS_Y" value="0.0"/>
+      <define name="DR_TEMP_BIAS" value="1"/>
     </target>
 
     <target name="nps" board="pc">

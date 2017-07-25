@@ -27,6 +27,11 @@
 #include "subsystems/abi.h"
 #include "mcu_periph/sys_time.h"
 
+#if DR_TEMP_BIAS
+#include "boards/ardrone/navdata.h"
+#include "temp_bias_ardrone_vh.h"
+#endif
+
 #include <stdio.h>
 
 #ifndef DR_SEND_ABI
@@ -108,6 +113,12 @@ void dr_periodic(void) {
 	struct Int32Vect3 *acc = stateGetAccelBody_i();
 	float ax = ACCEL_FLOAT_OF_BFP(acc->x) + dr_bias_x;
 	float ay = ACCEL_FLOAT_OF_BFP(acc->y) + dr_bias_y;
+	// Correct bias with temperature model
+#if DR_TEMP_BIAS
+	uint16_t temp = navdata.measure.temperature_acc;
+	ax -= bias_x(temp);
+	ay -= bias_y(temp);
+#endif
 	// Get velocity measurement from drag
 	float vx = -ax / dr_drag1;
 	float vy = -ay / dr_drag1;
