@@ -193,25 +193,15 @@ void visualhoming_guidance_set_heading_error(float dpsi) {
 //	return dpsi;
 //}
 
-/**
- * Switch to MODULE mode and update AUTO2 accordingly.
- * @return
+/** Switch autopilot mode from flightplan
+ *
+ * @param ap_mode new autopilot mode.
+ * @return FALSE
  */
-bool NavToModule(void) {
-	printf("Autopilot to MODULE mode\n");
-	autopilot_mode_auto2 = AP_MODE_MODULE;
-	autopilot_set_mode(AP_MODE_MODULE);
-	return FALSE; // Return immediately
-}
-
-/**
- * Switch to NAV mode and update AUTO2 accordingly.
- * @return
- */
-bool ModuleToNav(void) {
-	printf("Autopilot to NAV mode\n");
-	autopilot_mode_auto2 = AP_MODE_NAV;
-	autopilot_set_mode(AP_MODE_NAV);
+bool SetAPMode(uint8_t ap_mode) {
+	printf("Set autopilot to mode %d\n", ap_mode);
+	autopilot_mode_auto2 = ap_mode;
+	autopilot_set_mode(ap_mode);
 	return FALSE; // Return immediately
 }
 

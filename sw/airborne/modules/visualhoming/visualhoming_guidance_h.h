@@ -39,8 +39,7 @@ void visualhoming_guidance_set_heading_error(float dpsi);
 //float visualhoming_guidance_point_at_homingvector(float dx, float dy);
 
 /* Mode switching functions for flightplan */
-bool NavToModule(void);
-bool ModuleToNav(void);
+bool SetAPMode(uint8_t ap_mode);
 
 int visualhoming_guidance_in_control(void);
 
