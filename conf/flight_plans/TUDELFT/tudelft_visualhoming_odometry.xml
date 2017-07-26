@@ -50,6 +50,12 @@
       <call_once fun="SetAPMode(AP_MODE_MODULE)"/>
       <while cond="TRUE"/>
     </block>
+    <block name="GUIDED Hover zero position">
+      <call_once fun="VisualHomingSetOdometryMode()"/>
+      <call_once fun="VisualHomingRecordSingle()"/>
+      <call_once fun="SetAPMode(AP_MODE_GUIDED)"/>
+      <while cond="TRUE"/>
+    </block>
     <block name="MODULE Hover zero position">
       <call_once fun="VisualHomingSetOdometryMode()"/>
       <call_once fun="VisualHomingRecordSingle()"/>
