@@ -87,7 +87,7 @@ struct FloatVect2 dr_getBodyVel(void) {
 }
 
 float dr_getHeading(void) {
-	return dr_state.psi;
+	return stateGetNedToBodyEulers_f()->psi;
 }
 
 void dr_init(void) {

@@ -194,7 +194,7 @@ void visualhoming_periodic(void) {
 	if (odo) {
 		static float previous_heading = 0.0;
 
-		float heading = dr_getHeading();
+		float heading = dr_getHeading(); // TODO remove?
 		float dpsi = heading - previous_heading;
 		previous_heading = heading;
 
