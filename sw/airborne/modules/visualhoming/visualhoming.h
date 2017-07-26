@@ -49,9 +49,13 @@ extern enum vh_sequencer_mode_t vh_gcs_seq_mode;
 extern enum vh_input_mode_t vh_gcs_input_mode;
 
 /* Navigation functions for flightplan */
-bool VisualHomingTakeSnapshot(void);
-bool VisualHomingRecordOdometry(void);
+bool VisualHomingSetSnapshotMode(void);
+bool VisualHomingSetOdometryMode(void);
+
+bool VisualHomingStop(void);
+bool VisualHomingRecordSingle(void);
 bool VisualHomingRecordRoute(void);
+
 bool VisualHomingCompleted(void);
 
 /* Module functions */

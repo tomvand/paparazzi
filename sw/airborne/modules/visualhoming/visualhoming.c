@@ -103,18 +103,23 @@ static float tel_dt;
 static float tel_angle_diff;
 
 /* Navigation functions for flightplan */
-bool VisualHomingTakeSnapshot(void) {
+bool VisualHomingSetSnapshotMode(void) {
 	vh_gcs_input_mode = VH_IN_SNAPSHOT;
-	vh_gcs_seq_mode = VH_SEQ_SINGLE;
-	return FALSE; // Return immediately
+	return FALSE;
 }
-
-bool VisualHomingRecordOdometry(void) {
+bool VisualHomingSetOdometryMode(void) {
 	vh_gcs_input_mode = VH_IN_ODO;
-	vh_gcs_seq_mode = VH_SEQ_SINGLE;
-	return FALSE; // Return immediately
+	return FALSE;
 }
 
+bool VisualHomingStop(void) {
+	vh_gcs_seq_mode = VH_SEQ_STOP;
+	return FALSE;
+}
+bool VisualHomingRecordSingle(void) {
+	vh_gcs_seq_mode = VH_SEQ_SINGLE;
+	return FALSE;
+}
 bool VisualHomingRecordRoute(void) {
 	vh_gcs_seq_mode = VH_SEQ_ROUTE;
 	return FALSE;
