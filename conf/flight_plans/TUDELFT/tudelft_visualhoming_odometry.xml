@@ -1,19 +1,14 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan alt="1.0" ground_alt="0" lat0="51.990634" lon0="4.376789" max_dist_from_home="20" name="Rotorcraft Optitrack (Delft)" security_height="0.3">
+<flight_plan alt="1.0" ground_alt="0" lat0="51.990634" lon0="4.376789" max_dist_from_home="20" name="Odometry test in optitrack" security_height="0.3">
   <header>
 #include "autopilot.h"
-</header>
+  </header>
   <waypoints>
     <waypoint name="HOME" x="0.0" y="0.0"/>
-    <waypoint name="CLIMB" x="1.2" y="-0.6"/>
-    <waypoint name="GOAL" x="2.0" y="2.0"/>
-    <waypoint name="STDBY" x="-0.7" y="-0.8"/>
-    <waypoint name="TD" x="0.8" y="-1.7"/>
-    <waypoint lat="51.990630" lon="4.376823" name="p1"/>
-    <waypoint lat="51.990614" lon="4.376779" name="p2"/>
-    <waypoint lat="51.990636" lon="4.376759" name="p3"/>
-    <waypoint lat="51.990651" lon="4.376805" name="p4"/>
+    <waypoint name="CLIMB" x="0.0" y="0.0"/>
+    <waypoint name="GOAL" x="-1.5" y="-2"/>
+    <waypoint name="STDBY" x="1.5" y="2"/>
     <waypoint lat="51.9906213" lon="4.3768628" name="FA1"/>
     <waypoint lat="51.9905874" lon="4.3767766" name="FA2"/>
     <waypoint lat="51.9906409" lon="4.3767226" name="FA3"/>
@@ -33,7 +28,7 @@
       <while cond="!GpsFixValid()"/>
     </block>
     <block name="Holding point">
-      <call_once fun="NavSetWaypointHere(WP_GOAL)"/>
+      <call_once fun="NavSetWaypointHere(WP_HOME)"/>
       <call_once fun="NavKillThrottle()"/>
       <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
     </block>
@@ -42,24 +37,40 @@
       <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
     </block>
     <block name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
-      <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="Stay at goal"/>
+      <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="NAV Stay at goal"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
       <stay climb="nav_climb_vspeed" vmode="climb" wp="CLIMB"/>
     </block>
-    <block name="Stay at goal">
+    <block name="NAV Stay at goal">
+      <call_once fun="SetAPMode(AP_MODE_NAV)"/>
       <stay wp="GOAL"/>
     </block>
-    <block name="Record outbound trajectory">
-      <call_once fun="VisualHomingRecordOdometry()"/>
-      <stay wp="STDBY"/>
+    <block name="MODULE Hover zero velocity">
+      <call_once fun="VisualHomingStop()"/>
+      <call_once fun="SetAPMode(AP_MODE_MODULE)"/>
+      <while cond="TRUE"/>
     </block>
-    <block name="MODULE Return using odometry">
-      <call_once fun="NavToModule()"/>
-      <while cond="!VisualHomingCompleted()"/>
+    <block name="MODULE Hover zero position">
+      <call_once fun="VisualHomingSetOdometryMode()"/>
+      <call_once fun="VisualHomingRecordSingle()"/>
+      <call_once fun="SetAPMode(AP_MODE_MODULE)"/>
+      <while cond="TRUE"/>
     </block>
-    <block name="NAV Return to goal">
-      <call fun="ModuleToNav()"/>
-      <deroute block="Stay at goal"/>
+    <block name="GUIDED Trajectory">
+      <call_once fun="VisualHomingSetOdometryMode()"/>
+      <call_once fun="VisualHomingRecordSingle()"/>
+      <go wp="STDBY" from="GOAL" hmode="route"/>
+      <stay wp="STDBY" until="stage_time>2.0"/>
+      <call_once fun="SetAPMode(AP_MODE_GUIDED)"/>
+      <while cond="TRUE"/>
+    </block>
+    <block name="MODULE Trajectory">
+      <call_once fun="VisualHomingSetOdometryMode()"/>
+      <call_once fun="VisualHomingRecordSingle()"/>
+      <go wp="STDBY" from="GOAL" hmode="route"/>
+      <stay wp="STDBY" until="stage_time>2.0"/>
+      <call_once fun="SetAPMode(AP_MODE_MODULE)"/>
+      <while cond="TRUE"/>
     </block>
   </blocks>
 </flight_plan>
