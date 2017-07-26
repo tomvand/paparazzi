@@ -8,7 +8,8 @@
     <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="CLIMB" x="0.0" y="0.0"/>
     <waypoint name="GOAL" x="-1.5" y="-2"/>
-    <waypoint name="STDBY" x="1.5" y="2"/>
+    <waypoint name="TRAJ" x="1.5" y="2"/>
+    <waypoint name="STDBY" x="0.0" y="0.0"/>
     <waypoint lat="51.9906213" lon="4.3768628" name="FA1"/>
     <waypoint lat="51.9905874" lon="4.3767766" name="FA2"/>
     <waypoint lat="51.9906409" lon="4.3767226" name="FA3"/>
@@ -37,11 +38,15 @@
       <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
     </block>
     <block name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
-      <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="NAV Stay at goal"/>
+      <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="NAV Stay at STDBY"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
       <stay climb="nav_climb_vspeed" vmode="climb" wp="CLIMB"/>
     </block>
-    <block name="NAV Stay at goal">
+    <block name="NAV Stay at STDBY">
+      <call_once fun="SetAPMode(AP_MODE_NAV)"/>
+      <stay wp="STDBY"/>
+    </block>
+    <block name="NAV stay at GOAL">
       <call_once fun="SetAPMode(AP_MODE_NAV)"/>
       <stay wp="GOAL"/>
     </block>
@@ -65,16 +70,16 @@
     <block name="GUIDED Trajectory">
       <call_once fun="VisualHomingSetOdometryMode()"/>
       <call_once fun="VisualHomingRecordSingle()"/>
-      <go wp="STDBY" from="GOAL" hmode="route"/>
-      <stay wp="STDBY" until="stage_time>2.0"/>
+      <go wp="TRAJ" from="GOAL" hmode="route"/>
+      <stay wp="TRAJ" until="stage_time>2.0"/>
       <call_once fun="SetAPMode(AP_MODE_GUIDED)"/>
       <while cond="TRUE"/>
     </block>
     <block name="MODULE Trajectory">
       <call_once fun="VisualHomingSetOdometryMode()"/>
       <call_once fun="VisualHomingRecordSingle()"/>
-      <go wp="STDBY" from="GOAL" hmode="route"/>
-      <stay wp="STDBY" until="stage_time>2.0"/>
+      <go wp="TRAJ" from="GOAL" hmode="route"/>
+      <stay wp="TRAJ" until="stage_time>2.0"/>
       <call_once fun="SetAPMode(AP_MODE_MODULE)"/>
       <while cond="TRUE"/>
     </block>
