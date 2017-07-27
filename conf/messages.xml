@@ -1749,6 +1749,9 @@
       <field name="step_time" type="uint32" unit="us"/>
       <field name="angle_diff" type="float" unit="rad"/>
       <field name="in_control" type="int8"/>
+      <field name="cmd_phi" type="float" unit="rad"/>
+      <field name="cmd_theta" type="float" unit="rad"/>
+      <field name="cmd_psi" type="float" unit="rad"/>
 	</message>
 
     <message name="ROTORCRAFT_STATUS" id="231">

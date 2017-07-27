@@ -216,6 +216,15 @@ int visualhoming_guidance_in_control(void) {
 					&& horizontal_mode == HORIZONTAL_MODE_ATTITUDE);
 }
 
+struct FloatEulers visualhoming_guidance_get_command(void) {
+	struct FloatEulers cmd = {
+			.phi = vh_cmd.cmd_phi,
+			.theta = vh_cmd.cmd_theta,
+			.psi = vh_cmd.cmd_psi
+	};
+	return cmd;
+}
+
 void guidance_h_module_init(void) {
 	// Do nothing
 }

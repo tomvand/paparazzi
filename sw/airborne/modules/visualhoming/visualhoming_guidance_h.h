@@ -43,6 +43,8 @@ bool SetAPMode(uint8_t ap_mode);
 
 int visualhoming_guidance_in_control(void);
 
+struct FloatEulers visualhoming_guidance_get_command(void);
+
 void guidance_h_module_init(void);
 void guidance_h_module_enter(void);
 void guidance_h_module_read_rc(void);

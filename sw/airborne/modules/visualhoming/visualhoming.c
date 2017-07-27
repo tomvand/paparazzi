@@ -423,6 +423,8 @@ static void send_visualhoming(
 	struct EnuCoor_f *enu = stateGetPositionEnu_f();
 	float psi = stateGetNedToBodyEulers_f()->psi;
 
+	struct FloatEulers cmd = visualhoming_guidance_get_command();
+
 	float dummy = 0;
 
 	pprz_msg_send_VISUALHOMING(trans, dev, AC_ID, &input_mode, &sequencer_mode,
@@ -433,6 +435,7 @@ static void send_visualhoming(
 			&velocity.x, &velocity.y,
 			&current_ts, &tel_dt, &step_time,
 			&tel_angle_diff,
-			&in_control);
+			&in_control,
+			&cmd.phi, &cmd.theta, &cmd.psi);
 }
 
