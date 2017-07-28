@@ -169,8 +169,8 @@ static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
 {
 	float dummy = 0;
 	struct FloatEulers *att = stateGetNedToBodyEulers_f();
-	struct NedCoor_f *pos = stateGetPositionNed_f();
-	struct NedCoor_f *vel = stateGetSpeedNed_f();
+	struct EnuCoor_f *pos = stateGetPositionEnu_f();
+	struct EnuCoor_f *vel = stateGetSpeedEnu_f();
 	float ins_u, ins_v;
 	ins_u = cos(att->psi) * vel->x + sin(att->psi) * vel->y;
 	ins_v = -sin(att->psi) * vel->x + cos(att->psi) * vel->y;
