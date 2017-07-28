@@ -42,25 +42,24 @@
       <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
     </block>
     <block name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
-      <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="Stay at goal"/>
+      <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="NAV Stay at goal"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
       <stay climb="nav_climb_vspeed" vmode="climb" wp="CLIMB"/>
     </block>
-    <block name="Stay at goal">
+    <block name="NAV Stay at goal">
+      <call_once fun="SetAPMode(AP_MODE_NAV)"/>
       <stay wp="GOAL"/>
     </block>
     <block name="Record trajectory">
+      <call_once fun="SetAPMode(AP_MODE_NAV)"/>
       <call_once fun="VisualHomingRecordRoute()"/>
       <path wpts="EI1,EI2,EI3,EI4,EI5,EI6,EI7,EI8,EI9,EI10,EI11,EI12,EI13,EI14,EI15,EI16,EI17,EI18,GOAL" approaching_time="0"/>
       <stay wp="GOAL"/>
     </block>
-    <block name="[MODULE] Follow route">
-      <call_once fun="NavToModule()"/>
+    <block name="MODULE Follow route">
+      <call_once fun="SetAPMode(AP_MODE_MODULE)"/>
       <while cond="!VisualHomingCompleted()"/>
-    </block>
-    <block name="[NAV] Return to goal">
-      <call_once fun="ModuleToNav()"/>
-      <deroute block="Stay at goal"/>
+      <deroute block="NAV Stay at goal"/>
     </block>
   </blocks>
 </flight_plan>
