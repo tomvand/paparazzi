@@ -137,6 +137,7 @@ void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
 	// Write commands for module mode
 	vh_cmd.cmd_theta = -ax;
 	vh_cmd.cmd_phi = ay;
+	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi;
 	// XXX DEBUG
 	printf("dx = %+.2f,\tdy = %+.2f\n", dx, dy);
 	printf("-ax = %+.2f,\tay = %+.2f\n", -ax, ay);
