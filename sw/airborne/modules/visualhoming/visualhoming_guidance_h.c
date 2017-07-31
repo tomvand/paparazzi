@@ -28,171 +28,195 @@
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude.h"
 #include "mcu_periph/sys_time.h"
 
+#include "modules/dead_reckoning/dead_reckoning.h"
+
+#include "generated/modules.h"
+
 #include <stdio.h>
 
-// PD tuning
-#ifndef VISUALHOMING_GUIDANCE_P
-#define VISUALHOMING_GUIDANCE_P 0.50
-#endif
-#ifndef VISUALHOMING_GUIDANCE_TD
-#define VISUALHOMING_GUIDANCE_TD 0.30
-#endif
-#ifndef VISUALHOMING_GUIDANCE_FILTER_GAIN
-#define VISUALHOMING_GUIDANCE_FILTER_GAIN 1.00
-#endif
-#ifndef VISUALHOMING_GUIDANCE_MAX_BANK
-#define VISUALHOMING_GUIDANCE_MAX_BANK 0.18 // rad
-#endif
-#ifndef VISUALHOMING_VECTOR_SATURATE
-#define VISUALHOMING_VECTOR_SATURATE 0.10
-#endif
-#ifndef VISUALHOMING_CONSTANT_PITCH
-#define VISUALHOMING_CONSTANT_PITCH 0.10 // rad
-#endif
-#ifndef VISUALHOMING_GUIDANCE_HEADING_RATE
-#define VISUALHOMING_GUIDANCE_HEADING_RATE 10.0 // rad/s
+#ifndef VH_MAX_BANK
+#define VH_MAX_BANK GUIDANCE_H_MAX_BANK
 #endif
 
-struct vh_guidance_tuning_t vh_guidance_tuning = {
-		.Kp = VISUALHOMING_GUIDANCE_P,
-		.Td = VISUALHOMING_GUIDANCE_TD,
-		.Kf = VISUALHOMING_GUIDANCE_FILTER_GAIN };
+/** Default speed saturation (taken from guidance_h_ref.h) */
+#ifndef GUIDANCE_H_REF_MAX_SPEED
+#define GUIDANCE_H_REF_MAX_SPEED 5.
+#endif
+PRINT_CONFIG_MSG_VALUE("VH MAX SPEED ", GUIDANCE_H_REF_MAX_SPEED);
 
-static struct vh_guidance_cmd_t {
-	float cmd_phi;		// Roll [rad]
-	float cmd_theta;	// Pitch [rad]
-	float cmd_psi;		// Yaw [rad]
-	float vx; // Last estimated velocity [m/s]
-	float vy; // Last estimated velocity [m/s]
-} vh_cmd;
+/* Misc */
+static const float dt = (1.0 / MODULES_FREQUENCY);
+static const float max_pos_error = 16.0;
 
-///**
-// * Set position setpoint for use in GUIDED mode.
-// * @param dx
-// * @param dy
-// */
-//void visualhoming_guidance_set_pos_setpoint(float dx, float dy) {
-////	autopilot_guided_goto_body_relative(10.0 * dx, 10.0 * dy, 0, 0);
-//	guidance_h_set_guided_body_vel(0.5 * dx, 0.5 * dy);
-//	guidance_v_from_nav(1);
-//}
+/* Guidance state */
+#ifndef VH_GUIDANCE_H_PGAIN
+#define VH_GUIDANCE_H_PGAIN GUIDANCE_H_PGAIN
+#endif
+#ifndef VH_GUIDANCE_H_IGAIN
+#define VH_GUIDANCE_H_IGAIN GUIDANCE_H_IGAIN
+#endif
+#ifndef VH_GUIDANCE_H_DGAIN
+#define VH_GUIDANCE_H_DGAIN GUIDANCE_H_DGAIN
+#endif
 
-///**
-// * Set new position error.
-// *
-// * This function estimates the current velocity using the change in position
-// * error and updates the PD controller accordingly.
-// * @param dx Position error [m]
-// * @param dy Position error [m]
-// */
-//void visualhoming_guidance_set_pos_error(float dx, float dy) {
-//	static uint32_t prev_ts = 0;
-//	static float prev_dx = 0;
-//	static float prev_dy = 0;
-//
-//	// Estimate current velocity
-//	uint32_t now_ts = get_sys_time_usec();
-//	float dt = (now_ts - prev_ts) / 1.0e6;
-//	if (dt > 0.01 && prev_ts != 0) { // Prevent too small timesteps.
-//		vh_cmd.vx = vh_guidance_tuning.Kf * ((prev_dx - dx) / dt)
-//				+ (1 - vh_guidance_tuning.Kf) * vh_cmd.vx;
-//		vh_cmd.vy = vh_guidance_tuning.Kf * ((prev_dy - dy) / dt)
-//				+ (1 - vh_guidance_tuning.Kf) * vh_cmd.vy;
-//		prev_dx = dx;
-//		prev_dy = dy;
-//	}
-//
-//	// Update PD controller
-//	visualhoming_guidance_set_PD(dx, dy, vh_cmd.vx, vh_cmd.vy);
-//}
+struct vh_guidance_t vh_guidance = {
+		.gains.p = VH_GUIDANCE_H_PGAIN,
+		.gains.i = VH_GUIDANCE_H_IGAIN,
+		.gains.d = VH_GUIDANCE_H_DGAIN,
+		.maneuver_time = 10.0
+};
 
-/**
- * Set new position error and update PD controller. Unlike _set_pos_error(),
- * this function accepts external velocity estimates.
- * @param dx Position error [m]
- * @param dy Position error [m]
- * @param vx Current velocity [m/s]
- * @param vy Current velocity [m/s]
- */
-void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy) {
-	// Write setpoint for guided mode
-	autopilot_guided_goto_body_relative(dx, dy, 0, 0);
-	guidance_v_from_nav(true);
-	// Saturate position error
-	float magn = sqrt(dx * dx + dy * dy);
-	if (magn > VISUALHOMING_VECTOR_SATURATE) {
-		dx = dx / magn * VISUALHOMING_VECTOR_SATURATE;
-		dy = dy / magn * VISUALHOMING_VECTOR_SATURATE;
-	}
-	// Calculate desired angles
-	float ax, ay;
-	ax = vh_guidance_tuning.Kp * (dx - vh_guidance_tuning.Td * vx);
-	ay = vh_guidance_tuning.Kp * (dy - vh_guidance_tuning.Td * vy);
-	// Saturate angles
-	magn = sqrt(ax * ax + ay * ay);
-	if (magn > VISUALHOMING_GUIDANCE_MAX_BANK) {
-		ax = ax / magn * VISUALHOMING_GUIDANCE_MAX_BANK;
-		ay = ay / magn * VISUALHOMING_GUIDANCE_MAX_BANK;
-	}
-	// Write commands for module mode
-	vh_cmd.cmd_theta = -ax;
-	vh_cmd.cmd_phi = ay;
-	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi;
-	// XXX DEBUG
-	printf("dx = %+.2f,\tdy = %+.2f\n", dx, dy);
-	printf("-ax = %+.2f,\tay = %+.2f\n", -ax, ay);
-	printf("theta = %+.2f,\tphi = %+.2f,\tpsi = %+.2f\n", vh_cmd.cmd_theta,
-			vh_cmd.cmd_phi, vh_cmd.cmd_psi);
+/* Guidance functions */
+void vh_guidance_set_pos(float x, float y) {
+	vh_guidance.sp.pos.x = x;
+	vh_guidance.sp.pos.y = y;
+	vh_guidance.sp.pos_set = TRUE;
+	vh_guidance.sp.vel_set = FALSE;
 }
 
-///**
-// * Move with constant pitch/roll along the homing vector
-// * @param dx
-// * @param dy
-// */
-//void visualhoming_guidance_set_constant_pitch(float dx, float dy) {
-//	float magn = sqrt(dx * dx + dy * dy);
-//	if (magn != 0) {
-//		vh_cmd.cmd_theta = -dx / magn * VISUALHOMING_CONSTANT_PITCH;
-//		vh_cmd.cmd_phi = dy / magn * VISUALHOMING_CONSTANT_PITCH;
-//	} else {
-//		vh_cmd.cmd_theta = 0;
-//		vh_cmd.cmd_phi = 0;
-//	}
-//}
-
-//void visualhoming_guidance_set_heading_rate(
-//		float dx,
-//		float dy,
-//		float dt __attribute__((unused))) {
-//	float dpsi = visualhoming_guidance_point_at_homingvector(dx, dy);
-//	if (dpsi > -0.5 && dpsi < 0.5) {
-//		vh_cmd.cmd_theta = -VISUALHOMING_CONSTANT_PITCH;
-//	} else {
-//		vh_cmd.cmd_theta = 0;
-//	}
-//	vh_cmd.cmd_phi = 0;
-//}
-
-void visualhoming_guidance_set_heading_error(float dpsi) {
-	// Limit dpsi
-	if (dpsi > 0.1) dpsi = 0.1;
-	if (dpsi < -0.1) dpsi = -0.1;
-	// Calculate heading setpoint
-	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi + dpsi;
+void vh_guidance_set_pos_vel(float x, float y, float u, float v) {
+	vh_guidance.sp.pos.x = x;
+	vh_guidance.sp.pos.y = y;
+	vh_guidance.sp.pos_set = TRUE;
+	vh_guidance.sp.vel.x = u;
+	vh_guidance.sp.vel.y = v;
+	vh_guidance.sp.vel_set = TRUE;
 }
 
-//float visualhoming_guidance_point_at_homingvector(float dx, float dy) {
-//	float dpsi = atan2(dy, dx);
-//	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi + dpsi;
-//	while (vh_cmd.cmd_psi > 2 * M_PI) {
-//		vh_cmd.cmd_psi -= 2 * M_PI;
-//	}
-//	while (vh_cmd.cmd_psi < 0) {
-//		vh_cmd.cmd_psi += 2 * M_PI;
-//	}
-//	return dpsi;
-//}
+void vh_guidance_set_vel(float u, float v) {
+	vh_guidance.sp.pos.x = 0;
+	vh_guidance.sp.pos.y = 0;
+	vh_guidance.sp.pos_set = TRUE;
+	vh_guidance.sp.vel.x = u;
+	vh_guidance.sp.vel.y = v;
+	vh_guidance.sp.vel_set = TRUE;
+}
+
+void vh_guidance_change_heading(float delta_psi) {
+	vh_guidance.cmd.psi += delta_psi;
+}
+
+
+void guidance_h_module_init(void) {
+	// Do nothing
+}
+
+void guidance_h_module_enter(void) {
+	vh_guidance.integrator.x = 0;
+	vh_guidance.integrator.y = 0;
+	vh_guidance.cmd.psi = stateGetNedToBodyEulers_f()->psi;
+}
+
+void guidance_h_module_read_rc(void) {
+	// Do nothing
+}
+
+// with a pgain of 100 and this scale,
+// you get an angle of 5.6 degrees for 1m pos error
+// See guidance_h.c
+#define VH_GAIN_SCALE 1.0e-3
+
+void guidance_h_module_run(bool in_flight) {
+	// Get current velocities
+	struct FloatVect2 vel = dr_getBodyVel();
+
+	// Fill unset reference signals
+	if (!vh_guidance.sp.pos_set && !vh_guidance.sp.vel_set) {
+		vh_guidance.sp.pos.x = 0;
+		vh_guidance.sp.pos.y = 0;
+		vh_guidance.sp.vel.x = 0;
+		vh_guidance.sp.vel.y = 0;
+	} else if (!vh_guidance.sp.pos_set) {
+		vh_guidance.sp.pos.x = vh_guidance.sp.vel.x * vh_guidance.maneuver_time;
+		vh_guidance.sp.pos.y = vh_guidance.sp.vel.y * vh_guidance.maneuver_time;
+	} else if (!vh_guidance.sp.vel_set) {
+		vh_guidance.sp.vel.x = vh_guidance.sp.pos.x / vh_guidance.maneuver_time;
+		vh_guidance.sp.vel.y = vh_guidance.sp.pos.y / vh_guidance.maneuver_time;
+	}
+	// Trim reference velocity
+	float vel_magn = sqrt(vh_guidance.sp.vel.x * vh_guidance.sp.vel.x +
+			vh_guidance.sp.vel.y * vh_guidance.sp.vel.y);
+	if (vel_magn > GUIDANCE_H_REF_MAX_SPEED) {
+		vh_guidance.sp.vel.x = vh_guidance.sp.vel.x
+				/ vel_magn* GUIDANCE_H_REF_MAX_SPEED;
+		vh_guidance.sp.vel.y = vh_guidance.sp.vel.y
+				/ vel_magn* GUIDANCE_H_REF_MAX_SPEED;
+	}
+	// Trim reference position
+	float pos_magn = sqrt(vh_guidance.sp.pos.x * vh_guidance.sp.pos.x +
+			vh_guidance.sp.pos.y * vh_guidance.sp.pos.y);
+	if (pos_magn > max_pos_error) {
+		vh_guidance.sp.pos.x = vh_guidance.sp.pos.x
+				/ pos_magn * max_pos_error;
+		vh_guidance.sp.pos.y = vh_guidance.sp.pos.y
+				/ pos_magn * max_pos_error;
+	}
+
+	// Compute velocity error
+	float vel_err_x = vh_guidance.sp.vel.x - vel.x;
+	float vel_err_y = vh_guidance.sp.vel.y - vel.y;
+
+	// Run PD
+	float pd_x = vh_guidance.gains.p * vh_guidance.sp.pos.x * VH_GAIN_SCALE +
+			vh_guidance.gains.d * vel_err_x * VH_GAIN_SCALE;
+	float pd_y = vh_guidance.gains.p * vh_guidance.sp.pos.y * VH_GAIN_SCALE +
+			vh_guidance.gains.d * vel_err_y * VH_GAIN_SCALE;
+	// Trim PD command
+	float pd_magn = sqrt(pd_x * pd_x + pd_y * pd_y);
+	if (pd_magn > VH_MAX_BANK) {
+		pd_x = pd_x / pd_magn * VH_MAX_BANK;
+		pd_y = pd_y / pd_magn * VH_MAX_BANK;
+	}
+
+	// Update integrator
+	if (in_flight) {
+		// Update integrator
+		vh_guidance.integrator.x += vh_guidance.gains.i * pd_x * VH_GAIN_SCALE
+				* VH_GAIN_SCALE; // Scaled twice as in guidance_h.c
+		vh_guidance.integrator.y += vh_guidance.gains.i * pd_y * VH_GAIN_SCALE
+				* VH_GAIN_SCALE;
+		// Trim
+		float int_magn = sqrt(
+				vh_guidance.integrator.x * vh_guidance.integrator.x
+						+ vh_guidance.integrator.y * vh_guidance.integrator.y);
+		if (int_magn > VH_MAX_BANK) {
+			vh_guidance.integrator.x = vh_guidance.integrator.x
+					/ int_magn* VH_MAX_BANK;
+			vh_guidance.integrator.y = vh_guidance.integrator.y
+					/ int_magn* VH_MAX_BANK;
+		}
+		// Add to command
+		pd_x += vh_guidance.integrator.x;
+		pd_y += vh_guidance.integrator.y;
+	} else {
+		vh_guidance.integrator.x = 0;
+		vh_guidance.integrator.y = 0;
+	}
+
+	// Trim setpoints
+	float sp_magn = sqrt(pd_x * pd_x + pd_y * pd_y);
+	if (sp_magn > VH_MAX_BANK) {
+		pd_x = pd_x / sp_magn * VH_MAX_BANK;
+		pd_y = pd_y / sp_magn * VH_MAX_BANK;
+	}
+
+	// Store setpoints
+	vh_guidance.cmd.phi = pd_y;
+	vh_guidance.cmd.theta = -pd_x;
+
+	// Run stabilization
+	struct Int32Eulers rpy;
+	EULERS_BFP_OF_REAL(rpy, vh_guidance.cmd);
+	stabilization_attitude_set_rpy_setpoint_i(&rpy);
+	stabilization_attitude_run(in_flight);
+
+	// Update velocity setpoint
+	if (vh_guidance.sp.pos_set) {
+		vh_guidance.sp.pos.x -= vel.x * dt;
+		vh_guidance.sp.pos.y -= vel.y * dt;
+	}
+}
+
 
 /** Switch autopilot mode from flightplan
  *
@@ -212,41 +236,6 @@ bool SetAPMode(uint8_t ap_mode) {
  */
 int visualhoming_guidance_in_control(void) {
 	return (guidance_h.mode == GUIDANCE_H_MODE_MODULE)
-			|| (guidance_h.mode == GUIDANCE_H_MODE_GUIDED)
-			|| (guidance_h.mode == GUIDANCE_H_MODE_NAV
-					&& horizontal_mode == HORIZONTAL_MODE_ATTITUDE);
-}
-
-struct FloatEulers visualhoming_guidance_get_command(void) {
-	struct FloatEulers cmd = {
-			.phi = vh_cmd.cmd_phi,
-			.theta = vh_cmd.cmd_theta,
-			.psi = vh_cmd.cmd_psi
-	};
-	return cmd;
-}
-
-void guidance_h_module_init(void) {
-	// Do nothing
-}
-
-void guidance_h_module_enter(void) {
-	// Set setpoints to zero
-	vh_cmd.cmd_theta = 0;
-	vh_cmd.cmd_phi = 0;
-	vh_cmd.cmd_psi = stateGetNedToBodyEulers_f()->psi;
-}
-
-void guidance_h_module_read_rc(void) {
-	// Do nothing
-}
-
-void guidance_h_module_run(bool in_flight) {
-	struct Int32Eulers rpy = {
-			.theta = ANGLE_BFP_OF_REAL(vh_cmd.cmd_theta),
-			.phi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_phi),
-			.psi = ANGLE_BFP_OF_REAL(vh_cmd.cmd_psi) };
-	stabilization_attitude_set_rpy_setpoint_i(&rpy);
-	stabilization_attitude_run(in_flight);
+			|| (guidance_h.mode == GUIDANCE_H_MODE_GUIDED);
 }
 

@@ -23,27 +23,38 @@
 #include "state.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude.h"
 
-struct vh_guidance_tuning_t {
-	float Kp; // P-gain [rad/m]
-	float Td; // D-gain [rad/(m/s)]
-	float Kf; // Filter gain [0..1], where 1 does not use old estimates
+struct vh_gains_t {
+	float p;
+	float d;
+	float i;
 };
-extern struct vh_guidance_tuning_t vh_guidance_tuning;
 
-//void visualhoming_guidance_set_pos_setpoint(float dx, float dy);
-//void visualhoming_guidance_set_pos_error(float dx, float dy);
-void visualhoming_guidance_set_PD(float dx, float dy, float vx, float vy);
-//void visualhoming_guidance_set_constant_pitch(float dx, float dy);
-//void visualhoming_guidance_set_heading_rate(float dx, float dy, float dt);
-void visualhoming_guidance_set_heading_error(float dpsi);
-//float visualhoming_guidance_point_at_homingvector(float dx, float dy);
+struct vh_g_setpoint_t {
+	struct FloatVect2 pos; // Position setpoint [m]
+	bool pos_set; // Is position set by user?
+	struct FloatVect2 vel; // Velocity setpoint [m]
+	bool vel_set; // Is velocity set by user?
+};
+
+struct vh_guidance_t {
+	struct vh_gains_t gains; // Control gains
+	struct vh_g_setpoint_t sp; // Setpoints
+	struct FloatVect2 integrator; // Integrator state
+	struct FloatEulers cmd; // Commanded attitude
+	float maneuver_time; // Expected time for feedforward pos/vel signals [s]
+};
+extern struct vh_guidance_t vh_guidance;
+
+/* Setpoints */
+void vh_guidance_set_pos(float x, float y);
+void vh_guidance_set_pos_vel(float x, float y, float u, float v);
+void vh_guidance_set_vel(float u, float v);
+void vh_guidance_change_heading(float delta_psi);
 
 /* Mode switching functions for flightplan */
 bool SetAPMode(uint8_t ap_mode);
 
 int visualhoming_guidance_in_control(void);
-
-struct FloatEulers visualhoming_guidance_get_command(void);
 
 void guidance_h_module_init(void);
 void guidance_h_module_enter(void);

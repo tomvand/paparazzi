@@ -1752,6 +1752,8 @@
       <field name="cmd_phi" type="float" unit="rad"/>
       <field name="cmd_theta" type="float" unit="rad"/>
       <field name="cmd_psi" type="float" unit="rad"/>
+      <field name="int_x" type="float" unit="rad"/>
+      <field name="int_y" type="float" unit="rad"/>
 	</message>
 
     <message name="ROTORCRAFT_STATUS" id="231">
