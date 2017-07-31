@@ -153,6 +153,10 @@ void visualhoming_init(void) {
 }
 
 void visualhoming_periodic(void) {
+	// Check that horizon has been updated
+	current_ts = vh_get_current_timestamp();
+	if (current_ts == previous_ts) return; // Nothing else to do if image hasn't been updated.
+
 	// Update odometry
 	struct FloatVect2 *odo = vh_map_odometry();
 	if (odo) {
@@ -162,7 +166,7 @@ void visualhoming_periodic(void) {
 		float dpsi = heading - previous_heading;
 		previous_heading = heading;
 
-		float dt = VISUALHOMING_PERIODIC_PERIOD;
+		float dt = (float)(current_ts - previous_ts) / 1e6;
 		float dx = velocity.x * dt;
 		float dy = velocity.y * dt;
 
@@ -171,10 +175,6 @@ void visualhoming_periodic(void) {
 				dpsi);
 		printf("Odo: x = %+.2f, y = %+.2f\n", odo->x, odo->y);
 	}
-
-	// Check that horizon has been updated
-	current_ts = vh_get_current_timestamp();
-	if (current_ts == previous_ts) return; // Nothing else to do if image hasn't been updated.
 
 	// Get current snapshot
 	vh_get_current_horizon(horizon);
