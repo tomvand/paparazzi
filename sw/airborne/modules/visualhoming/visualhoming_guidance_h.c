@@ -183,9 +183,9 @@ void guidance_h_module_run(bool in_flight) {
 			vh_guidance.gains.d * vel_err_y * VH_GAIN_SCALE;
 	// Trim PD command
 	float pd_magn = sqrt(pd_x * pd_x + pd_y * pd_y);
-	if (pd_magn > VH_MAX_BANK) {
-		pd_x = pd_x / pd_magn * VH_MAX_BANK;
-		pd_y = pd_y / pd_magn * VH_MAX_BANK;
+	if (pd_magn > VH_MAX_BANK / 2) {
+		pd_x = pd_x / pd_magn * VH_MAX_BANK / 2;
+		pd_y = pd_y / pd_magn * VH_MAX_BANK / 2;
 	}
 
 	// Update integrator
@@ -199,11 +199,11 @@ void guidance_h_module_run(bool in_flight) {
 		float int_magn = sqrt(
 				vh_guidance.integrator.x * vh_guidance.integrator.x
 						+ vh_guidance.integrator.y * vh_guidance.integrator.y);
-		if (int_magn > VH_MAX_BANK) {
+		if (int_magn > VH_MAX_BANK / 2) {
 			vh_guidance.integrator.x = vh_guidance.integrator.x
-					/ int_magn* VH_MAX_BANK;
+					/ int_magn * VH_MAX_BANK / 2;
 			vh_guidance.integrator.y = vh_guidance.integrator.y
-					/ int_magn* VH_MAX_BANK;
+					/ int_magn * VH_MAX_BANK / 2;
 		}
 		// Add to command
 		pd_x += vh_guidance.integrator.x;
