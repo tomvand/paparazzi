@@ -44,6 +44,14 @@
 #endif
 PRINT_CONFIG_MSG_VALUE("VH MAX SPEED ", GUIDANCE_H_REF_MAX_SPEED);
 
+/** Accel saturation.
+ * tanf(RadOfDeg(30.))*9.81 = 5.66
+ */
+#ifndef GUIDANCE_H_REF_MAX_ACCEL
+#define GUIDANCE_H_REF_MAX_ACCEL 5.66
+#endif
+PRINT_CONFIG_MSG_VALUE("VH MAX ACCEL ", GUIDANCE_H_REF_MAX_ACCEL);
+
 /* Misc */
 static const float dt = (1.0 / MODULES_FREQUENCY);
 static const float max_pos_error = 16.0;
@@ -102,6 +110,8 @@ void guidance_h_module_init(void) {
 }
 
 void guidance_h_module_enter(void) {
+	vh_guidance.sp.vel.x = 0;
+	vh_guidance.sp.vel.y = 0;
 	vh_guidance.integrator.x = 0;
 	vh_guidance.integrator.y = 0;
 	vh_guidance.cmd.psi = stateGetNedToBodyEulers_f()->psi;
@@ -130,8 +140,18 @@ void guidance_h_module_run(bool in_flight) {
 		vh_guidance.sp.pos.x = vh_guidance.sp.vel.x * vh_guidance.maneuver_time;
 		vh_guidance.sp.pos.y = vh_guidance.sp.vel.y * vh_guidance.maneuver_time;
 	} else if (!vh_guidance.sp.vel_set) {
-		vh_guidance.sp.vel.x = vh_guidance.sp.pos.x / vh_guidance.maneuver_time;
-		vh_guidance.sp.vel.y = vh_guidance.sp.pos.y / vh_guidance.maneuver_time;
+		float diff_x = vh_guidance.sp.pos.x / vh_guidance.maneuver_time
+				- vh_guidance.sp.vel.x;
+		float diff_y = vh_guidance.sp.pos.y / vh_guidance.maneuver_time
+				- vh_guidance.sp.vel.y;
+		float diff_magn = sqrt(diff_x * diff_x + diff_y * diff_y);
+		float diff_max = (float)GUIDANCE_H_REF_MAX_ACCEL / MODULES_FREQUENCY;
+		if (diff_magn > diff_max) {
+			diff_x = diff_x / diff_magn * diff_max;
+			diff_y = diff_y / diff_magn * diff_max;
+		}
+		vh_guidance.sp.vel.x += diff_x;
+		vh_guidance.sp.vel.y += diff_y;
 	}
 	// Trim reference velocity
 	float vel_magn = sqrt(vh_guidance.sp.vel.x * vh_guidance.sp.vel.x +
