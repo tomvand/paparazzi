@@ -80,6 +80,8 @@ struct vh_guidance_t vh_guidance = {
 
 /* Guidance functions */
 void vh_guidance_set_pos(float x, float y) {
+	autopilot_guided_goto_body_relative(x, y, 0, 0);
+	guidance_v_from_nav(TRUE);
 	vh_guidance.sp.pos.x = x;
 	vh_guidance.sp.pos.y = y;
 	vh_guidance.sp.pos_set = TRUE;
@@ -87,6 +89,8 @@ void vh_guidance_set_pos(float x, float y) {
 }
 
 void vh_guidance_set_pos_vel(float x, float y, float u, float v) {
+	autopilot_guided_goto_body_relative(x, y, 0, 0);
+	guidance_v_from_nav(TRUE);
 	vh_guidance.sp.pos.x = x;
 	vh_guidance.sp.pos.y = y;
 	vh_guidance.sp.pos_set = TRUE;
@@ -96,6 +100,8 @@ void vh_guidance_set_pos_vel(float x, float y, float u, float v) {
 }
 
 void vh_guidance_set_vel(float u, float v) {
+	guidance_h_set_guided_body_vel(u, v);
+	guidance_v_from_nav(TRUE);
 	vh_guidance.sp.pos.x = 0;
 	vh_guidance.sp.pos.y = 0;
 	vh_guidance.sp.pos_set = TRUE;
@@ -105,6 +111,7 @@ void vh_guidance_set_vel(float u, float v) {
 }
 
 void vh_guidance_change_heading(float delta_psi) {
+	guidance_h_set_guided_heading(stateGetNedToBodyEulers_f()->psi + delta_psi);
 	vh_guidance.sp.heading = stateGetNedToBodyEulers_f()->psi + delta_psi;
 }
 
