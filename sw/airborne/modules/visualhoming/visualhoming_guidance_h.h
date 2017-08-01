@@ -34,6 +34,7 @@ struct vh_g_setpoint_t {
 	bool pos_set; // Is position set by user?
 	struct FloatVect2 vel; // Velocity setpoint [m]
 	bool vel_set; // Is velocity set by user?
+	float heading; // Heading [rad]
 };
 
 struct vh_guidance_t {

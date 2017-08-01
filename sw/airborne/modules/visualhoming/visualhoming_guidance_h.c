@@ -34,6 +34,10 @@
 
 #include <stdio.h>
 
+#ifndef VH_MAX_YAW_RATE
+#define VH_MAX_YAW_RATE 1.0
+#endif
+
 #ifndef VH_MAX_BANK
 #define VH_MAX_BANK GUIDANCE_H_MAX_BANK
 #endif
@@ -101,7 +105,7 @@ void vh_guidance_set_vel(float u, float v) {
 }
 
 void vh_guidance_change_heading(float delta_psi) {
-	vh_guidance.cmd.psi += delta_psi;
+	vh_guidance.sp.heading = stateGetNedToBodyEulers_f()->psi + delta_psi;
 }
 
 
@@ -115,6 +119,7 @@ void guidance_h_module_enter(void) {
 	vh_guidance.integrator.x = 0;
 	vh_guidance.integrator.y = 0;
 	vh_guidance.cmd.psi = stateGetNedToBodyEulers_f()->psi;
+	vh_guidance.sp.heading = stateGetNedToBodyEulers_f()->psi;
 }
 
 void guidance_h_module_read_rc(void) {
@@ -223,6 +228,16 @@ void guidance_h_module_run(bool in_flight) {
 	// Store setpoints
 	vh_guidance.cmd.phi = pd_y;
 	vh_guidance.cmd.theta = -pd_x;
+
+	// Calculate yaw command
+	float diff_yaw = vh_guidance.sp.heading - vh_guidance.cmd.psi;
+	while (diff_yaw < -M_PI)
+		diff_yaw += 2 * M_PI;
+	while (diff_yaw > M_PI)
+		diff_yaw -= 2 * M_PI;
+	if (diff_yaw > VH_MAX_YAW_RATE * dt) diff_yaw = VH_MAX_YAW_RATE * dt;
+	if (diff_yaw < -VH_MAX_YAW_RATE * dt) diff_yaw = -VH_MAX_YAW_RATE * dt;
+	vh_guidance.cmd.psi += diff_yaw;
 
 	// Run stabilization
 	struct Int32Eulers rpy;
