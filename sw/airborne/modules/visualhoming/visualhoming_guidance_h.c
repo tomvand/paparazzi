@@ -42,6 +42,11 @@
 #define VH_MAX_BANK GUIDANCE_H_MAX_BANK
 #endif
 
+/** Keep integrator values when not in control of the UAV */
+#ifndef VH_KEEP_INTEGRATOR
+#define VH_KEEP_INTEGRATOR FALSE
+#endif
+
 /** Default speed saturation (taken from guidance_h_ref.h) */
 #ifndef GUIDANCE_H_REF_MAX_SPEED
 #define GUIDANCE_H_REF_MAX_SPEED 5.
@@ -123,8 +128,10 @@ void guidance_h_module_init(void) {
 void guidance_h_module_enter(void) {
 	vh_guidance.sp.vel.x = 0;
 	vh_guidance.sp.vel.y = 0;
+#if !VH_KEEP_INTEGRATOR
 	vh_guidance.integrator.x = 0;
 	vh_guidance.integrator.y = 0;
+#endif
 	vh_guidance.cmd.psi = stateGetNedToBodyEulers_f()->psi;
 	vh_guidance.sp.heading = stateGetNedToBodyEulers_f()->psi;
 }
