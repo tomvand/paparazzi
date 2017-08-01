@@ -6,35 +6,29 @@
     <target name="ap" board="ardrone2">
       <configure name="PREFIX" value="/opt/arm-2012.03/bin/arm-none-linux-gnueabi"/>
       <define name="USE_SONAR" value="FALSE"/><!-- Sonar on this drone is broken :( -->
-      <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_RC_DIRECT"/>
+      <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_NAV"/>
       <!-- Aircraft specific tuning for visual homing -->
       <define name="VISUALHOMING_CENTER_X" value="0.55"/>
       <define name="VISUALHOMING_CENTER_Y" value="0.47"/>
       <define name="VISUALHOMING_RADIUS_TOP" value="0.25"/>
       <define name="VISUALHOMING_RADIUS_BOTTOM" value="0.27"/>
-      <!-- Aircraft specific tuning for dead reckoning -->
-      <define name="DR_DRAG1" value="0.5784"/>
-      <define name="DR_DRAG2" value="0.0000"/>
-      <define name="DR_THRUST" value="0.0013"/>
-      <define name="DR_GAIN" value="0.0038"/>
-      <define name="DR_BIAS_PHI" value="0.006"/>
-      <define name="DR_BIAS_THETA" value="-0.003"/>
-      <define name="DR_BIAS_AX" value="-0.043"/>
-      <define name="DR_BIAS_AY" value="-0.105"/>
+      <!-- Aircraft specific tuning for velocity estimation -->
+      <define name="DR_DRAG1" value="0.7506"/>
+      <define name="DR_FILTER" value="0.1145"/>
+      <define name="DR_BIAS_X" value="0.0"/>
+      <define name="DR_BIAS_Y" value="0.0"/>
+      <define name="DR_TEMP_BIAS" value="1"/>
     </target>
 
     <target name="nps" board="pc">
       <module name="fdm" type="gazebo"/>
       <define name="USE_SONAR" value="TRUE"/>
       <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_NAV"/>
-      <define name="DR_DRAG1" value="0.6579"/>
-      <define name="DR_DRAG2" value="0.0735"/>
-      <define name="DR_THRUST" value="0.0010"/>
-      <define name="DR_GAIN" value="0.0038"/>
-      <define name="DR_BIAS_PHI" value="0"/>
-      <define name="DR_BIAS_THETA" value="0"/>
-      <define name="DR_BIAS_AX" value="0.0011"/>
-      <define name="DR_BIAS_AY" value="0.4580"/>
+      <!-- Aircraft specific tuning for velocity estimation -->
+      <define name="DR_DRAG1" value="0.1107"/>
+      <define name="DR_FILTER" value="0.1267"/>
+      <define name="DR_BIAS_X" value="0.0"/>
+      <define name="DR_BIAS_Y" value="0.0"/>
     </target>
 
     <define name="ARRIVED_AT_WAYPOINT" value="0.2"/>
@@ -50,7 +44,7 @@
     <module name="imu" type="ardrone2"/>
     <!-- gps: "ublox" or change to "sirf" for usage with parrot flight recorder -->
     <module name="gps" type="datalink"/>
-    <module name="stabilization" type="int_quat"/>
+    <module name="stabilization" type="indi_simple"/>
     <module name="ahrs" type="int_cmpl_quat"/>
     <module name="ins" type="extended"/>
   </firmware>
@@ -123,8 +117,8 @@
     <define name="MAG_Y_CURRENT_COEF" value="0.0"/>
     <define name="MAG_Z_CURRENT_COEF" value="0.0"/>
 
-    <define name="BODY_TO_IMU_PHI" value="-2.39" unit="deg"/>
-    <define name="BODY_TO_IMU_THETA" value="-1.87" unit="deg"/>
+    <define name="BODY_TO_IMU_PHI" value="-2.39" unit="deg"/><!-- -2.47 -->
+    <define name="BODY_TO_IMU_THETA" value="-1.87" unit="deg"/><!-- -1.69 -->
     <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
   </section>
 
@@ -196,6 +190,35 @@
     <define name="PHI_DDGAIN" value="0"/>
     <define name="THETA_DDGAIN" value="0"/>
     <define name="PSI_DDGAIN" value="100"/>
+  </section>
+  
+  <section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
+    <!-- control effectiveness -->
+    <define name="G1_P" value="0.022654"/>
+    <define name="G1_Q" value="0.015904"/>
+    <define name="G1_R" value="0.002944"/>
+    <define name="G2_R" value="0.060224"/>
+
+    <!-- reference acceleration for attitude control -->
+    <define name="REF_ERR_P" value="380.0"/>
+    <define name="REF_ERR_Q" value="380.0"/>
+    <define name="REF_ERR_R" value="250.0"/>
+    <define name="REF_RATE_P" value="21.6"/>
+    <define name="REF_RATE_Q" value="21.6"/>
+    <define name="REF_RATE_R" value="21.0"/>
+
+    <!-- second order filter parameters -->
+    <define name="FILT_CUTOFF" value="3.2"/>
+    <define name="FILT_CUTOFF_R" value="3.2"/>
+
+    <!-- first order actuator dynamics -->
+    <define name="ACT_DYN_P" value="0.06"/>
+    <define name="ACT_DYN_Q" value="0.06"/>
+    <define name="ACT_DYN_R" value="0.06"/>
+
+    <!-- Adaptive Learning Rate -->
+    <define name="USE_ADAPTIVE" value="FALSE"/>
+    <define name="ADAPTIVE_MU" value="0.0001"/>
   </section>
 
   <section name="GUIDANCE_V" prefix="GUIDANCE_V_">
