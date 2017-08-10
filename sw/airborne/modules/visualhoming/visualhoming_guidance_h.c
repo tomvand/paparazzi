@@ -210,9 +210,11 @@ void guidance_h_module_run(bool in_flight) {
 	// Update integrator
 	if (in_flight) {
 		// Update integrator
-		vh_guidance.integrator.x += vh_guidance.gains.i * pd_x * VH_GAIN_SCALE
+		float p_x = vh_guidance.gains.p * vh_guidance.sp.pos.x * VH_GAIN_SCALE;
+		float p_y = vh_guidance.gains.p * vh_guidance.sp.pos.y * VH_GAIN_SCALE;
+		vh_guidance.integrator.x += vh_guidance.gains.i * p_x * VH_GAIN_SCALE
 				* VH_GAIN_SCALE; // Scaled twice as in guidance_h.c
-		vh_guidance.integrator.y += vh_guidance.gains.i * pd_y * VH_GAIN_SCALE
+		vh_guidance.integrator.y += vh_guidance.gains.i * p_y * VH_GAIN_SCALE
 				* VH_GAIN_SCALE;
 		// Trim
 		float int_magn = sqrt(
