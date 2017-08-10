@@ -31,7 +31,7 @@
 #define VISUALHOMING_CAMERA bottom_camera
 #endif
 #ifndef VISUALHOMING_RADIAL_SAMPLES
-#define VISUALHOMING_RADIAL_SAMPLES 5
+#define VISUALHOMING_RADIAL_SAMPLES 10
 #endif
 
 // Default settings

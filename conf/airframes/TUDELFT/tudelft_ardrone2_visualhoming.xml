@@ -10,8 +10,8 @@
       <!-- Aircraft specific tuning for visual homing -->
       <define name="VISUALHOMING_CENTER_X" value="0.55"/>
       <define name="VISUALHOMING_CENTER_Y" value="0.47"/>
-      <define name="VISUALHOMING_RADIUS_TOP" value="0.25"/>
-      <define name="VISUALHOMING_RADIUS_BOTTOM" value="0.27"/>
+      <define name="VISUALHOMING_RADIUS_TOP" value="0.22"/>
+      <define name="VISUALHOMING_RADIUS_BOTTOM" value="0.30"/>
       <!-- Aircraft specific tuning for velocity estimation -->
       <define name="DR_DRAG1" value="0.7506"/>
       <define name="DR_FILTER" value="0.1145"/>
