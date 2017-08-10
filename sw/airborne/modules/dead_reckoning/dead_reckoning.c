@@ -172,8 +172,8 @@ static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
 	struct EnuCoor_f *pos = stateGetPositionEnu_f();
 	struct EnuCoor_f *vel = stateGetSpeedEnu_f();
 	float ins_u, ins_v;
-	ins_u = cos(att->psi) * vel->x + sin(att->psi) * vel->y;
-	ins_v = -sin(att->psi) * vel->x + cos(att->psi) * vel->y;
+	ins_u = cos(att->psi) * vel->y + sin(att->psi) * vel->x;
+	ins_v = -sin(att->psi) * vel->y + cos(att->psi) * vel->x;
 
 	pprz_msg_send_DEAD_RECKONING(trans, dev, AC_ID,
 			&dummy, &dummy,
