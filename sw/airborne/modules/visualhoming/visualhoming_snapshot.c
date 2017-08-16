@@ -35,7 +35,7 @@
 #endif
 
 #ifndef VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT
-#define VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT 500 // w_1 is approximately 200-300 in Gazebo
+#define VISUALHOMING_SNAPSHOT_MAGNETO_WEIGHT 5000 // w_1 is approximately 200-300 in Gazebo
 #endif
 
 // Macros for 1-based indexing of Fourier coefficients
