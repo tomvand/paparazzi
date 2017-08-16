@@ -25,7 +25,7 @@
 #include "modules/computer_vision/lib/vision/image.h"
 
 #ifndef VISUALHOMING_HORIZON_RESOLUTION
-#define VISUALHOMING_HORIZON_RESOLUTION 64
+#define VISUALHOMING_HORIZON_RESOLUTION 128
 #endif
 
 #define PIXEL_UV(img,x,y) ( ((uint8_t*)((img)->buf))[2*(x) + 2*(y)*(img)->w] )
