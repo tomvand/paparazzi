@@ -5,7 +5,8 @@
   <firmware name="rotorcraft">
     <target name="ap" board="ardrone2">
       <configure name="PREFIX" value="/opt/arm-2012.03/bin/arm-none-linux-gnueabi"/>
-      <define name="USE_SONAR" value="FALSE"/><!-- Sonar on this drone is broken :( -->
+      <configure name="USE_BARO_BOARD" value="FALSE"/>
+      <define name="USE_SONAR" value="TRUE"/><!-- Sonar on this drone is broken :( -->
       <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_NAV"/>
       <!-- Aircraft specific tuning for visual homing -->
       <define name="VISUALHOMING_CENTER_X" value="0.55"/>
@@ -54,7 +55,7 @@
     <!-- remove the gps_ubx_ucenter module if you use the sirf gps (flight recorder) -->
     <!-- <module name="gps" type="ubx_ucenter"/> -->
     <module name="send_imu_mag_current"/>
-    <module name="air_data"/>
+    <!--<module name="air_data"/>-->
     <module name="geo_mag"/>
     <!--module name="logger_file"/-->
     <module name="video_thread"/>
@@ -142,7 +143,7 @@
   </section>
 
   <section name="INS" prefix="INS_">
-    <define name="SONAR_MAX_RANGE" value="2.2"/>
+    <define name="SONAR_MAX_RANGE" value="3.2"/>
     <define name="SONAR_UPDATE_ON_AGL" value="TRUE"/>
     <!-- Use GPS altitude measurments and set the R gain -->
     <define name="USE_GPS_ALT" value="1"/>
@@ -242,7 +243,7 @@
   </section>
 
   <section name="SIMULATOR" prefix="NPS_">
-    <define name="GAZEBO_WORLD" value='"ardrone_omni_AE_beun.world"'/>
+    <define name="GAZEBO_WORLD" value='"ardrone_omni_cyberzoo_beun.world"'/>
     <define name="ACTUATOR_NAMES" value="nw_motor, ne_motor, se_motor, sw_motor" type="string[]"/>
     <define name="ACTUATOR_THRUSTS" value="1.55, 1.55, 1.55, 1.55" type="double[]"/>
     <define name="ACTUATOR_TORQUES" value="0.155, -0.155, 0.155, -0.155" type="double[]"/>
@@ -257,7 +258,7 @@
     <define name="MODE_STARTUP" value="AP_MODE_NAV"/>
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
     <define name="MODE_AUTO1" value="AP_MODE_ATTITUDE_Z_HOLD"/>
-    <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
+    <define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/>
   </section>
 
   <section name="BAT">

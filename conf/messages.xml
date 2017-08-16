@@ -1873,6 +1873,7 @@
       <field name="ins_vy"	type="float"	unit="m/s"/>
       <field name="ins_u"	type="float"	unit="m/s"/>
       <field name="ins_v"	type="float"	unit="m/s"/>
+      <field name="sonar"	type="float"	unit="m"/>
     </message>
 
     <message name="NPS_WIND" id="244">

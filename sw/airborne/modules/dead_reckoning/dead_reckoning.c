@@ -82,6 +82,11 @@ static float accel_x;
 static float accel_y;
 static void send_telemetry(struct transport_tx *trans, struct link_device *dev);
 
+/* Sonar test */
+static float sonar;
+static abi_event sonar_ev;
+static void sonar_cb(uint8_t sender_id, float distance);
+
 struct FloatVect2 dr_getBodyVel(void) {
 	return dr_state.v;
 }
@@ -93,6 +98,7 @@ float dr_getHeading(void) {
 void dr_init(void) {
 	register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_DEAD_RECKONING,
 			send_telemetry);
+	AbiBindMsgAGL(ABI_BROADCAST, &sonar_ev, sonar_cb);
 }
 
 void dr_periodic(void) {
@@ -183,6 +189,10 @@ static void send_telemetry(struct transport_tx *trans, struct link_device *dev)
 			&att->phi, &att->theta, &att->psi,
 			&pos->x, &pos->y,
 			&vel->x, &vel->y,
-			&ins_u, &ins_v);
+			&ins_u, &ins_v,
+			&sonar);
 }
 
+static void sonar_cb(uint8_t sender_id, float distance) {
+	sonar = distance;
+}
