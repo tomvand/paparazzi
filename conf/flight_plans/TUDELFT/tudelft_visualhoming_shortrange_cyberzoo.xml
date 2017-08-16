@@ -38,7 +38,7 @@
       <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
     </block>
     <block name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
-      <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="NAV Stay at STDBY"/>
+      <exception cond="stateGetPositionEnu_f()->z > 0.5" deroute="NAV Stay at STDBY"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
       <call_once fun="NavSetWaypointHere(WP_STDBY)"/>
       <stay climb="nav_climb_vspeed" vmode="climb" wp="CLIMB"/>
@@ -51,24 +51,28 @@
       <call_once fun="SetAPMode(AP_MODE_NAV)"/>
       <stay wp="GOAL"/>
     </block>
-    <block name="MODULE Hover zero velocity">
-      <call_once fun="VisualHomingStop()"/>
-      <call_once fun="SetAPMode(AP_MODE_MODULE)"/>
-      <while cond="TRUE"/>
+    <block name="Take snapshot and go to STDBY">
+      <call_once fun="VisualHomingSetSnapshotMode()"/>
+      <call_once fun="VisualHomingRecordSingle()"/>
+      <go wp="STDBY" from="GOAL" hmode="route"/>
+      <stay wp="STDBY" until="stage_time>2.0"/>
     </block>
-    <block name="GUIDED Hover zero position">
-      <call_once fun="VisualHomingSetOdometryMode()"/>
+    <block name="MODULE mode">
+      <call_once fun="SetAPMode(AP_MODE_MODULE)"/>
+    </block>
+    <block name="GUIDED SNAPSHOT Hover zero position">
+      <call_once fun="VisualHomingSetSnapshotMode()"/>
       <call_once fun="VisualHomingRecordSingle()"/>
       <call_once fun="SetAPMode(AP_MODE_GUIDED)"/>
       <while cond="TRUE"/>
     </block>
-    <block name="MODULE Hover zero position">
-      <call_once fun="VisualHomingSetOdometryMode()"/>
+    <block name="MODULE SNAPSHOT Hover zero position">
+      <call_once fun="VisualHomingSetSnapshotMode()"/>
       <call_once fun="VisualHomingRecordSingle()"/>
       <call_once fun="SetAPMode(AP_MODE_MODULE)"/>
       <while cond="TRUE"/>
     </block>
-    <block name="GUIDED Trajectory">
+    <block name="GUIDED ROUTE Trajectory">
       <call_once fun="VisualHomingSetOdometryMode()"/>
       <call_once fun="VisualHomingRecordRoute()"/>
       <go wp="TRAJ" from="GOAL" hmode="route"/>
@@ -76,7 +80,7 @@
       <call_once fun="SetAPMode(AP_MODE_GUIDED)"/>
       <while cond="TRUE"/>
     </block>
-    <block name="MODULE Trajectory">
+    <block name="MODULE ROUTE Trajectory">
       <call_once fun="VisualHomingSetOdometryMode()"/>
       <call_once fun="VisualHomingRecordRoute()"/>
       <go wp="TRAJ" from="GOAL" hmode="route"/>
