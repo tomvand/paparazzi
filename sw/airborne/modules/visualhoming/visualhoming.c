@@ -62,7 +62,7 @@ int vh_snapshot_trigger_from_initial =
 VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL;
 
 #ifndef VISUALHOMING_RECORD_PERIOD
-#define VISUALHOMING_RECORD_PERIOD 0.3e6 // us
+#define VISUALHOMING_RECORD_PERIOD 4.0e6 // us
 #endif
 
 #ifndef VISUALHOMING_REPLAY_PERIOD
@@ -242,7 +242,7 @@ void visualhoming_periodic(void) {
 		// Set guidance setpoints
 		vh_guidance_set_pos(vh_environment_radius * homingvector.x,
 				vh_environment_radius * -homingvector.y);
-		vh_guidance_change_heading(-homingvector.sigma);
+//		vh_guidance_change_heading(-homingvector.sigma);
 		// Waypoint sequencing in route mode
 		if (vh_seq_mode == VH_SEQ_ROUTE) {
 			if (visualhoming_guidance_in_control()) {
@@ -250,6 +250,8 @@ void visualhoming_periodic(void) {
 				if (current_ts > last_replay_ts + VISUALHOMING_REPLAY_PERIOD) {
 					if (vh_map_get_index() > 0) {
 						vh_map_pop();
+						odo = vh_map_odometry();
+						vh_odometry_update(odo, 0, 0, homingvector.sigma); // Rotate odometry to match current heading
 						odo_reqd = 1;
 					}
 					last_replay_ts = current_ts;
