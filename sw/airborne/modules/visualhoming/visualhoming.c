@@ -267,6 +267,14 @@ void visualhoming_periodic(void) {
 				last_replay_ts = current_ts + 5e6;
 			}
 		}
+		// Arrival detection
+		if (vh_map_get_index() == 0) {
+			if (sqrt(
+					homingvector.x * homingvector.x
+							+ homingvector.y * homingvector.y) < 0.01) {
+				arrival_detected = 1;
+			}
+		}
 	} else {
 		// Maintain zero velocity
 		vh_guidance_set_vel(0, 0);

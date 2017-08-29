@@ -1,0 +1,14 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="navtools">
+  <doc>
+    <description>Misc functions for flightplans</description>
+  </doc>
+  <header>
+    <file name="navtools.h"/>
+  </header>
+  <makefile>
+    <file name="navtools.c"/>
+  </makefile>
+</module>
+
