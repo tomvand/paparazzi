@@ -64,7 +64,7 @@ bool NavGridNext(uint8_t wp_id);
  * Returns true if all grid positions have been visited
  * @return
  */
-bool NavGridComplete();
+bool NavGridComplete(void);
 
 #endif
 
