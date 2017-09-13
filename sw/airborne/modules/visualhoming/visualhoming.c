@@ -165,7 +165,7 @@ void visualhoming_periodic(void) {
 		float dpsi = heading - previous_heading;
 		previous_heading = heading;
 
-		float dt = (float)(current_ts - previous_ts) / 1e6;
+		float dt = VISUALHOMING_PERIODIC_PERIOD;
 		float dx = velocity.x * dt;
 		float dy = velocity.y * dt;
 
