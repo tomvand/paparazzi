@@ -153,15 +153,7 @@ void visualhoming_init(void) {
 }
 
 void visualhoming_periodic(void) {
-	// Check that horizon has been updated
-	current_ts = vh_get_current_timestamp();
-	if (current_ts == previous_ts) return; // Nothing else to do if image hasn't been updated.
-
-	// Get current snapshot
-	vh_get_current_horizon(horizon);
-	vh_snapshot_from_horizon(&current_snapshot, horizon);
 	// Estimate velocity
-//	velocity = estimate_velocity(&current_snapshot);
 	velocity = dr_getBodyVel();
 
 	// Update odometry
@@ -182,6 +174,14 @@ void visualhoming_periodic(void) {
 				dpsi);
 		printf("Odo: x = %+.2f, y = %+.2f\n", odo->x, odo->y);
 	}
+
+	// Check that horizon has been updated
+	current_ts = vh_get_current_timestamp();
+	if (current_ts == previous_ts) return; // Nothing else to do if image hasn't been updated.
+
+	// Get current snapshot
+	vh_get_current_horizon(horizon);
+	vh_snapshot_from_horizon(&current_snapshot, horizon);
 
 	// Handle commands
 	if (vh_gcs_input_mode != VH_IN_NOCMD) {
