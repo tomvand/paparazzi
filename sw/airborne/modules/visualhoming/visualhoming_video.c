@@ -174,9 +174,13 @@ static void draw_calibration(struct image_t *img) {
 	for (int i = 0; i < 360; i++) {
 		struct point_t pt;
 		pt = derotated_point(img, i / 180.0 * M_PI, -1.0);
-		PIXEL_Y(img, pt.x, pt.y) = 0;
+		PIXEL_Y(img, pt.x, pt.y) = 76;
+		PIXEL_U(img, pt.x, pt.y) = 84;
+		PIXEL_V(img, pt.x, pt.y) = 255;
 		pt = derotated_point(img, i / 180.0 * M_PI, 1.0);
-		PIXEL_Y(img, pt.x, pt.y) = 0;
+		PIXEL_Y(img, pt.x, pt.y) = 76;
+		PIXEL_U(img, pt.x, pt.y) = 84;
+		PIXEL_V(img, pt.x, pt.y) = 255;
 		pt.x = calibration.center_x * img->w
 				+ 0.1 * img->h * cos(i / 180.0 * M_PI);
 		pt.y = calibration.center_y * img->h
