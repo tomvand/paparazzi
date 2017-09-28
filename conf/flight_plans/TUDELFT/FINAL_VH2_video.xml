@@ -9,9 +9,9 @@
     <waypoint name="CLIMB" x="0.0" y="0.0"/>
     <waypoint name="STDBY" x="0.0" y="0.0"/>
     
-    <waypoint name="GRID0" lat="51.9906059" lon="4.3767837"/>
-    <waypoint name="GRIDX" lat="51.9906245" lon="4.3768353"/>
-    <waypoint name="GRIDY" lat="51.9906366" lon="4.3767513"/>
+    <waypoint name="GRID0" lat="51.9906115" lon="4.3767853"/>
+    <waypoint name="GRIDX" lat="51.9906263" lon="4.3768238"/>
+    <waypoint name="GRIDY" lat="51.9906335" lon="4.3767586"/>
     <waypoint name="START" x="0" y="0"/>
     <waypoint name="GOAL" x="0" y="0"/>
     <waypoint name="TD" x="0" y="0"/>
@@ -51,7 +51,7 @@
     </block>
     <block name="NAV Prepare center run">
       <call_once fun="SetAPMode(AP_MODE_NAV)"/>
-      <call_once fun="NavSetupGrid(WP_GRID0,WP_GRIDX,WP_GRIDY,3,3)"/>
+      <call_once fun="NavSetupGrid(WP_GRID0,WP_GRIDX,WP_GRIDY,2,2)"/>
       <call_once fun="NavGridPos(WP_GOAL,0.5,0.5)"/>
       <stay wp="GOAL" until="stage_time > 5.0"/>
     </block>
@@ -62,9 +62,9 @@
       <while cond="!NavGridComplete()">
         <call_once fun="SetAPMode(AP_MODE_NAV)"/>
         <call_once fun="NavGridNext(WP_START)"/>
-        <go wp="START"/>
+        <stay wp="START" until="stage_time > 4.0"/>
         <call_once fun="SetAPMode(AP_MODE_MODULE)"/>
-        <stay wp="GOAL" until="stage_time > 8.0"/>
+        <stay wp="GOAL" until="stage_time > 6.0"/>
       </while>
     </block>
 
@@ -84,6 +84,23 @@
     <block name="landed">
       <call_once fun="NavKillThrottle()"/>
       <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
+    </block>
+    
+    <block name="GRID_0">
+      <call_once fun="SetAPMode(AP_MODE_NAV)"/>
+      <stay wp="GRID0"/>
+    </block>
+    <block name="GRID_X">
+      <call_once fun="SetAPMode(AP_MODE_NAV)"/>
+      <stay wp="GRIDX"/>
+    </block>
+    <block name="GRID_Y">
+      <call_once fun="SetAPMode(AP_MODE_NAV)"/>
+      <stay wp="GRIDY"/>
+    </block>
+    <block name="GOAL">
+      <call_once fun="SetAPMode(AP_MODE_NAV)"/>
+      <stay wp="GOAL"/>
     </block>
     
   </blocks>

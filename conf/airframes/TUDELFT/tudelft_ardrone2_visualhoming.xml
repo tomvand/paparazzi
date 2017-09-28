@@ -8,10 +8,10 @@
       <define name="USE_SONAR" value="FALSE"/><!-- Sonar on this drone is broken :( -->
       <define name="GUIDANCE_V_MODE_MODULE_SETTING" value="GUIDANCE_V_MODE_NAV"/>
       <!-- Aircraft specific tuning for visual homing -->
-      <define name="VISUALHOMING_CENTER_X" value="0.55"/>
-      <define name="VISUALHOMING_CENTER_Y" value="0.47"/>
-      <define name="VISUALHOMING_RADIUS_TOP" value="0.22"/>
-      <define name="VISUALHOMING_RADIUS_BOTTOM" value="0.30"/>
+      <define name="VISUALHOMING_CENTER_X" value="0.56"/>
+      <define name="VISUALHOMING_CENTER_Y" value="0.46"/>
+      <define name="VISUALHOMING_RADIUS_TOP" value="0.24"/>
+      <define name="VISUALHOMING_RADIUS_BOTTOM" value="0.26"/>
       <!-- Aircraft specific tuning for velocity estimation -->
       <define name="DR_DRAG1" value="0.7506"/>
       <define name="DR_FILTER" value="0.1145"/>
