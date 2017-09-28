@@ -65,13 +65,13 @@ bool NavGridNext(uint8_t wp_id) {
 	float x = (float)(grid_pos % grid_width) / (grid_width - 1);
 	float y = (int)(grid_pos / grid_width) / (float)(grid_height - 1);
 	NavGridPos(wp_id, x, y);
-	if (grid_pos + 1 < grid_width * grid_height) grid_pos++;
+	grid_pos++;
 
 	return FALSE;
 }
 
 
 bool NavGridComplete() {
-	return grid_pos >= grid_width * grid_height - 1;
+	return grid_pos >= grid_width * grid_height;
 }
 
