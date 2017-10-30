@@ -59,6 +59,8 @@ struct AhrsImpl {
 struct AhrsImpl ahrs_impls[AHRS_NB_IMPL];
 uint8_t ahrs_output_idx;
 
+static bool ahrs_disabled = FALSE;  /// All AHRS have been disabled (and can therefore be re-enabled)
+
 void ahrs_register_impl(AhrsEnableOutput enable)
 {
   int i;
@@ -92,6 +94,7 @@ void ahrs_init(void)
 
 int ahrs_switch(uint8_t idx)
 {
+  if (ahrs_disabled) { return -1; }
   if (idx >= AHRS_NB_IMPL) { return -1; }
   if (ahrs_impls[idx].enable == NULL) { return -1; }
   /* first disable other AHRS output */
@@ -105,4 +108,26 @@ int ahrs_switch(uint8_t idx)
   ahrs_impls[idx].enable(TRUE);
   ahrs_output_idx = idx;
   return ahrs_output_idx;
+}
+
+void ahrs_disable_all(void)
+{
+  int i;
+  for (i = 0; i < AHRS_NB_IMPL; i++) {
+    if (ahrs_impls[i].enable != NULL) {
+      ahrs_impls[i].enable(FALSE);
+    }
+  }
+  ahrs_disabled = TRUE;
+}
+
+bool ahrs_is_disabled(void)
+{
+  return ahrs_disabled;
+}
+
+int ahrs_restore_last(void)
+{
+  ahrs_disabled = FALSE;
+  return ahrs_switch(ahrs_output_idx);
 }

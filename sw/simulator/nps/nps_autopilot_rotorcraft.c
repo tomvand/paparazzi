@@ -92,6 +92,17 @@ void nps_autopilot_run_systime_step(void)
 
 void nps_autopilot_run_step(double time)
 {
+  // Enable or disable AHRS
+  if (nps_bypass_ahrs && !ahrs_is_disabled()) {
+    ahrs_disable_all();
+  }
+  if (!nps_bypass_ahrs && ahrs_is_disabled()) {
+    ahrs_restore_last();
+  }
+  // Copy true state if AHRS is bypassed
+  if (nps_bypass_ahrs) {
+    sim_overwrite_ahrs();
+  }
 
   nps_electrical_run_step(time);
 
@@ -146,10 +157,6 @@ void nps_autopilot_run_step(double time)
     main_event();
   }
 #endif
-
-  if (nps_bypass_ahrs) {
-    sim_overwrite_ahrs();
-  }
 
   if (nps_bypass_ins) {
     sim_overwrite_ins();

@@ -75,4 +75,22 @@ extern void ahrs_init(void);
  */
 extern int ahrs_switch(uint8_t idx);
 
+/**
+ * Disable output of all AHRS impls.
+ * (Note: also disables ahrs_switch)
+ */
+extern void ahrs_disable_all(void);
+
+/**
+ * Check whether AHRS output has been disabled through ahrs_disable_all.
+ * @return TRUE if disabled.
+ */
+extern bool ahrs_is_disabled(void);
+
+/**
+ * Re-enable output of last selected AHRS.
+ * @return index of enabled AHRS.
+ */
+extern int ahrs_restore_last(void);
+
 #endif /* AHRS_H */
