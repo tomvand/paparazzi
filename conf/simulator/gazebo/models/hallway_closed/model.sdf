@@ -5,7 +5,7 @@
       <visual name='visual'>
         <geometry>
           <mesh>
-            <uri>model://hallway_closed/hallway_closed.dae</uri>
+            <uri>model://hallway_closed/hallway_closed_without_door.dae</uri>
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
@@ -14,7 +14,7 @@
       <collision name='collision'>
         <geometry>
           <mesh>
-            <uri>model://hallway_closed/hallway_closed.dae</uri>
+            <uri>model://hallway_closed/hallway_closed_without_door.dae</uri>
           </mesh>
         </geometry>
       </collision>
