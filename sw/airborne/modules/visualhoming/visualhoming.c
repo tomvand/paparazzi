@@ -35,10 +35,21 @@
 #include <stdio.h>
 
 /* Settings */
-#ifndef VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD
-#define VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD 0.0
+#ifndef VISUALHOMING_EARLY_HOMING_MAX_ODO
+#define VISUALHOMING_EARLY_HOMING_MAX_ODO 1.0
 #endif
-float vh_odometry_arrival_threshold = VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD;
+float vh_early_homing_max_odo = VISUALHOMING_EARLY_HOMING_MAX_ODO;
+
+#ifndef VISUALHOMING_EARLY_HOMING_MAX_ANGULAR_ERROR
+#define VISUALHOMING_EARLY_HOMING_MAX_ANGULAR_ERROR 35 // Degrees
+#endif
+float vh_early_homing_max_angular_error =
+    VISUALHOMING_EARLY_HOMING_MAX_ANGULAR_ERROR;
+
+#ifndef VISUALHOMING_EARLY_HOMING_CORRECT_FRAMES
+#define VISUALHOMING_EARLY_HOMING_CORRECT_FRAMES 3
+#endif
+int vh_early_homing_correct_frames = VISUALHOMING_EARLY_HOMING_CORRECT_FRAMES;
 
 #ifndef VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD
 #define VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD 0.02
@@ -175,9 +186,9 @@ void visualhoming_periodic(void) {
 		float dy = velocity.y * dt;
 
 		vh_odometry_update(odo, dx, dy, dpsi);
-		printf("Odo update: dx = %+.2f, dy = %+.2f, dpsi = %+.2f\n", dx, dy,
-				dpsi);
-		printf("Odo: x = %+.2f, y = %+.2f\n", odo->x, odo->y);
+//		printf("Odo update: dx = %+.2f, dy = %+.2f, dpsi = %+.2f\n", dx, dy,
+//				dpsi);
+//		printf("Odo: x = %+.2f, y = %+.2f\n", odo->x, odo->y);
 	}
 
 	// Check that horizon has been updated
@@ -230,11 +241,40 @@ void visualhoming_periodic(void) {
 		// Use ODOMETRY as guidance vector
 		odo_reqd = 1;
 		struct FloatVect2 *odo = vh_map_odometry();
-		printf("odo->x = %+.2f,\todo->y = %+.2f\n", odo->x, odo->y);
+//		printf("odo->x = %+.2f,\todo->y = %+.2f\n", odo->x, odo->y);
 		vh_guidance_set_pos(odo->x, odo->y);
 		// Detect arrival
-		if (sqrt(odo->x * odo->x + odo->y * odo->y) < 0.2) {
+    float remaining = sqrt(odo->x * odo->x + odo->y * odo->y);
+    bool odo_arrived = (remaining < 0.2);
+
+    float odo_angle = atan2(odo->y, odo->x);
+    float homing_angle = atan2(-homingvector.y, homingvector.x);
+    float angular_error = odo_angle - homing_angle;
+    while (angular_error < -M_PI)
+      angular_error += 2 * M_PI;
+    while (angular_error > M_PI)
+      angular_error -= 2 * M_PI;
+    angular_error = fabsf(angular_error) / M_PI * 180.0;
+    bool angle_ok = (angular_error < vh_early_homing_max_angular_error);
+    static int odo_correct_frames = 0;
+    if (angle_ok) {
+      odo_correct_frames++;
+    } else {
+      odo_correct_frames = 0;
+    }
+    bool early_homing_ok =
+        (remaining < vh_early_homing_max_odo
+            && odo_correct_frames >= vh_early_homing_correct_frames);
+
+
+		if (early_homing_ok || odo_arrived) {
+      if (early_homing_ok) {
+        printf("Early homing\n");
+      } else {
+        printf("Normal homing\n");
+      }
 			odo_reqd = 0;
+      odo_correct_frames = 0;
 		}
 		// Reset snapshot timer
 		last_replay_ts = current_ts;

@@ -17,10 +17,12 @@
         <dl_setting shortname="derotate_gain" param="VISUALHOMING_DEROTATE_GAIN" var="derotate_gain" min="-0.15" step="0.01" max="0.15"/>
         <dl_setting shortname="ss_arr_thres" param="VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD" var="vh_snapshot_arrival_threshold" min="0" step="0.001" max="0.1"/>
         <dl_setting shortname="ss_arr_max_odo" param="VISUALHOMING_SNAPSHOT_ARRIVAL_MAX_ODO" var="vh_snapshot_arrival_max_odo" min="0" step="0.1" max="3.0"/>
+        <dl_setting shortname="early_max_odo" param="VISUALHOMING_EARLY_HOMING_MAX_ODO" var="vh_early_homing_max_odo" min="0.0" step="0.1" max="5.0"/>
+        <dl_setting shortname="early_max_angle" param="VISUALHOMING_EARLY_HOMING_MAX_ANGULAR_ERROR" var="vh_early_homing_max_angular_error" min="0.0" step="1" max="180"/>
+        <dl_setting shortname="early_correct_frames" param="VISUALHOMING_EARLY_HOMING_CORRECT_FRAMES" var="vh_early_homing_correct_frames" min="1" step="1" max="10"/>
         <dl_setting shortname="ss_init_thres" param="VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD" var="vh_snapshot_initial_threshold" min="0" step="0.01" max="0.25"/>
         <dl_setting shortname="ss_trig_thres" param="VISUALHOMING_SNAPSHOT_TRIGGER_THRESHOLD" var="vh_snapshot_trigger_threshold" min="0" step="0.1" max="3.14"/>
         <dl_setting shortname="ss_diff_init" param="VISUALHOMING_SNAPSHOT_TRIGGER_FROM_INITIAL" var="vh_snapshot_trigger_from_initial" min="0" step="1" max="1"/>
-        <dl_setting shortname="odo_arr_thres" param="VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD" var="vh_odometry_arrival_threshold" min="0" step="0.01" max="1.0"/>
         <dl_setting shortname="input_mode" var="vh_gcs_input_mode" min="0" step="1" max="2" values="Snapshot|Odometry|-">
           <strip_button name="Snapshot" value="0" group="vh_input" icon="digital-camera.png"/>
           <strip_button name="Odometry" value="1" group="vh_input" icon="survey_we.png"/>
