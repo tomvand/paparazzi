@@ -41,9 +41,14 @@
 float vh_odometry_arrival_threshold = VISUALHOMING_ODOMETRY_ARRIVAL_THRESHOLD;
 
 #ifndef VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD
-#define VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD 0.01
+#define VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD 0.02
 #endif
 float vh_snapshot_arrival_threshold = VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD;
+
+#ifndef VISUALHOMING_SNAPSHOT_ARRIVAL_MAX_ODO
+#define VISUALHOMING_SNAPSHOT_ARRIVAL_MAX_ODO 0.5
+#endif
+float vh_snapshot_arrival_max_odo = VISUALHOMING_SNAPSHOT_ARRIVAL_MAX_ODO;
 
 #ifndef VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD
 #define VISUALHOMING_SNAPSHOT_INITIAL_THRESHOLD 0.01
@@ -247,7 +252,15 @@ void visualhoming_periodic(void) {
 		if (vh_seq_mode == VH_SEQ_ROUTE) {
 			if (visualhoming_guidance_in_control()) {
 				// Inbound flight
-				if (current_ts > last_replay_ts + VISUALHOMING_REPLAY_PERIOD) {
+        bool snapshot_timeout_passed = (current_ts
+            > last_replay_ts + VISUALHOMING_REPLAY_PERIOD);
+        bool within_odometry_limits = (sqrt(odo->x * odo->x + odo->y * odo->y)
+            < vh_snapshot_arrival_max_odo);
+        bool snapshot_arrival_detected = (sqrt(
+            homingvector.x * homingvector.x + homingvector.y * homingvector.y)
+            < vh_snapshot_arrival_threshold);
+        if ((snapshot_arrival_detected && within_odometry_limits)
+            || snapshot_timeout_passed) {
 					if (vh_map_get_index() > 0) {
 						vh_map_pop();
 						odo = vh_map_odometry();

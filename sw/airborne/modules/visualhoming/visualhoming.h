@@ -27,6 +27,7 @@
 extern float vh_environment_radius;
 extern float vh_odometry_arrival_threshold;
 extern float vh_snapshot_arrival_threshold;
+extern float vh_snapshot_arrival_max_odo;
 extern float vh_snapshot_initial_threshold;
 extern float vh_snapshot_trigger_threshold;
 extern int vh_snapshot_trigger_from_initial;
