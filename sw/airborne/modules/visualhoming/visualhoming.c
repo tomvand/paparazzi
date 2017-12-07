@@ -77,7 +77,7 @@ float vh_trigger_min_radius = VISUALHOMING_TRIGGER_MIN_RADIUS;
 float vh_trigger_extend_factor = VISUALHOMING_TRIGGER_EXTEND_FACTOR;
 
 #ifndef VISUALHOMING_TRIGGER_TIMEOUT
-#define VISUALHOMING_TRIGGER_TIMEOUT 8.0 // s
+#define VISUALHOMING_TRIGGER_TIMEOUT 1.43 // s for <1.0m sideways deviation @ 99% and 10cm/s odo bias SD
 #endif
 float vh_trigger_timeout = VISUALHOMING_TRIGGER_TIMEOUT;
 
