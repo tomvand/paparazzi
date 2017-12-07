@@ -61,13 +61,13 @@ float vh_snapshot_arrival_threshold = VISUALHOMING_SNAPSHOT_ARRIVAL_THRESHOLD;
 #endif
 float vh_snapshot_arrival_max_odo = VISUALHOMING_SNAPSHOT_ARRIVAL_MAX_ODO;
 
-#ifndef VISUALHOMING_TRIGGER_ANGULAR_RATE
-#define VISUALHOMING_TRIGGER_ANGULAR_RATE 114 // Deg/m
+#ifndef VISUALHOMING_TRIGGER_ANGULAR_ERROR
+#define VISUALHOMING_TRIGGER_ANGULAR_ERROR 35 // Deg
 #endif
-float vh_trigger_angular_rate = VISUALHOMING_TRIGGER_ANGULAR_RATE;
+float vh_trigger_angular_error = VISUALHOMING_TRIGGER_ANGULAR_ERROR;
 
 #ifndef VISUALHOMING_TRIGGER_MIN_LENGTH
-#define VISUALHOMING_TRIGGER_MIN_LENGTH 0.03
+#define VISUALHOMING_TRIGGER_MIN_LENGTH 0.05
 #endif
 float vh_trigger_min_length = VISUALHOMING_TRIGGER_MIN_LENGTH;
 
@@ -316,27 +316,30 @@ void visualhoming_periodic(void)
       } else {
         // Outbound flight
         static float ca_radius = 0.f;
-        static float previous_angle = 0.f;
-        float current_angle = atan2(-homingvector.y, homingvector.x)
-            + stateGetNedToBodyEulers_f()->psi;
-        float angular_diff = current_angle - previous_angle;
-        while (angular_diff < -M_PI)
-          angular_diff += 2 * M_PI;
-        while (angular_diff > M_PI)
-          angular_diff -= 2 * M_PI;
-        struct FloatVect2 vel_v = dr_getBodyVel();
-        float vel = sqrt(vel_v.x * vel_v.x + vel_v.y * vel_v.y);
-        float angular_rate = angular_diff / M_PI * 180.0 * 1.0e6
-            / (float) (current_ts - previous_ts) / vel;
-        previous_angle = current_angle;
-        printf("angular rate = %.1f deg/m\n", angular_rate);
-        if (ca_radius == 0.f && fabsf(angular_rate) > vh_trigger_angular_rate &&
-            sqrt(homingvector.x * homingvector.x
-                + homingvector.y * homingvector.y) > vh_trigger_min_length) {
-          ca_radius = sqrt(odo->x * odo->x + odo->y * odo->y);
-          printf("Detected edge of CA! r = %.2f\n", ca_radius);
+        float homing_length = sqrt(homingvector.x * homingvector.x
+            + homingvector.y * homingvector.y);
+        if (odo && homing_length > vh_trigger_min_length) {
+          float homing_angle = atan2(-homingvector.y, homingvector.x);
+          float odo_angle = atan2(odo->y, odo->x);
+          printf("homing angle: %.0f deg\n", homing_angle / M_PI * 180.0);
+          printf("odo angle: %.0f deg\n", odo_angle / M_PI * 180.0);
+          float angular_error = homing_angle - odo_angle;
+          while (angular_error < -M_PI)
+            angular_error += 2 * M_PI;
+          while (angular_error > M_PI)
+            angular_error -= 2 * M_PI;
+          printf("angular error = %.0f deg\n", angular_error / M_PI * 180.0);
+          if (ca_radius == 0.f
+              && fabsf(angular_error) > vh_trigger_angular_error / 180.0 * M_PI) {
+            ca_radius = sqrt(odo->x * odo->x + odo->y * odo->y);
+            printf("Detected edge of CA! r = %.2f\n", ca_radius);
+            // TODO Take snapshot beyond CA edge
+            vh_map_push(&current_snapshot);
+            vh_odometry_reset(vh_map_odometry());
+            last_record_ts = current_ts;
+            ca_radius = 0.f;
+          }
         }
-        // TODO Take snapshot at correct distance
         if (current_ts
             > last_record_ts + VISUALHOMING_TRIGGER_TIMEOUT * 1.0e6) {
           printf("Snapshot trigger timed out!\n");
