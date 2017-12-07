@@ -72,7 +72,7 @@ float vh_trigger_angular_error = VISUALHOMING_TRIGGER_ANGULAR_ERROR;
 float vh_trigger_min_radius = VISUALHOMING_TRIGGER_MIN_RADIUS;
 
 #ifndef VISUALHOMING_TRIGGER_EXTEND_FACTOR
-#define VISUALHOMING_TRIGGER_EXTEND_FACTOR 1.35 // s/m for 0.999 success rate @20cm/s odo drift
+#define VISUALHOMING_TRIGGER_EXTEND_FACTOR 1.26 // s/m for 0.9996 success rate @10cm/s odo bias SD
 #endif
 float vh_trigger_extend_factor = VISUALHOMING_TRIGGER_EXTEND_FACTOR;
 
