@@ -30,9 +30,9 @@ extern int vh_early_homing_correct_frames;
 extern float vh_environment_radius;
 extern float vh_snapshot_arrival_threshold;
 extern float vh_snapshot_arrival_max_odo;
-extern float vh_snapshot_initial_threshold;
-extern float vh_snapshot_trigger_threshold;
-extern int vh_snapshot_trigger_from_initial;
+extern float vh_trigger_angular_rate;
+extern float vh_trigger_min_length;
+extern float vh_trigger_timeout;
 
 /* Control modes */
 enum vh_sequencer_mode_t {
