@@ -71,6 +71,11 @@ float vh_trigger_angular_error = VISUALHOMING_TRIGGER_ANGULAR_ERROR;
 #endif
 float vh_trigger_min_radius = VISUALHOMING_TRIGGER_MIN_RADIUS;
 
+#ifndef VISUALHOMING_TRIGGER_EXTEND_FACTOR
+#define VISUALHOMING_TRIGGER_EXTEND_FACTOR 1.35 // s/m for 0.999 success rate @20cm/s odo drift
+#endif
+float vh_trigger_extend_factor = VISUALHOMING_TRIGGER_EXTEND_FACTOR;
+
 #ifndef VISUALHOMING_TRIGGER_TIMEOUT
 #define VISUALHOMING_TRIGGER_TIMEOUT 8.0 // s
 #endif
@@ -315,36 +320,43 @@ void visualhoming_periodic(void)
         last_record_ts = current_ts;
       } else {
         // Outbound flight
+        // Detect catchment area radius
         static float ca_radius = 0.f;
         if (odo) {
           float odo_length = sqrt(odo->x * odo->x + odo->y * odo->y);
           if (odo_length > vh_trigger_min_radius) {
             float homing_angle = atan2(-homingvector.y, homingvector.x);
             float odo_angle = atan2(odo->y, odo->x);
-            printf("homing angle: %.0f deg\n", homing_angle / M_PI * 180.0);
-            printf("odo angle: %.0f deg\n", odo_angle / M_PI * 180.0);
+//            printf("homing angle: %.0f deg\n", homing_angle / M_PI * 180.0);
+//            printf("odo angle: %.0f deg\n", odo_angle / M_PI * 180.0);
             float angular_error = homing_angle - odo_angle;
             while (angular_error < -M_PI)
               angular_error += 2 * M_PI;
             while (angular_error > M_PI)
               angular_error -= 2 * M_PI;
-            printf("angular error = %.0f deg\n", angular_error / M_PI * 180.0);
+//            printf("angular error = %.0f deg\n", angular_error / M_PI * 180.0);
             if (ca_radius
                 == 0.f
                 && fabsf(angular_error) > vh_trigger_angular_error / 180.0 * M_PI) {
               ca_radius = sqrt(odo->x * odo->x + odo->y * odo->y);
-              printf("Detected edge of CA! r = %.2f\n", ca_radius);
-              // TODO Take snapshot beyond CA edge
-              vh_map_push(&current_snapshot);
-              vh_odometry_reset(vh_map_odometry());
-              last_record_ts = current_ts;
-              ca_radius = 0.f;
+              printf("Detected edge of CA! r = %.2f @ t = %.2f\n", ca_radius,
+                  (float) (current_ts - last_record_ts) / 1.0e6);
             }
           }
         }
-        if (current_ts
-            > last_record_ts + VISUALHOMING_TRIGGER_TIMEOUT * 1.0e6) {
-          printf("Snapshot trigger timed out!\n");
+        // Find max time from last waypoint
+        uint32_t max_time = 0.0;
+        if (ca_radius != 0.f) {
+          max_time = ca_radius * vh_trigger_extend_factor * 1.0e6;
+        } else {
+          max_time = VISUALHOMING_TRIGGER_TIMEOUT * 1.0e6;
+        }
+        // Create snapshot at appropriate time
+        if (current_ts > last_record_ts + max_time) {
+          printf("Take snapshot!\n");  // r = %.2f m\n", sqrt(odo->x * odo->x + odo->y * odo->y));
+          printf("t = %.2f s, tmax = %.2f s\n",
+              (float) (current_ts - last_record_ts) / 1.0e6,
+              (float) max_time / 1.0e6);
           vh_map_push(&current_snapshot);
           vh_odometry_reset(vh_map_odometry());
           last_record_ts = current_ts;
