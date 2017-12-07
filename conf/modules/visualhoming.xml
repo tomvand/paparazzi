@@ -21,7 +21,7 @@
         <dl_setting shortname="early_max_angle" param="VISUALHOMING_EARLY_HOMING_MAX_ANGULAR_ERROR" var="vh_early_homing_max_angular_error" min="0.0" step="1" max="180"/>
         <dl_setting shortname="early_correct_frames" param="VISUALHOMING_EARLY_HOMING_CORRECT_FRAMES" var="vh_early_homing_correct_frames" min="1" step="1" max="10"/>
         <dl_setting shortname="trig_angle" param="VISUALHOMING_TRIGGER_ANGULAR_ERROR" var="vh_trigger_angular_error" min="0.0" step="1.0" max="180.0"/>
-        <dl_setting shortname="trig_min_length" param="VISUALHOMING_TRIGGER_MIN_LENGTH" var="vh_trigger_min_length" min="0.00" step="0.01" max="0.05"/>
+        <dl_setting shortname="trig_min_radius" param="VISUALHOMING_TRIGGER_MIN_RADIUS" var="vh_trigger_min_radius" min="0.00" step="0.05" max="1.00"/>
         <dl_setting shortname="trig_timeout" param="VISUALHOMING_TRIGGER_TIMEOUT" var="vh_trigger_timeout" min="0.0" step="0.5" max="10.0"/>
         <dl_setting shortname="input_mode" var="vh_gcs_input_mode" min="0" step="1" max="2" values="Snapshot|Odometry|-">
           <strip_button name="Snapshot" value="0" group="vh_input" icon="digital-camera.png"/>

@@ -36,7 +36,7 @@
 
 /* Settings */
 #ifndef VISUALHOMING_EARLY_HOMING_MAX_ODO
-#define VISUALHOMING_EARLY_HOMING_MAX_ODO 1.0
+#define VISUALHOMING_EARLY_HOMING_MAX_ODO 0.0 // Disabled by default
 #endif
 float vh_early_homing_max_odo = VISUALHOMING_EARLY_HOMING_MAX_ODO;
 
@@ -66,10 +66,10 @@ float vh_snapshot_arrival_max_odo = VISUALHOMING_SNAPSHOT_ARRIVAL_MAX_ODO;
 #endif
 float vh_trigger_angular_error = VISUALHOMING_TRIGGER_ANGULAR_ERROR;
 
-#ifndef VISUALHOMING_TRIGGER_MIN_LENGTH
-#define VISUALHOMING_TRIGGER_MIN_LENGTH 0.05
+#ifndef VISUALHOMING_TRIGGER_MIN_RADIUS
+#define VISUALHOMING_TRIGGER_MIN_RADIUS 0.25 // m
 #endif
-float vh_trigger_min_length = VISUALHOMING_TRIGGER_MIN_LENGTH;
+float vh_trigger_min_radius = VISUALHOMING_TRIGGER_MIN_RADIUS;
 
 #ifndef VISUALHOMING_TRIGGER_TIMEOUT
 #define VISUALHOMING_TRIGGER_TIMEOUT 8.0 // s
@@ -316,28 +316,30 @@ void visualhoming_periodic(void)
       } else {
         // Outbound flight
         static float ca_radius = 0.f;
-        float homing_length = sqrt(homingvector.x * homingvector.x
-            + homingvector.y * homingvector.y);
-        if (odo && homing_length > vh_trigger_min_length) {
-          float homing_angle = atan2(-homingvector.y, homingvector.x);
-          float odo_angle = atan2(odo->y, odo->x);
-          printf("homing angle: %.0f deg\n", homing_angle / M_PI * 180.0);
-          printf("odo angle: %.0f deg\n", odo_angle / M_PI * 180.0);
-          float angular_error = homing_angle - odo_angle;
-          while (angular_error < -M_PI)
-            angular_error += 2 * M_PI;
-          while (angular_error > M_PI)
-            angular_error -= 2 * M_PI;
-          printf("angular error = %.0f deg\n", angular_error / M_PI * 180.0);
-          if (ca_radius == 0.f
-              && fabsf(angular_error) > vh_trigger_angular_error / 180.0 * M_PI) {
-            ca_radius = sqrt(odo->x * odo->x + odo->y * odo->y);
-            printf("Detected edge of CA! r = %.2f\n", ca_radius);
-            // TODO Take snapshot beyond CA edge
-            vh_map_push(&current_snapshot);
-            vh_odometry_reset(vh_map_odometry());
-            last_record_ts = current_ts;
-            ca_radius = 0.f;
+        if (odo) {
+          float odo_length = sqrt(odo->x * odo->x + odo->y * odo->y);
+          if (odo_length > vh_trigger_min_radius) {
+            float homing_angle = atan2(-homingvector.y, homingvector.x);
+            float odo_angle = atan2(odo->y, odo->x);
+            printf("homing angle: %.0f deg\n", homing_angle / M_PI * 180.0);
+            printf("odo angle: %.0f deg\n", odo_angle / M_PI * 180.0);
+            float angular_error = homing_angle - odo_angle;
+            while (angular_error < -M_PI)
+              angular_error += 2 * M_PI;
+            while (angular_error > M_PI)
+              angular_error -= 2 * M_PI;
+            printf("angular error = %.0f deg\n", angular_error / M_PI * 180.0);
+            if (ca_radius
+                == 0.f
+                && fabsf(angular_error) > vh_trigger_angular_error / 180.0 * M_PI) {
+              ca_radius = sqrt(odo->x * odo->x + odo->y * odo->y);
+              printf("Detected edge of CA! r = %.2f\n", ca_radius);
+              // TODO Take snapshot beyond CA edge
+              vh_map_push(&current_snapshot);
+              vh_odometry_reset(vh_map_odometry());
+              last_record_ts = current_ts;
+              ca_radius = 0.f;
+            }
           }
         }
         if (current_ts

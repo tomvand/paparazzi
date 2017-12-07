@@ -31,7 +31,7 @@ extern float vh_environment_radius;
 extern float vh_snapshot_arrival_threshold;
 extern float vh_snapshot_arrival_max_odo;
 extern float vh_trigger_angular_error;
-extern float vh_trigger_min_length;
+extern float vh_trigger_min_radius;
 extern float vh_trigger_timeout;
 
 /* Control modes */
