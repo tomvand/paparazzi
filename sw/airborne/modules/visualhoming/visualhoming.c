@@ -349,7 +349,7 @@ void visualhoming_periodic(void)
         if (ca_radius != 0.f) {
           max_time = ca_radius * vh_trigger_extend_factor * 1.0e6;
         } else {
-          max_time = VISUALHOMING_TRIGGER_TIMEOUT * 1.0e6;
+          max_time = vh_trigger_timeout * 1.0e6;
         }
         // Create snapshot at appropriate time
         if (current_ts > last_record_ts + max_time) {
