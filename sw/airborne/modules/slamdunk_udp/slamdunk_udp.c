@@ -47,6 +47,7 @@ static uint8_t mp_msg_buf[128]  __attribute__((aligned));   ///< The message buf
 void slamdunk_init(void) {
   printf("--- SALMDUNK init\n");
   pprz_transport_init(&slamdunk.transport);
+  printf("--- finished\n");
 }
 
 
@@ -60,8 +61,11 @@ void slamdunk_periodic(void) {
 
   //printf("pprz_msg_send_PAYLOAD this line causes seg fault.\n");
 
+//  printf("Send PAYLOAD\n");
+  char message[] = "Hello world!\n";
+
   pprz_msg_send_PAYLOAD(&(slamdunk.transport.trans_tx), slamdunk.device,
-    1, sizeof(struct PPRZ2SlamdunkPackage),  (unsigned char * ) &s2k_package);
+    AC_ID, sizeof(message),  (unsigned char * ) &message);
 
   /*pprz_msg_send_PAYLOAD(&(slamdunk.transport.trans_tx), slamdunk.device,
     1, sizeof(struct PPRZ2SlamdunkPackage), (unsigned char *)(&s2k_package));
@@ -72,12 +76,16 @@ void slamdunk_periodic(void) {
 
 /* Parse the message */
 static inline void slamdunk_parse_msg(void) {
-/* Parse the kalamos message */
-  uint8_t msg_id = mp_msg_buf[1];
+  printf("Message received!\n");
+  printf("%d %d %d %d %d %d ...\n", mp_msg_buf[0], mp_msg_buf[1], mp_msg_buf[2], mp_msg_buf[3], mp_msg_buf[4], mp_msg_buf[5]);
+
+  /* Parse the kalamos message */
+  uint8_t msg_id = mp_msg_buf[3]; // PPRZLINK v2
 
   switch (msg_id) {
     case PPRZ_MSG_ID_PAYLOAD:
-      printf("Message received!\n");
+      printf("PAYLOAD received!\n");
+      printf("%s\n", &mp_msg_buf[5]);
       break;
 
     default:
