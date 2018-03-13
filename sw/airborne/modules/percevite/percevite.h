@@ -27,6 +27,17 @@
 #ifndef PERCEVITE_H
 #define PERCEVITE_H
 
+struct percevite_t {
+  float max_velocity;
+};
+extern struct percevite_t percevite;
+
+struct percevite_settings_t {
+  float deceleration;
+  float minimum_distance;
+};
+extern struct percevite_settings_t percevite_settings;
+
 extern void percevite_init(void);
 extern void percevite_periodic(void);
 extern void percevite_event(void);
