@@ -1,0 +1,33 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="percevite">
+  <doc>
+    <description>Obstacle detection and avoidance module for PercEvite</description>
+  </doc>
+  <header>
+    <file name="percevite.h"/>
+  </header>
+  <init fun="percevite_init()"/>
+  <periodic fun="percevite_periodic()" freq="50"/>
+  <event fun="percevite_event()"/>
+  <makefile>
+    <!-- Configure default UART port and baudrate -->
+    <configure name="PERCEVITE_UDP" default="UDP1" case="upper|lower"/>
+    <configure name="PERCEVITE_HOST" default="192.168.45.255"/>
+    <configure name="PERCEVITE_PORT_OUT" default="4245"/>
+    <configure name="PERCEVITE_PORT_IN" default="4244"/>
+    <configure name="PERCEVITE_BROADCAST" default="TRUE"/>
+
+    <!-- Enable udp and set address-->
+    <define name="USE_$(PERCEVITE_UDP_UPPER)"/>
+    <define name="$(PERCEVITE_UDP_UPPER)_HOST" value="$(PERCEVITE_HOST)"/>
+    <define name="$(PERCEVITE_UDP_UPPER)_PORT_OUT" value="$(PERCEVITE_PORT_OUT)"/>
+    <define name="$(PERCEVITE_UDP_UPPER)_PORT_IN" value="$(PERCEVITE_PORT_IN)"/>
+    <define name="$(PERCEVITE_UDP_UPPER)_BROADCAST" value="$(PERCEVITE_BROADCAST)"/>
+    <define name="PERCEVITE_UDP" value="$(PERCEVITE_UDP_LOWER)"/>
+
+    <file name="percevite.c"/>
+    <file name="pprz_transport.c" dir="pprzlink/src"/>
+  </makefile>
+</module>
+

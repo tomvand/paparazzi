@@ -37,7 +37,7 @@
     <module name="logger_file">
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
     </module>
-    <module name="slamdunk_udp"/>
+    <module name="percevite"/>
   </modules>
 
   <commands>
