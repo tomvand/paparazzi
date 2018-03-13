@@ -61,14 +61,17 @@ struct percevite_settings_t percevite_settings = {
 static void slamdunk_init(void);
 static void slamdunk_event(void);
 static void slamdunk_parse_message(void);
-static void slamdunk_send_dummy_message(void);
+static void slamdunk_send_message(union paparazzi_to_slamdunk_msg_t *msg);
 
 void percevite_init(void) {
   slamdunk_init();
 }
 
 void percevite_periodic(void) {
-  slamdunk_send_dummy_message();
+  union paparazzi_to_slamdunk_msg_t msg = {
+      .text = "Hello SLAMDunk!"
+  };
+  slamdunk_send_message(&msg);
 }
 
 void percevite_event(void) {
@@ -138,10 +141,8 @@ static void slamdunk_parse_message(void) {
   }
 }
 
-static void slamdunk_send_dummy_message(void) {
-  union paparazzi_to_slamdunk_msg_t msg = {
-      .text = "Hello SLAMDunk!"
-  };
+static void slamdunk_send_message(union paparazzi_to_slamdunk_msg_t *msg) {
   pprz_msg_send_PAYLOAD(&(slamdunk.transport.trans_tx), slamdunk.device,
-      AC_ID, sizeof(msg), &msg.bytes);
+      AC_ID, sizeof(*msg), &(msg->bytes));
 }
+
