@@ -32,6 +32,9 @@
 
 #include "firmwares/rotorcraft/guidance/guidance_h_ref.h"
 
+#include "firmwares/rotorcraft/navigation.h"
+#include "subsystems/navigation/waypoints.h"
+
 #include "generated/modules.h"
 
 #include <stdio.h>
@@ -135,6 +138,87 @@ static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
 #endif
   // Reset timeout
   percevite.time_since_image = 0.0;
+}
+
+
+/*
+ * Navigation functions
+ */
+/*
+ * Outline:
+ * Navigation is performed by moving towards the percevite waypoint instead of
+ * the real target. The percevite wp is set at a safe distance from the current
+ * position in the direction of the target waypoint.
+ * The percevite waypoint position is updated with each call to PerceviteGo or
+ * PerceviteStay based on the last received safe distance.
+ */
+
+static uint8_t percevite_wp; ///< Waypoint that will be moved by the percevite module
+
+///< Sets the heading towards the target_wp as in nav_set_heading_towards_waypoint,
+/// but also returns a bool wether the aircraft is currently pointing in the right
+/// direction +- a few degrees.
+static bool aim_at_waypoint(uint8_t target_wp) {
+  const float threshold = 0.20; // [rad]
+  struct FloatVect2 target = {WaypointX(target_wp), WaypointY(target_wp)};
+  struct FloatVect2 pos_diff;
+  VECT2_DIFF(pos_diff, target, *stateGetPositionEnu_f());
+  // don't change heading if closer than 0.5m to target
+  if(VECT2_NORM2(pos_diff) < 0.25) {
+    return TRUE; // Currently at waypoint, accept all headings
+  }
+  float target_heading = atan2f(pos_diff.x, pos_diff.y); // Note: ENU, CW from North
+  nav_set_heading_rad(target_heading);
+  // Compare to current heading
+  float heading_error = target_heading - stateGetNedToBodyEulers_f()->psi; // ENU
+  while(heading_error < -M_PI) heading_error += 2*M_PI;
+  while(heading_error > M_PI) heading_error -= 2*M_PI;
+  heading_error = fabsf(heading_error);
+  return heading_error < threshold;
+}
+
+static void set_percevite_wp(uint8_t target_wp, float distance) {
+  struct EnuCoor_f *pos = stateGetPositionEnu_f();
+  struct EnuCoor_f wp_pos = { WaypointX(target_wp), WaypointY(target_wp), WaypointAlt(target_wp) };
+  struct FloatVect2 move;
+  VECT2_DIFF(move, wp_pos, *pos); // Vector from current pos to target_wp
+  float distance_to_wp = float_vect2_norm(&move); // Distance between current position and target
+  if(distance_to_wp < distance) {
+    // Waypoint is withing safe distance, go there directly
+    waypoint_copy(percevite_wp, target_wp);
+  } else {
+    // Move percevite_wp towards target_wp but keep it within the safe distance
+    float_vect2_normalize(&move); // Unit vector towards target_wp
+    VECT2_SMUL(move, move, distance); // Vector of length distance towards target_wp
+    VECT2_SUM(wp_pos, *pos, move); // Write new wp x and y (pos + move). Keep Z of target wp.
+    waypoint_set_enu(percevite_wp, &wp_pos);
+  }
+}
+
+/**
+ * Assign waypoint to PercEvite module. This waypoint will be used for PerceviteGo
+ * and PerceviteStay commands. The waypoint will only be placed in regions that
+ * are determined to be safe.
+ * @param wp
+ * @return
+ */
+bool PerceviteInit(uint8_t wp) {
+  percevite_wp = wp;
+  return FALSE; // No looping req'd
+}
+
+bool PerceviteGo(uint8_t target_wp) {
+  NavSetWaypointHere(percevite_wp);
+  if(aim_at_waypoint(target_wp)) {
+    set_percevite_wp(percevite_wp, percevite.safe_distance);
+  }
+  NavGotoWaypoint(percevite_wp);
+  return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp
+}
+
+bool PerceviteStay(uint8_t target_wp) {
+  PerceviteGo(target_wp);
+  return TRUE; // Keep looping
 }
 
 

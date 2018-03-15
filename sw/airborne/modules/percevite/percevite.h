@@ -27,7 +27,11 @@
 #ifndef PERCEVITE_H
 #define PERCEVITE_H
 
+#include "firmwares/rotorcraft/navigation.h" // No idea where the bool type comes from :S
+#include <stdint.h>
+
 struct percevite_t {
+  float safe_distance; ///< Distance that can be moved forward whilst maintaining the minimal safe distance.
   float max_velocity;
   float time_since_image;
 };
@@ -44,6 +48,10 @@ extern struct percevite_settings_t percevite_settings;
 extern void percevite_init(void);
 extern void percevite_periodic(void);
 extern void percevite_event(void);
+
+extern bool PerceviteInit(uint8_t wp);
+extern bool PerceviteGo(uint8_t target_wp);
+extern bool PerceviteStay(uint8_t target_wp);
 
 #endif
 
