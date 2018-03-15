@@ -93,10 +93,15 @@ void percevite_event(void) {
 static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
   // Store safe distance for navigation
   if(msg->valid_pixels > percevite_settings.pixels_threshold * 255) {
-    percevite.safe_distance = msg->safe_distance;
+    percevite.safe_distance = 0.10 * msg->safe_distance - percevite_settings.minimum_distance;
+    if(percevite.safe_distance < 0) {
+      percevite.safe_distance = 0.0;
+    }
   } else {
     percevite.safe_distance = 0.0;
   }
+  printf("[percevite] Safe distance: %.1fm (Valid pixels: %.0f%%)\n",
+      percevite.safe_distance, msg->valid_pixels / 2.55);
   // Reset timeout
   percevite.time_since_image = 0.0;
 }
@@ -143,17 +148,18 @@ static bool aim_at_waypoint(uint8_t target_wp) {
 static void set_percevite_wp(uint8_t target_wp, float distance) {
   struct EnuCoor_f *pos = stateGetPositionEnu_f();
   struct EnuCoor_f wp_pos = { WaypointX(target_wp), WaypointY(target_wp), WaypointAlt(target_wp) };
-  struct FloatVect2 move;
-  VECT2_DIFF(move, wp_pos, *pos); // Vector from current pos to target_wp
-  float distance_to_wp = float_vect2_norm(&move); // Distance between current position and target
+  struct FloatVect2 diff;
+  VECT2_DIFF(diff, wp_pos, *pos); // Vector from current pos to target_wp
+  printf("[percevite] diff x = %.1f, y = %.1f\n", diff.x, diff.y);
+  float distance_to_wp = float_vect2_norm(&diff); // Distance between current position and target
   if(distance_to_wp < distance) {
-    // Waypoint is withing safe distance, go there directly
+    // Waypoint is within safe distance, go there directly
     waypoint_copy(percevite.wp, target_wp);
   } else {
     // Move percevite_wp towards target_wp but keep it within the safe distance
-    float_vect2_normalize(&move); // Unit vector towards target_wp
-    VECT2_SMUL(move, move, distance); // Vector of length distance towards target_wp
-    VECT2_SUM(wp_pos, *pos, move); // Write new wp x and y (pos + move). Keep Z of target wp.
+    float_vect2_normalize(&diff); // Unit vector towards target_wp
+    VECT2_SMUL(diff, diff, distance); // Vector of length distance towards target_wp
+    VECT2_SUM(wp_pos, *pos, diff); // Write new wp x and y (pos + move). Keep Z of target wp.
     waypoint_set_enu(percevite.wp, &wp_pos);
   }
 }
@@ -173,7 +179,7 @@ bool PerceviteInit(uint8_t wp) {
 bool PerceviteGo(uint8_t target_wp) {
   NavSetWaypointHere(percevite.wp);
   if(aim_at_waypoint(target_wp)) {
-    set_percevite_wp(percevite.wp, percevite.safe_distance);
+    set_percevite_wp(target_wp, percevite.safe_distance);
   }
   NavGotoWaypoint(percevite.wp);
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp
