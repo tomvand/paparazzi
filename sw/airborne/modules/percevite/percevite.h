@@ -32,15 +32,13 @@
 
 struct percevite_t {
   float safe_distance; ///< Distance that can be moved forward whilst maintaining the minimal safe distance.
-  float max_velocity;
   float time_since_image;
+  uint8_t wp; ///< Waypoint moved by this module
 };
 extern struct percevite_t percevite;
 
 struct percevite_settings_t {
-  float deceleration;
   float minimum_distance;
-  float image_lag;
   float pixels_threshold;
 };
 extern struct percevite_settings_t percevite_settings;

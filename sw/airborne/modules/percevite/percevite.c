@@ -30,8 +30,6 @@
 #include "mcu_periph/udp.h"
 #include "subsystems/datalink/downlink.h"
 
-#include "firmwares/rotorcraft/guidance/guidance_h_ref.h"
-
 #include "firmwares/rotorcraft/navigation.h"
 #include "subsystems/navigation/waypoints.h"
 
@@ -39,19 +37,9 @@
 
 #include <stdio.h>
 
-// Reference deceleration rate in m/s2
-#ifndef PERCEVITE_DECELERATION
-#define PERCEVITE_DECELERATION 0.5
-#endif
-
 // Minimum distance to keep towards obstacle [m]
 #ifndef PERCEVITE_MINIMUM_DISTANCE
 #define PERCEVITE_MINIMUM_DISTANCE 3.0
-#endif
-
-// Assumed delay between image capture and receival of safe distance measurement [s]
-#ifndef PERCEVITE_IMAGE_LAG
-#define PERCEVITE_IMAGE_LAG 1.0
 #endif
 
 // Max allowed time between images [s]
@@ -64,20 +52,14 @@
 #define PERCEVITE_VALID_PIXELS_THRESHOLD 0.50
 #endif
 
-// Enable writing to guidance h max velocity
-#ifndef PERCEVITE_SET_NAV_VMAX
-#define PERCEVITE_SET_NAV_VMAX TRUE
-#endif
-
 struct percevite_t percevite = {
-    .max_velocity = 0.0,
+    .safe_distance = 0.0,
     .time_since_image = 0.0,
+    .wp = 255, // Should cause an error when not initialized in flight plan!
 };
 
 struct percevite_settings_t percevite_settings = {
-    .deceleration = PERCEVITE_DECELERATION,
     .minimum_distance = PERCEVITE_MINIMUM_DISTANCE,
-    .image_lag = PERCEVITE_IMAGE_LAG,
     .pixels_threshold = PERCEVITE_VALID_PIXELS_THRESHOLD,
 };
 
@@ -91,15 +73,11 @@ void percevite_init(void) {
 }
 
 void percevite_periodic(void) {
-  // Increase image timer
+  // Update image timeout
   percevite.time_since_image += PERCEVITE_PERIODIC_PERIOD;
   if(percevite.time_since_image > PERCEVITE_IMAGE_TIMEOUT) {
     printf("[percevite] WARNING: Image timeout exceeded!\n");
-    percevite.max_velocity = 0.0;
-    // Output to guidance H
-#if PERCEVITE_SET_NAV_VMAX
-    gh_set_max_speed(percevite.max_velocity);
-#endif
+    percevite.safe_distance = 0.0;
   }
   // Send dummy message to slamdunk
   union paparazzi_to_slamdunk_msg_t msg = {
@@ -113,29 +91,12 @@ void percevite_event(void) {
 }
 
 static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
-  // Calculate max velocity
-  float braking_distance = (0.10 * msg->safe_distance) - percevite_settings.minimum_distance;
-  if(braking_distance > 0.0
-      && msg->valid_pixels > 255 * percevite_settings.pixels_threshold) {
-//    percevite.max_velocity = sqrtf(2.0 * braking_distance * percevite_settings.deceleration);
-    percevite.max_velocity = sqrtf(2.0 * braking_distance * percevite_settings.deceleration
-        + (percevite_settings.deceleration * percevite_settings.deceleration) * (percevite_settings.image_lag * percevite_settings.image_lag))
-        - percevite_settings.deceleration * percevite_settings.image_lag;
-    if(percevite.max_velocity > GUIDANCE_H_REF_MAX_SPEED) {
-      percevite.max_velocity = GUIDANCE_H_REF_MAX_SPEED;
-    }
+  // Store safe distance for navigation
+  if(msg->valid_pixels > percevite_settings.pixels_threshold * 255) {
+    percevite.safe_distance = msg->safe_distance;
   } else {
-    percevite.max_velocity = 0.0;
+    percevite.safe_distance = 0.0;
   }
-  // Print max velocity
-  printf("[percevite] Max velocity = %.1fm/s\t(safe distance: %.1fm, valid pixels: %.0f%%)\n",
-      percevite.max_velocity,
-      0.10 * msg->safe_distance,
-      msg->valid_pixels / 2.55);
-  // Output to guidance H
-#if PERCEVITE_SET_NAV_VMAX
-  gh_set_max_speed(percevite.max_velocity);
-#endif
   // Reset timeout
   percevite.time_since_image = 0.0;
 }
@@ -153,11 +114,13 @@ static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
  * PerceviteStay based on the last received safe distance.
  */
 
-static uint8_t percevite_wp; ///< Waypoint that will be moved by the percevite module
-
-///< Sets the heading towards the target_wp as in nav_set_heading_towards_waypoint,
-/// but also returns a bool wether the aircraft is currently pointing in the right
-/// direction +- a few degrees.
+/**
+ * Sets the heading towards the target_wp as in nav_set_heading_towards_waypoint,
+ * but also returns a bool wether the aircraft is currently pointing in the right
+ * direction +- a few degrees.
+ * @param target_wp
+ * @return pointed at target
+ */
 static bool aim_at_waypoint(uint8_t target_wp) {
   const float threshold = 0.20; // [rad]
   struct FloatVect2 target = {WaypointX(target_wp), WaypointY(target_wp)};
@@ -185,13 +148,13 @@ static void set_percevite_wp(uint8_t target_wp, float distance) {
   float distance_to_wp = float_vect2_norm(&move); // Distance between current position and target
   if(distance_to_wp < distance) {
     // Waypoint is withing safe distance, go there directly
-    waypoint_copy(percevite_wp, target_wp);
+    waypoint_copy(percevite.wp, target_wp);
   } else {
     // Move percevite_wp towards target_wp but keep it within the safe distance
     float_vect2_normalize(&move); // Unit vector towards target_wp
     VECT2_SMUL(move, move, distance); // Vector of length distance towards target_wp
     VECT2_SUM(wp_pos, *pos, move); // Write new wp x and y (pos + move). Keep Z of target wp.
-    waypoint_set_enu(percevite_wp, &wp_pos);
+    waypoint_set_enu(percevite.wp, &wp_pos);
   }
 }
 
@@ -203,16 +166,16 @@ static void set_percevite_wp(uint8_t target_wp, float distance) {
  * @return
  */
 bool PerceviteInit(uint8_t wp) {
-  percevite_wp = wp;
+  percevite.wp = wp;
   return FALSE; // No looping req'd
 }
 
 bool PerceviteGo(uint8_t target_wp) {
-  NavSetWaypointHere(percevite_wp);
+  NavSetWaypointHere(percevite.wp);
   if(aim_at_waypoint(target_wp)) {
-    set_percevite_wp(percevite_wp, percevite.safe_distance);
+    set_percevite_wp(percevite.wp, percevite.safe_distance);
   }
-  NavGotoWaypoint(percevite_wp);
+  NavGotoWaypoint(percevite.wp);
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp
 }
 
