@@ -37,10 +37,7 @@
     <module name="logger_file">
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
     </module>
-    <module name="percevite">
-      <define name="PERCEVITE_DECELERATION" value="0.5"/>
-      <define name="PERCEVITE_MINIMUM_DISTANCE" value="3.0"/>
-    </module>
+    <module name="percevite"/>
   </modules>
 
   <commands>

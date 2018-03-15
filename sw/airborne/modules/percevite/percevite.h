@@ -29,12 +29,15 @@
 
 struct percevite_t {
   float max_velocity;
+  float time_since_image;
 };
 extern struct percevite_t percevite;
 
 struct percevite_settings_t {
   float deceleration;
   float minimum_distance;
+  float image_lag;
+  float pixels_threshold;
 };
 extern struct percevite_settings_t percevite_settings;
 
