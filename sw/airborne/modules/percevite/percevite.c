@@ -39,7 +39,7 @@
 
 // Minimum distance to keep towards obstacle [m]
 #ifndef PERCEVITE_MINIMUM_DISTANCE
-#define PERCEVITE_MINIMUM_DISTANCE 3.0
+#define PERCEVITE_MINIMUM_DISTANCE 2.0
 #endif
 
 // Max allowed time between images [s]
