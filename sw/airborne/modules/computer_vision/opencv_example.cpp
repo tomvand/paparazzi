@@ -34,26 +34,46 @@ using namespace std;
 using namespace cv;
 #include "opencv_image_functions.h"
 
+#include <cstdio>
+
 int opencv_example(char *img, int width, int height)
 {
   // Create a new image, using the original bebop image.
   Mat M(height, width, CV_8UC2, img);
   Mat image;
   // If you want a color image, uncomment this line
-//   cvtColor(M, image, CV_YUV2BGR_Y422);
+  cvtColor(M, image, CV_YUV2BGR_Y422);
   // For a grayscale image, use this one
-  cvtColor(M, image, CV_YUV2GRAY_Y422);
+//  cvtColor(M, image, CV_YUV2GRAY_Y422);
 
   // Blur it, because we can
 //  blur(image, image, Size(5, 5));
 
   // Canny edges, only works with grayscale image
-  int edgeThresh = 35;
-  Canny(image, image, edgeThresh, edgeThresh * 3);
+//  int edgeThresh = 35;
+//  Canny(image, image, edgeThresh, edgeThresh * 3);
 
   // Convert back to YUV422, and put it in place of the original image
-  grayscale_opencv_to_yuv422(image, img, width, height);
-//  colorrgb_opencv_to_yuv422(image, img, width, height);
+//  grayscale_opencv_to_yuv422(image, img, width, height);
+  colorrgb_opencv_to_yuv422(image, img, width, height);
+
+
+  // Test because WTF
+  Mat test_bgr(1, 1, CV_8UC3); // BGR test
+  Mat test_yuv(1, 1, CV_8UC3);
+  printf("WRITE\n");
+  test_bgr.at<Vec3b>(0,0) = Vec3b(255, 0, 0);
+  printf("CONVERT\n");
+  cvtColor(test_bgr, test_yuv, CV_BGR2YUV);
+  printf("PRINT\n");
+  printf("B = %d, G = %d, R = %d\n",
+      test_bgr.at<Vec3b>(0,0)[0],
+      test_bgr.at<Vec3b>(0,0)[1],
+      test_bgr.at<Vec3b>(0,0)[2]);
+  printf("Y = %d, U = %d, V = %d\n",
+        test_yuv.at<Vec3b>(0,0)[0],
+        test_yuv.at<Vec3b>(0,0)[1],
+        test_yuv.at<Vec3b>(0,0)[2]);
 
   return 0;
 }

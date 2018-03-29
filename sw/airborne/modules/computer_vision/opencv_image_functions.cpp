@@ -48,20 +48,20 @@ void coloryuv_opencv_to_yuv422(Mat image, char *img, int width, int height)
     nRows = 1;
   }
 
-  // Iterate over the image, setting only the Y value
-  // and setting U and V to 127
+  // Iterate over the image.
   int i, j;
   uchar *p;
   int index_img = 0;
   for (i = 0; i < nRows; ++i) {
     p = image.ptr<uchar>(i);
-    for (j = 0; j < nCols; j += 6) {
+    for (j = 0; j < 3 * nCols; j += 6) {
+      // Loop per pixel *pair*
+      // j is byte index in OpenCV's row buffer (YUV YUV YUV YUV)
+      // index_img is byte index in Paparazzi's image buffer (UY VY UY VY)
       img[index_img++] = p[j + 1]; //U
       img[index_img++] = p[j];//Y
       img[index_img++] = p[j + 2]; //V
       img[index_img++] = p[j + 3]; //Y
-
-
     }
   }
 }
