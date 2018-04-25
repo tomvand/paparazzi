@@ -64,13 +64,13 @@
 #define PERCEVITE_VELOCITY_TIMEOUT 1.0
 #endif
 
-
+#define INVALID_WAYPOINT 255
 
 struct percevite_t percevite = {
     .safe_distance = 0.0,
     .time_since_safe_distance = 0.0,
     .time_since_velocity = 0.0,
-    .wp = 255, // Should cause an error when not initialized in flight plan!
+    .wp = INVALID_WAYPOINT, // Should cause an error when not initialized in flight plan!
 };
 
 struct percevite_settings_t percevite_settings = {
@@ -88,7 +88,7 @@ void percevite_init(void) {
 }
 
 void percevite_periodic(void) {
-  // Update image timeout
+  // Update timeouts
   percevite.time_since_safe_distance += PERCEVITE_PERIODIC_PERIOD;
   percevite.time_since_velocity += PERCEVITE_PERIODIC_PERIOD;
   if(percevite.time_since_safe_distance > PERCEVITE_IMAGE_TIMEOUT) {
@@ -110,32 +110,35 @@ void percevite_event(void) {
   slamdunk_event();
 }
 
-static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
-  if(msg->flags & SD_MSG_FLAG_SAFE_DISTANCE) {
-    // Update on safe distance
-    // Store safe distance for navigation
-    if(msg->valid_pixels > percevite_settings.pixels_threshold * 255) {
-      percevite.safe_distance = 0.10 * msg->safe_distance - percevite_settings.minimum_distance;
-      if(percevite.safe_distance < 0) {
-        percevite.safe_distance = 0.0;
-      }
-    } else {
+static void percevite_on_safe_distance(union slamdunk_to_paparazzi_msg_t *msg) {
+  // Store safe distance for navigation
+  if(msg->valid_pixels > percevite_settings.pixels_threshold * 255) {
+    percevite.safe_distance = 0.10 * msg->safe_distance - percevite_settings.minimum_distance;
+    if(percevite.safe_distance < 0) {
       percevite.safe_distance = 0.0;
     }
-    printf("[percevite] Safe distance: %.1fm (Valid pixels: %.0f%%)\n",
-        percevite.safe_distance, msg->valid_pixels / 2.55);
-    // Reset timeout
-    percevite.time_since_safe_distance = 0.0;
+  } else {
+    percevite.safe_distance = 0.0;
   }
-  if(msg->flags & SD_MSG_FLAG_VELOCITY) {
-    // Velocity estimate
-    printf("[percevite] Velocity: %.1f %.1f %.1f m/s\n",
-        msg->vx, msg->vy, msg->vz);
-    AbiSendMsgVELOCITY_ESTIMATE(VEL_PERCEVITE_ID, get_sys_time_usec(),
-        msg->vx, msg->vy, msg->vz,
-        PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R);
-    percevite.time_since_velocity = 0.0;
-  }
+  printf("[percevite] Safe distance: %.1fm (Valid pixels: %.0f%%)\n",
+      percevite.safe_distance, msg->valid_pixels / 2.55);
+  // Reset timeout
+  percevite.time_since_safe_distance = 0.0;
+}
+
+static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
+  // Velocity estimate
+  printf("[percevite] Velocity: %.1f %.1f %.1f m/s\n",
+      msg->vx, msg->vy, msg->vz);
+  AbiSendMsgVELOCITY_ESTIMATE(VEL_PERCEVITE_ID, get_sys_time_usec(),
+      msg->vx, msg->vy, msg->vz,
+      PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R);
+  percevite.time_since_velocity = 0.0;
+}
+
+static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
+  if(msg->flags & SD_MSG_FLAG_SAFE_DISTANCE) percevite_on_safe_distance(msg);
+  if(msg->flags & SD_MSG_FLAG_VELOCITY) percevite_on_velocity(msg);
 }
 
 
