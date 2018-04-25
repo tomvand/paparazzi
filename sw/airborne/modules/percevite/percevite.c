@@ -61,13 +61,14 @@
 
 // Max allowed time between velocity updates [s]
 #ifndef PERCEVITE_VELOCITY_TIMEOUT
-#define PERCEVITE_VELOCITY_TIMEOUT 1.0
+#define PERCEVITE_VELOCITY_TIMEOUT 0.5
 #endif
 
 #define INVALID_WAYPOINT 255
 
 struct percevite_t percevite = {
-    .safe_distance = 0.0,
+    .safe_region.distance = 0.0,
+    .safe_region.seq = 0,
     .time_since_safe_distance = 0.0,
     .time_since_velocity = 0.0,
     .wp = INVALID_WAYPOINT, // Should cause an error when not initialized in flight plan!
@@ -93,11 +94,13 @@ void percevite_periodic(void) {
   percevite.time_since_velocity += PERCEVITE_PERIODIC_PERIOD;
   if(percevite.time_since_safe_distance > PERCEVITE_IMAGE_TIMEOUT) {
     printf("[percevite] WARNING: Image timeout exceeded!\n");
-    percevite.safe_distance = 0.0;
+    percevite.safe_region.distance = 0.0;
+    percevite.safe_region.seq++;
   }
   if(percevite.time_since_velocity > PERCEVITE_VELOCITY_TIMEOUT) {
     printf("[percevite] WARNING: Velocity timeout exceeded!\n");
-    percevite.safe_distance = 0.0;
+    percevite.safe_region.distance = 0.0;
+    percevite.safe_region.seq++;
   }
   // Send dummy message to slamdunk
   union paparazzi_to_slamdunk_msg_t msg = {
@@ -113,15 +116,16 @@ void percevite_event(void) {
 static void percevite_on_safe_distance(union slamdunk_to_paparazzi_msg_t *msg) {
   // Store safe distance for navigation
   if(msg->valid_pixels > percevite_settings.pixels_threshold * 255) {
-    percevite.safe_distance = 0.10 * msg->safe_distance - percevite_settings.minimum_distance;
-    if(percevite.safe_distance < 0) {
-      percevite.safe_distance = 0.0;
+    percevite.safe_region.distance = 0.10 * msg->safe_distance - percevite_settings.minimum_distance;
+    if(percevite.safe_region.distance < 0) {
+      percevite.safe_region.distance = 0.0;
     }
   } else {
-    percevite.safe_distance = 0.0;
+    percevite.safe_region.distance = 0.0;
   }
-  printf("[percevite] Safe distance: %.1fm (Valid pixels: %.0f%%)\n",
-      percevite.safe_distance, msg->valid_pixels / 2.55);
+  percevite.safe_region.seq++;
+  printf("[percevite] Safe distance: %.1fm (ID: %d, Valid pixels: %.0f%%)\n",
+      percevite.safe_region.distance, percevite.safe_region.seq, msg->valid_pixels / 2.55);
   // Reset timeout
   percevite.time_since_safe_distance = 0.0;
 }
@@ -212,9 +216,19 @@ bool PerceviteInit(uint8_t wp) {
 }
 
 bool PerceviteGo(uint8_t target_wp) {
-  NavSetWaypointHere(percevite.wp);
+  static uint32_t last_seq = 0;
   if(aim_at_waypoint(target_wp)) {
-    set_percevite_wp(target_wp, percevite.safe_distance);
+    if(percevite.time_since_safe_distance > PERCEVITE_IMAGE_TIMEOUT) {
+      // Safe distance not available. Maintain current position.
+      NavSetWaypointHere(percevite.wp);
+    } else if (percevite.safe_region.seq > last_seq) {
+      // New safe distance available while facing target_wp. Move waypoint accordingly.
+      set_percevite_wp(target_wp, percevite.safe_region.distance);
+      last_seq = percevite.safe_region.seq;
+    } // else: no new information, maintain safe waypoint
+  } else {
+    // Not facing target_wp. Maintain current position.
+    NavSetWaypointHere(percevite.wp);
   }
   NavGotoWaypoint(percevite.wp);
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp

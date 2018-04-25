@@ -31,7 +31,10 @@
 #include <stdint.h>
 
 struct percevite_t {
-  float safe_distance; ///< Distance that can be moved forward whilst maintaining the minimal safe distance.
+  struct {
+    float distance; ///< Distance that can be moved forward whilst maintaining the minimal safe distance.
+    uint32_t seq; ///< Measurement number. Increases by 1 per safe distance measurement.
+  } safe_region;
   float time_since_safe_distance; ///< [s] Time since last safe distance update
   float time_since_velocity; ///< [s] Time since last velocity update
   uint8_t wp; ///< Waypoint moved by this module
