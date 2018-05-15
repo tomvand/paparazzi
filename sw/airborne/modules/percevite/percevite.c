@@ -49,6 +49,11 @@
 #define PERCEVITE_VALID_PIXELS_THRESHOLD 0.50
 #endif
 
+// Send velocity estimate through ABI
+#ifndef PERCEVITE_ESTIMATE_VELOCITY
+#define PERCEVITE_ESTIMATE_VELOCITY FALSE
+#endif
+
 // Velocity estimate variance (default SD 10 cm/s = 0.01)
 #ifndef PERCEVITE_VELOCITY_R
 #define PERCEVITE_VELOCITY_R 0.01
@@ -134,9 +139,11 @@ static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
   // Velocity estimate
   printf("[percevite] Velocity: %.1f %.1f %.1f m/s\n",
       msg->vx, msg->vy, msg->vz);
+#if PERCEVITE_ESTIMATE_VELOCITY
   AbiSendMsgVELOCITY_ESTIMATE(VEL_PERCEVITE_ID, get_sys_time_usec(),
       msg->vx, msg->vy, msg->vz,
       PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R);
+#endif
   percevite.time_since_velocity = 0.0;
 }
 
