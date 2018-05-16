@@ -84,6 +84,12 @@ struct percevite_settings_t percevite_settings = {
     .pixels_threshold = PERCEVITE_VALID_PIXELS_THRESHOLD,
 };
 
+struct percevite_logging_t percevite_logging = {
+    .velocity = { 0.0, 0.0, 0.0 },
+    .target_wp = INVALID_WAYPOINT,
+    .raw_distance = 0.0,
+};
+
 static void slamdunk_init(void);
 static void slamdunk_event(void);
 static void slamdunk_parse_message(void);
@@ -133,6 +139,9 @@ static void percevite_on_safe_distance(union slamdunk_to_paparazzi_msg_t *msg) {
       percevite.safe_region.distance, percevite.safe_region.seq, msg->valid_pixels / 2.55);
   // Reset timeout
   percevite.time_since_safe_distance = 0.0;
+  // Logging
+  percevite_logging.raw_distance = 0.10 * msg->safe_distance;
+  percevite_logging.valid_pixels = msg->valid_pixels / 255.0;
 }
 
 static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
@@ -144,6 +153,9 @@ static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
       msg->vx, msg->vy, msg->vz,
       PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R);
 #endif
+  percevite_logging.velocity.x = msg->vx;
+  percevite_logging.velocity.y = msg->vy;
+  percevite_logging.velocity.z = msg->vz;
   percevite.time_since_velocity = 0.0;
 }
 
@@ -224,6 +236,7 @@ bool PerceviteInit(uint8_t wp) {
 
 bool PerceviteGo(uint8_t target_wp) {
   static uint32_t last_seq = 0;
+  percevite_logging.target_wp = target_wp;
   if(aim_at_waypoint(target_wp)) {
     if(percevite.time_since_safe_distance > PERCEVITE_IMAGE_TIMEOUT) {
       // Safe distance not available. Maintain current position.

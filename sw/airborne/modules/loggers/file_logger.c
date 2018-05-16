@@ -26,6 +26,8 @@
 
 #include "file_logger.h"
 
+#include "generated/modules.h"
+
 #include <stdio.h>
 #include "std.h"
 
@@ -37,6 +39,46 @@
 #ifndef FILE_LOGGER_PATH
 #define FILE_LOGGER_PATH /data/video/usb
 #endif
+
+/** Select variables to log */
+#ifndef FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
+#define FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE FALSE
+#endif
+#ifndef FILE_LOGGER_LOG_LTP_POS
+#define FILE_LOGGER_LOG_LTP_POS FALSE
+#endif
+#ifndef FILE_LOGGER_LOG_LTP_VEL
+#define FILE_LOGGER_LOG_LTP_VEL FALSE
+#endif
+#ifndef FILE_LOGGER_LOG_BODY_VEL
+#define FILE_LOGGER_LOG_BODY_VEL FALSE
+#endif
+#ifndef FILE_LOGGER_LOG_SONAR_BEBOP
+#define FILE_LOGGER_LOG_SONAR_BEBOP FALSE
+#endif
+#ifndef FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE
+#define FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE FALSE
+#endif
+#ifndef FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE
+#define FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE FALSE
+#endif
+#ifndef FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
+#define FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS FALSE
+#endif
+
+#if FILE_LOGGER_LOG_SONAR_BEBOP
+#include "modules/sonar/sonar_bebop.h"
+#endif
+#if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
+#include "subsystems/navigation/common_flight_plan.h"
+#endif
+#if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE || \
+  FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE || \
+  FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
+#include "modules/percevite/percevite.h"
+#include "subsystems/navigation/waypoints.h"
+#endif
+
 
 /** The file pointer */
 static FILE *file_logger = NULL;
@@ -59,10 +101,37 @@ void file_logger_start(void)
   file_logger = fopen(filename, "w");
 
   if (file_logger != NULL) {
-    fprintf(
-      file_logger,
-      "counter,gyro_unscaled_p,gyro_unscaled_q,gyro_unscaled_r,accel_unscaled_x,accel_unscaled_y,accel_unscaled_z,mag_unscaled_x,mag_unscaled_y,mag_unscaled_z,COMMAND_THRUST,COMMAND_ROLL,COMMAND_PITCH,COMMAND_YAW,qi,qx,qy,qz\n"
-    );
+    fprintf(file_logger, "counter,time,");
+#if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
+    fprintf(file_logger, "block,stage,");
+#endif
+#if FILE_LOGGER_LOG_LTP_POS
+    fprintf(file_logger, "pos_ltp_x,pos_ltp_y,pos_ltp_z,");
+#endif
+#if FILE_LOGGER_LOG_LTP_VEL
+    fprintf(file_logger, "vel_ltp_x,vel_ltp_y,vel_ltp_z,");
+#endif
+#if FILE_LOGGER_LOG_BODY_VEL
+    fprintf(file_logger, "vel_body_x,vel_body_y,vel_body_z,");
+#endif
+#if FILE_LOGGER_LOG_SONAR_BEBOP
+    fprintf(file_logger, "sonar_bebop,");
+#endif
+#if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE || \
+  FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE || \
+  FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
+    fprintf(file_logger, "percevite_ok,");
+#endif
+#if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE
+    fprintf(file_logger, "percevite_vx,percevite_vy,percevite_vz,percevite_time_since_vel,");
+#endif
+#if FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE
+    fprintf(file_logger, "percevite_safe_dist,percevite_safe_dist_seq,percevite_raw_dist,percevite_valid_px,");
+#endif
+#if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
+    fprintf(file_logger, "percevite_wp_id,percevite_wp_x,percevite_wp_y,percevite_wp_z,percevite_tgt_id,percevite_tgt_x,percevite_tgt_y,percevite_tgt_z,");
+#endif
+    fprintf(file_logger, "\n");
   }
 }
 
@@ -82,27 +151,80 @@ void file_logger_periodic(void)
     return;
   }
   static uint32_t counter;
-  struct Int32Quat *quat = stateGetNedToBodyQuat_i();
-
-  fprintf(file_logger, "%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
-          counter,
-          imu.gyro_unscaled.p,
-          imu.gyro_unscaled.q,
-          imu.gyro_unscaled.r,
-          imu.accel_unscaled.x,
-          imu.accel_unscaled.y,
-          imu.accel_unscaled.z,
-          imu.mag_unscaled.x,
-          imu.mag_unscaled.y,
-          imu.mag_unscaled.z,
-          stabilization_cmd[COMMAND_THRUST],
-          stabilization_cmd[COMMAND_ROLL],
-          stabilization_cmd[COMMAND_PITCH],
-          stabilization_cmd[COMMAND_YAW],
-          quat->qi,
-          quat->qx,
-          quat->qy,
-          quat->qz
-         );
+  fprintf(file_logger, "%u,%f,", counter, counter * FILE_LOGGER_PERIODIC_PERIOD);
+#if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
+  {
+    fprintf(file_logger, "%u,%u,", nav_block, nav_stage);
+  }
+#endif
+#if FILE_LOGGER_LOG_LTP_POS
+  {
+    struct NedCoor_f *pos_ltp = stateGetPositionNed_f();
+    fprintf(file_logger, "%f,%f,%f,", pos_ltp->x, pos_ltp->y, pos_ltp->z);
+  }
+#endif
+#if FILE_LOGGER_LOG_LTP_VEL
+  {
+    struct NedCoor_f *vel_ltp = stateGetSpeedNed_f();
+    fprintf(file_logger, "%f,%f,%f,", vel_ltp->x, vel_ltp->y, vel_ltp->z);
+  }
+#endif
+#if FILE_LOGGER_LOG_BODY_VEL
+  {
+    struct FloatRMat *R = stateGetNedToBodyRMat_f();
+    struct NedCoor_f *vel_ltp = stateGetSpeedNed_f();
+    struct FloatVect3 vel_body;
+    MAT33_VECT3_MUL(vel_body, *R, *vel_ltp);
+    fprintf(file_logger, "%f,%f,%f,", vel_body.x, vel_body.y, vel_body.z);
+  }
+#endif
+#if FILE_LOGGER_LOG_SONAR_BEBOP
+  {
+    fprintf(file_logger, "%f,", sonar_bebop.distance);
+  }
+#endif
+#if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE || \
+  FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE || \
+  FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
+  {
+    fprintf(file_logger, "%d,", PerceviteOk());
+  }
+#endif
+#if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE
+  {
+    fprintf(file_logger, "%f,%f,%f,%f,",
+        percevite_logging.velocity.x,
+        percevite_logging.velocity.y,
+        percevite_logging.velocity.z,
+        percevite.time_since_velocity);
+  }
+#endif
+#if FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE
+  {
+    fprintf(file_logger, "%f,%u,%f,%f,",
+        percevite.safe_region.distance, percevite.safe_region.seq,
+        percevite_logging.raw_distance, percevite_logging.valid_pixels);
+  }
+#endif
+#if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
+  {
+    struct NedCoor_f wp = {0.0, 0.0, 0.0};
+    if(percevite.wp < nb_waypoint) {
+      wp.x = waypoint_get_y(percevite.wp); // Note: convert to NED
+      wp.y = waypoint_get_x(percevite.wp);
+      wp.z = -waypoint_get_alt(percevite.wp);
+    }
+    struct NedCoor_f tgt = {0.0, 0.0, 0.0};
+    if(percevite_logging.target_wp < nb_waypoint) {
+      tgt.x = waypoint_get_y(percevite_logging.target_wp); // Note: convert to NED
+      tgt.y = waypoint_get_x(percevite_logging.target_wp);
+      tgt.z = -waypoint_get_alt(percevite_logging.target_wp);
+    }
+    fprintf(file_logger, "%u,%f,%f,%f,%u,%f,%f,%f,",
+        percevite.wp, wp.x, wp.y, wp.z,
+        percevite_logging.target_wp, tgt.x, tgt.y, tgt.z);
+  }
+#endif
+  fprintf(file_logger, "\n");
   counter++;
 }
