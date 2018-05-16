@@ -45,6 +45,9 @@
 #ifndef FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
 #define FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE FALSE
 #endif
+#ifndef FILE_LOGGER_LOG_AUTOPILOT
+#define FILE_LOGGER_LOG_AUTOPILOT FALSE
+#endif
 #ifndef FILE_LOGGER_LOG_LTP_POS
 #define FILE_LOGGER_LOG_LTP_POS FALSE
 #endif
@@ -75,6 +78,9 @@
 
 #if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
 #include "subsystems/navigation/common_flight_plan.h"
+#endif
+#if FILE_LOGGER_LOG_AUTOPILOT
+#include "autopilot.h"
 #endif
 #if FILE_LOGGER_LOG_SONAR_BEBOP
 #include "modules/sonar/sonar_bebop.h"
@@ -118,6 +124,9 @@ void file_logger_start(void)
 #if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
     fprintf(file_logger, "block,stage,");
 #endif
+#if FILE_LOGGER_LOG_AUTOPILOT
+    fprintf(file_logger, "ap_mode,ap_motors_on,ap_kill_throttle,ap_in_flight,ap_ground_detected,");
+#endif
 #if FILE_LOGGER_LOG_LTP_POS
     fprintf(file_logger, "pos_ltp_x,pos_ltp_y,pos_ltp_z,");
 #endif
@@ -145,7 +154,7 @@ void file_logger_start(void)
     fprintf(file_logger, "percevite_vx,percevite_vy,percevite_vz,percevite_time_since_vel,");
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE
-    fprintf(file_logger, "percevite_safe_dist,percevite_safe_dist_seq,percevite_raw_dist,percevite_valid_px,");
+    fprintf(file_logger, "percevite_safe_dist,percevite_safe_dist_seq,percevite_raw_dist,percevite_valid_px,percevite_time_since_dist,");
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
     fprintf(file_logger, "percevite_wp_id,percevite_wp_x,percevite_wp_y,percevite_wp_z,percevite_tgt_id,percevite_tgt_x,percevite_tgt_y,percevite_tgt_z,");
@@ -174,6 +183,14 @@ void file_logger_periodic(void)
 #if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
   {
     fprintf(file_logger, "%u,%u,", nav_block, nav_stage);
+  }
+#endif
+#if FILE_LOGGER_LOG_AUTOPILOT
+  {
+    fprintf(file_logger, "%u,%d,%d,%d,%d,",
+        autopilot.mode, autopilot.motors_on,
+        autopilot.kill_throttle, autopilot.in_flight,
+        autopilot.ground_detected);
   }
 #endif
 #if FILE_LOGGER_LOG_LTP_POS
@@ -233,9 +250,10 @@ void file_logger_periodic(void)
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE
   {
-    fprintf(file_logger, "%f,%u,%f,%f,",
+    fprintf(file_logger, "%f,%u,%f,%f,%f,",
         percevite.safe_region.distance, percevite.safe_region.seq,
-        percevite_logging.raw_distance, percevite_logging.valid_pixels);
+        percevite_logging.raw_distance, percevite_logging.valid_pixels,
+        percevite.time_since_safe_distance);
   }
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
