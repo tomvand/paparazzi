@@ -48,6 +48,9 @@
 #ifndef FILE_LOGGER_LOG_AUTOPILOT
 #define FILE_LOGGER_LOG_AUTOPILOT FALSE
 #endif
+#ifndef FILE_LOGGER_LOG_ATTITUDE
+#define FILE_LOGGER_LOG_ATTITUDE FALSE
+#endif
 #ifndef FILE_LOGGER_LOG_LTP_POS
 #define FILE_LOGGER_LOG_LTP_POS FALSE
 #endif
@@ -127,6 +130,9 @@ void file_logger_start(void)
 #if FILE_LOGGER_LOG_AUTOPILOT
     fprintf(file_logger, "ap_mode,ap_motors_on,ap_kill_throttle,ap_in_flight,ap_ground_detected,");
 #endif
+#if FILE_LOGGER_LOG_ATTITUDE
+    fprintf(file_logger, "att_phi,att_theta,att_psi,");
+#endif
 #if FILE_LOGGER_LOG_LTP_POS
     fprintf(file_logger, "pos_ltp_x,pos_ltp_y,pos_ltp_z,");
 #endif
@@ -191,6 +197,13 @@ void file_logger_periodic(void)
         autopilot.mode, autopilot.motors_on,
         autopilot.kill_throttle, autopilot.in_flight,
         autopilot.ground_detected);
+  }
+#endif
+#if FILE_LOGGER_LOG_ATTITUDE
+  {
+    struct FloatEulers *att = stateGetNedToBodyEulers_f();
+    fprintf(file_logger, "%f,%f,%f,",
+        att->phi, att->theta, att->psi);
   }
 #endif
 #if FILE_LOGGER_LOG_LTP_POS
