@@ -57,6 +57,9 @@
 #ifndef FILE_LOGGER_LOG_SONAR_BEBOP
 #define FILE_LOGGER_LOG_SONAR_BEBOP FALSE
 #endif
+#ifndef FILE_LOGGER_LOG_BARO
+#define FILE_LOGGER_LOG_BARO FALSE
+#endif
 #ifndef FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE
 #define FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE FALSE
 #endif
@@ -69,6 +72,9 @@
 
 #if FILE_LOGGER_LOG_SONAR_BEBOP
 #include "modules/sonar/sonar_bebop.h"
+#endif
+#if FILE_LOGGER_LOG_BARO
+#include "modules/air_data/air_data.h"
 #endif
 #if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
 #include "subsystems/navigation/common_flight_plan.h"
@@ -117,6 +123,9 @@ void file_logger_start(void)
 #endif
 #if FILE_LOGGER_LOG_SONAR_BEBOP
     fprintf(file_logger, "sonar_bebop,");
+#endif
+#if FILE_LOGGER_LOG_BARO
+    fprintf(file_logger, "baro_valid,baro,");
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE || \
   FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE || \
@@ -182,6 +191,12 @@ void file_logger_periodic(void)
 #if FILE_LOGGER_LOG_SONAR_BEBOP
   {
     fprintf(file_logger, "%f,", sonar_bebop.distance);
+  }
+#endif
+#if FILE_LOGGER_LOG_BARO
+  {
+    fprintf(file_logger, "%d,%f,",
+        air_data.amsl_baro_valid, air_data.amsl_baro);
   }
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE || \

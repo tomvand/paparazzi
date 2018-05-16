@@ -34,11 +34,12 @@
     <module name="send_imu_mag_current"/>
     <module name="logger_file">
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
-      <define name="FILE_LOGGER_LOG_BODY_VEL" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_LTP_VEL" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_LTP_POS" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_SONAR_BEBOP" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE" value="TRUE"/>
+      <define name="FILE_LOGGER_LOG_LTP_POS" value="TRUE"/>
+      <define name="FILE_LOGGER_LOG_LTP_VEL" value="TRUE"/>
+      <define name="FILE_LOGGER_LOG_BODY_VEL" value="TRUE"/>
+      <define name="FILE_LOGGER_LOG_SONAR_BEBOP" value="TRUE"/>
+      <define name="FILE_LOGGER_LOG_BARO" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS" value="TRUE"/>
