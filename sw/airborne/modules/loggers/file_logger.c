@@ -27,6 +27,7 @@
 #include "file_logger.h"
 
 #include "generated/modules.h"
+#include "mcu_periph/sys_time.h"
 
 #include <stdio.h>
 #include "std.h"
@@ -151,7 +152,7 @@ void file_logger_periodic(void)
     return;
   }
   static uint32_t counter;
-  fprintf(file_logger, "%u,%f,", counter, counter * FILE_LOGGER_PERIODIC_PERIOD);
+  fprintf(file_logger, "%u,%f,", counter, get_sys_time_float());
 #if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
   {
     fprintf(file_logger, "%u,%u,", nav_block, nav_stage);
