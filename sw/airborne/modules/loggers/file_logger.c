@@ -165,7 +165,7 @@ void file_logger_start(void)
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
     fprintf(file_logger, "percevite_wp_id,percevite_wp_x,percevite_wp_y,percevite_wp_z,percevite_tgt_id,percevite_tgt_x,percevite_tgt_y,percevite_tgt_z,");
 #endif
-    fprintf(file_logger, "\n");
+    fprintf(file_logger, "file_logger_time\n");
   }
 }
 
@@ -185,7 +185,8 @@ void file_logger_periodic(void)
     return;
   }
   static uint32_t counter;
-  fprintf(file_logger, "%u,%f,", counter, get_sys_time_float());
+  float start = get_sys_time_float();
+  fprintf(file_logger, "%u,%f,", counter, start);
 #if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
   {
     fprintf(file_logger, "%u,%u,", nav_block, nav_stage);
@@ -288,6 +289,7 @@ void file_logger_periodic(void)
         percevite_logging.target_wp, tgt.x, tgt.y, tgt.z);
   }
 #endif
-  fprintf(file_logger, "\n");
+  float end = get_sys_time_float();
+  fprintf(file_logger, "%f\n", end - start);
   counter++;
 }

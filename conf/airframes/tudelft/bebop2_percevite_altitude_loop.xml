@@ -4,7 +4,7 @@
 
   <firmware name="rotorcraft">
     <target name="ap" board="bebop2">
-      <define name="STABILIZATION_INDI_G2_R" value="0.233"/>
+      <define name="STABILIZATION_INDI_G2_R" value="0.20"/>
     </target>
 
     <target name="nps" board="pc">
@@ -36,7 +36,7 @@
     <module name="send_imu_mag_current"/>
     <module name="logger_file">
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
-      <define name="FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE" value="TRUE"/>
+      <!-- <define name="FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_AUTOPILOT" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_ATTITUDE" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_LTP_POS" value="TRUE"/>
@@ -47,7 +47,7 @@
       <define name="FILE_LOGGER_LOG_BATTERY" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS" value="TRUE"/>
+      <define name="FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS" value="TRUE"/> -->
     </module>
     <module name="percevite">
       <define name="PERCEVITE_ESTIMATE_VELOCITY" value="FALSE"/>
@@ -162,9 +162,9 @@
 
   <section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
     <!-- control effectiveness -->
-    <define name="G1_P" value="0.0431"/>
-    <define name="G1_Q" value="0.0366"/>
-    <define name="G1_R" value="0.000247"/>
+    <define name="G1_P" value="0.05"/>
+    <define name="G1_Q" value="0.025"/>
+    <define name="G1_R" value="0.0022"/>
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
     <define name="FILTER_ROLL_RATE" value="FALSE"/>
