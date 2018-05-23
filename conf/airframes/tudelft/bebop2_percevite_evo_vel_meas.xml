@@ -4,7 +4,10 @@
 
   <firmware name="rotorcraft">
     <target name="ap" board="bebop2">
+      <!-- with SLAMDunk -->
       <define name="STABILIZATION_INDI_G2_R" value="0.233"/>
+      <!-- without SLAMDunk -->
+      <!-- <define name="STABILIZATION_INDI_G2_R" value="0.20"/> -->
     </target>
 
     <target name="nps" board="pc">
@@ -160,9 +163,14 @@
 
   <section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
     <!-- control effectiveness -->
+    <!-- with SLAMDunk -->
     <define name="G1_P" value="0.0431"/>
     <define name="G1_Q" value="0.0366"/>
     <define name="G1_R" value="0.000247"/>
+    <!-- without SLAMDunk -->
+    <!-- <define name="G1_P" value="0.05"/>
+    <define name="G1_Q" value="0.025"/>
+    <define name="G1_R" value="0.0022"/> -->
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
     <define name="FILTER_ROLL_RATE" value="FALSE"/>
@@ -198,8 +206,11 @@
     <define name="HOVER_KP" value="350"/>
     <define name="HOVER_KD" value="85"/>
     <define name="HOVER_KI" value="20"/>
-    <define name="NOMINAL_HOVER_THROTTLE" value="0.68"/>
     <define name="ADAPT_THROTTLE_ENABLED" value="TRUE"/>
+    <!-- with SLAMDunk -->
+    <define name="NOMINAL_HOVER_THROTTLE" value="0.68"/>
+    <!-- without SLAMDunk -->
+    <!-- <define name="NOMINAL_HOVER_THROTTLE" value="0.655"/> -->
   </section>
 
   <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
