@@ -168,12 +168,12 @@ struct log_frame_t {
   struct NedCoor_f percevite_tgt_pos;
 #endif
 };
-static struct log_frame_t log_frame;
+static volatile struct log_frame_t log_frame;
 
 static pthread_t log_thread; ///< Logging thread
-static bool log_frame_requested = FALSE; ///< TRUE if periodic should fill log buffer
-static bool log_thread_is_running = FALSE; ///< TRUE while log thread is running
-static bool log_thread_should_run = FALSE; ///< TRUE as long as log thread should run
+static volatile bool log_frame_requested = FALSE; ///< TRUE if periodic should fill log buffer
+static volatile bool log_thread_is_running = FALSE; ///< TRUE while log thread is running
+static volatile bool log_thread_should_run = FALSE; ///< TRUE as long as log thread should run
 
 /** Logging THREAD */
 void *file_logger_thread(void *arg);
@@ -245,7 +245,7 @@ void *file_logger_thread(void *arg) {
   /* Write log */
   while(log_thread_should_run) {
     log_frame_requested = TRUE;
-    while(log_frame_requested) pthread_yield(); // Spin until frame is filled in by periodic
+    while(log_frame_requested && log_thread_should_run) pthread_yield(); // Spin until frame is filled in by periodic
     fprintf(file_logger, "%u,%f,%f,",
         log_frame.counter, log_frame.time, log_frame.dt);
 #if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
