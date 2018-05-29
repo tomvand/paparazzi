@@ -227,8 +227,8 @@
   </section>
 
   <section name="NAVIGATION" prefix="NAV_">
-    <define name="CLIMB_VSPEED" value="1.0"/>
-    <define name="DESCEND_VSPEED" value="-0.8"/>
+    <define name="CLIMB_VSPEED" value="0.2"/>
+    <define name="DESCEND_VSPEED" value="-0.2"/>
   </section>
 
   <section name="SIMULATOR" prefix="NPS_">
