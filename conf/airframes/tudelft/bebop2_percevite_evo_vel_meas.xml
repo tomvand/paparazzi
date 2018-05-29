@@ -31,6 +31,7 @@
     <module name="ins" type="gps_passthrough"/>
     
     <define name="ARRIVED_AT_WAYPOINT" value="0.5"/>
+    <define name="USE_SONAR" value="TRUE"/>
 
     <module name="geo_mag"/>
     <module name="air_data"/>
