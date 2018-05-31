@@ -4,17 +4,18 @@
 
   <firmware name="rotorcraft">
     <target name="ap" board="bebop2">
-      <define name="STABILIZATION_INDI_G2_R" value="0.233"/>
-    </target>
+    <configure name="HOST" value="192.168.42.$(AC_ID)" />
+    <configure name="MODEM_HOST" value="192.168.42.40" />
+  </target>
 
     <target name="nps" board="pc">
       <module name="fdm" type="jsbsim"/>
       <module name="udp"/>
-      <!-- rotor inertia not modelled in simple_quad JSBSim model, set G2 to zero -->
-      <define name="STABILIZATION_INDI_G2_R" value="0.0"/>
     </target>
 
-	  <!-- Subsystem section -->
+    <define name="USE_SONAR" value="TRUE"/>
+
+    <!-- Subsystem section -->
     <module name="telemetry" type="transparent_udp"/>
     <module name="radio_control" type="datalink"/>
     <module name="motor_mixing"/>
@@ -23,53 +24,52 @@
     <module name="gps" type="datalink"/>
     <module name="stabilization" type="indi_simple"/>
     <module name="ahrs" type="int_cmpl_quat">
-      <configure name="USE_MAGNETOMETER" value="TRUE"/>
+      <configure name="USE_MAGNETOMETER" value="FALSE"/>
+      <configure name="AHRS_USE_GPS" value="FALSE"/>
     </module>
-    <module name="ins" type="extended"/>
-    
-    <define name="ARRIVED_AT_WAYPOINT" value="0.5"/>
-    <define name="USE_SONAR" value="TRUE"/>
-    <!-- <define name="USE_BAROMETER" value="TRUE"/> --><!-- Not required, BARO always enabled in vff_extended! -->
+    <module name="ins" type="hff_extended"/>
+  </firmware>
 
+  <modules main_freq="512">
     <module name="geo_mag"/>
     <module name="air_data"/>
     <module name="send_imu_mag_current"/>
-    <module name="logger_file">
-      <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
-      <define name="FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_AUTOPILOT" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_ATTITUDE" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_LTP_POS" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_LTP_VEL" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_BODY_VEL" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_SONAR_BEBOP" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_BARO" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_BATTERY" value="TRUE"/>
-      <!--<define name="FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS" value="TRUE"/>-->
+    <module name="Decawave_Serial_Communication">
+      <configure name="SERIAL_UART" value="UART2" />
+      <configure name="SERIAL_BAUD" value="B57600" />
     </module>
-    <!--<module name="percevite">
-      <define name="PERCEVITE_ESTIMATE_VELOCITY" value="FALSE"/>
-    </module>-->
+    <module name="relativelocalizationfilter"/>
+    <module name="guided_control_imav2017"/>
     
     <module name="video_thread"/>
+    <module name="pose_history"/>
     <module name="cv_opticflow">
       <define name="OPTICFLOW_CAMERA" value="bottom_camera"/>
       <define name="MAX_HORIZON" value="10"/>
-      <define name="OPTICFLOW_FX" value="347.22222222"/> <!-- 2.5 / (3.6 * 2.0) * 1000 -->
-      <define name="OPTICFLOW_FY" value="347.22222222"/> <!-- 2.5 / (3.6 * 2.0) * 1000 -->
-      <define name="OPTICFLOW_FOV_W" value="0.665499265"/> <!-- 2 * arctan(240 / (2*347.22222222)) -->
-      <define name="OPTICFLOW_FOV_H" value="0.665499265"/> <!-- 2 * arctan(240 / (2*347.22222222)) -->
-      <define name="OPTICFLOW_DEROTATION_CORRECTION_FACTOR_X" value="0.8"/> <!--Obtained from a linefit--> 
-      <define name="OPTICFLOW_DEROTATION_CORRECTION_FACTOR_Y" value="0.85"/> <!--Obtained from a linefit--> 
-    </module>
-    <module name="video_rtp_stream">
-      <define name="VIEWVIDEO_CAMERA" value="bottom_camera"/>
-      <define name="VIEWVIDEO_DOWNSIZE_FACTOR" value="1"/>
-      <define name="VIEWVIDEO_QUALITY_FACTOR" value="60"/>
-    </module>
-  </firmware>
+      <define name="OPTICFLOW_METHOD" value="0"/>
+      <define name="OPTICFLOW_DEROTATION" value="TRUE"/>
+      <define name="OPTICFLOW_MEDIAN_FILTER" value="TRUE"/>
+      <define name="OPTICFLOW_KALMAN_FILTER" value="FALSE"/>
+      <define name="OPTICFLOW_FX" value="347.22222222"/> 
+      <define name="OPTICFLOW_FY" value="347.22222222"/> 
+      <define name="OPTICFLOW_FOV_W" value="0.665499265"/> 
+      <define name="OPTICFLOW_FOV_H" value="0.665499265"/> 
+      <define name="OPTICFLOW_DEROTATION_CORRECTION_FACTOR_X" value="1.0"/>
+      <define name="OPTICFLOW_DEROTATION_CORRECTION_FACTOR_Y" value="0.9"/>
+  </module>
+    <!--module name="logger_file">
+      <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
+    </module-->
+  </modules>
+  
+  <section name="RELATIVELOCALIZATIONFILTER" prefix="">
+   <define name="RSSINOISE" value="5.0"/>  <!-- (Expected) Noise on RSSI -->
+   <define name="SPEEDNOISE" value="0.2"/> <!-- (Expected) Noise on 
+      other measurements -->
+   <define name="NUAVS" value="5"/>        <!-- Maximum number of UAVs 
+      to track -->
+      <!-- define name="UWB_LOCALIZATION" value="1" /-->
+  </section>
 
   <commands>
     <axis name="PITCH" failsafe_value="0"/>
@@ -104,22 +104,10 @@
   <section name="AIR_DATA" prefix="AIR_DATA_">
     <define name="CALC_AIRSPEED" value="FALSE"/>
     <define name="CALC_TAS_FACTOR" value="FALSE"/>
-    <define name="CALC_AMSL_BARO" value="TRUE"/>
+    <define name="CALC_AMSL_BARO" value="FALSE"/>
   </section>
 
-  <section name="IMU" prefix="IMU_">
-    <!-- Magneto calibration -->
-    <define name="MAG_X_NEUTRAL" value="18"/>
-    <define name="MAG_Y_NEUTRAL" value="46"/>
-    <define name="MAG_Z_NEUTRAL" value="202"/>
-    <define name="MAG_X_SENS" value="8.32441255621" integer="16"/>
-    <define name="MAG_Y_SENS" value="8.25720085664" integer="16"/>
-    <define name="MAG_Z_SENS" value="8.60009819293" integer="16"/>
-    
-    <define name="BODY_TO_IMU_PHI" value="0." unit="deg"/>
-    <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/>
-    <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
-  </section>
+  <include href="conf/airframes/TUDELFT/calibrations/bebop2_22.xml" />
 
   <!-- local magnetic field -->
   <!-- http://wiki.paparazziuav.org/wiki/Subsystem/ahrs#Local_Magnetic_Field -->
@@ -133,19 +121,16 @@
     <define name="H_X" value="0.3892503"/>
     <define name="H_Y" value="0.0017972"/>
     <define name="H_Z" value="0.9211303"/>
-    
-    <!-- Use GPS heading instead of magneto -->
-    <!-- <define name="USE_GPS_HEADING" value="1"/> -->
-    <!-- <define name="HEADING_UPDATE_GPS_MIN_SPEED" value="0"/> -->
+    <!--define name="HEADING_UPDATE_GPS_MIN_SPEED" value="0"/-->
   </section>
 
   <section name="INS" prefix="INS_">
     <define name="SONAR_MAX_RANGE" value="2.2"/>
     <define name="SONAR_UPDATE_ON_AGL" value="TRUE"/>
-    
-    <!-- Use GPS altitude measurments and set the R gain -->
-    <define name="USE_GPS_ALT" value="0"/>
-    <define name="VFF_R_GPS" value="0.01"/>
+    <define name="OPTITRACK_DONOTUSESPEED" value="TRUE"/>
+    <!--define name="USE_GPS_ALT" value="1"/>
+    <define name="USE_GPS_ALT_SPEED" value="1"/>
+    <define name="VFF_R_GPS" value="0.01"/-->
   </section>
 
 
@@ -179,9 +164,10 @@
 
   <section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
     <!-- control effectiveness -->
-    <define name="G1_P" value="0.0431"/>
-    <define name="G1_Q" value="0.0366"/>
-    <define name="G1_R" value="0.000247"/>
+    <define name="G1_P" value="0.05"/>
+    <define name="G1_Q" value="0.025"/>
+    <define name="G1_R" value="0.0022"/>
+    <define name="G2_R" value="0.20"/>
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
     <define name="FILTER_ROLL_RATE" value="FALSE"/>
@@ -189,15 +175,12 @@
     <define name="FILTER_YAW_RATE" value="FALSE"/>
 
     <!-- reference acceleration for attitude control -->
-    <define name="REF_ERR_P" value="170.0"/>
+    <define name="REF_ERR_P" value="600.0"/>
     <define name="REF_ERR_Q" value="600.0"/>
     <define name="REF_ERR_R" value="600.0"/>
-    <define name="REF_RATE_P" value="14.3"/>
+    <define name="REF_RATE_P" value="28.0"/>
     <define name="REF_RATE_Q" value="28.0"/>
     <define name="REF_RATE_R" value="28.0"/>
-    
-    <!--Maxium yaw rate, to avoid instability-->
-    <define name="MAX_R" value="120.0" unit="deg/s"/>
 
     <!-- second order filter parameters -->
     <define name="FILT_CUTOFF" value="3.2"/>
@@ -214,42 +197,46 @@
   </section>
 
   <section name="GUIDANCE_V" prefix="GUIDANCE_V_">
-    <define name="HOVER_KP" value="350"/>
+    <define name="HOVER_KP" value="300"/>
     <define name="HOVER_KD" value="85"/>
     <define name="HOVER_KI" value="20"/>
-    <define name="NOMINAL_HOVER_THROTTLE" value="0.68"/>
+    <define name="NOMINAL_HOVER_THROTTLE" value="0.655"/>
     <define name="ADAPT_THROTTLE_ENABLED" value="TRUE"/>
   </section>
 
   <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
     <!-- Good weather -->
     <define name="MAX_BANK" value="20" unit="deg"/>
-    <define name="REF_MAX_SPEED" value="1.0" unit="m/s"/>
+    <define name="REF_MAX_SPEED" value="0.7" unit="m/s"/>
     <!-- Bad weather -->
     <!-- define name="MAX_BANK" value="32" unit="deg"/ -->
     <define name="PGAIN" value="120"/>
-    <define name="DGAIN" value="200"/>
-    <define name="IGAIN" value="30"/>
-    <!-- Lower reference overshoot -->
-    <define name="REF_ZETA" value="1.2"/>
+    <define name="DGAIN" value="370"/>
+    <define name="IGAIN" value="0"/>
+  </section>
+  
+  <section name="IMU" prefix="IMU_">
+    <define name="BODY_TO_IMU_PHI" value="0." unit="deg"/>
+    <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/>
+    <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
   </section>
 
   <section name="NAVIGATION" prefix="NAV_">
     <define name="CLIMB_VSPEED" value="1.0"/>
-    <define name="DESCEND_VSPEED" value="-0.8"/>
+    <define name="DESCEND_VSPEED" value="-0.75"/>
   </section>
 
   <section name="SIMULATOR" prefix="NPS_">
     <define name="ACTUATOR_NAMES" value="nw_motor, ne_motor, se_motor, sw_motor" type="string[]"/>
-    <define name="JSBSIM_MODEL" value="simple_x_quad" type="string"/>
+    <define name="JSBSIM_MODEL" value="simple_x_quad_ccw" type="string"/>
     <define name="SENSORS_PARAMS" value="nps_sensors_params_default.h" type="string"/>
   </section>
-
+  
   <section name="AUTOPILOT">
-    <define name="MODE_STARTUP" value="AP_MODE_NAV"/>
+    <define name="MODE_STARTUP" value="AP_MODE_GUIDED"/>
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
-    <define name="MODE_AUTO1" value="AP_MODE_GUIDED"/>
-    <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
+    <define name="MODE_AUTO1" value="AP_MODE_ATTITUDE_Z_HOLD"/> <!-- not used -->
+    <define name="MODE_AUTO2" value="AP_MODE_GUIDED"/>
   </section>
 
   <section name="BAT">
@@ -259,4 +246,5 @@
     <define name="LOW_BAT_LEVEL" value="11.1" unit="V"/>
     <define name="MAX_BAT_LEVEL" value="12.4" unit="V"/>
   </section>
+  
 </airframe>

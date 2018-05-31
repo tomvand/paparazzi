@@ -4,7 +4,10 @@
 
   <firmware name="rotorcraft">
     <target name="ap" board="bebop2">
-      <define name="STABILIZATION_INDI_G2_R" value="0.233"/>
+      <!-- with SLAMDunk -->
+      <!-- <define name="STABILIZATION_INDI_G2_R" value="0.233"/> -->
+      <!-- without SLAMDunk -->
+      <define name="STABILIZATION_INDI_G2_R" value="0.20"/>
     </target>
 
     <target name="nps" board="pc">
@@ -144,8 +147,8 @@
     <define name="SONAR_UPDATE_ON_AGL" value="TRUE"/>
     
     <!-- Use GPS altitude measurments and set the R gain -->
-    <define name="USE_GPS_ALT" value="0"/>
-    <define name="VFF_R_GPS" value="0.01"/>
+    <!-- <define name="USE_GPS_ALT" value="1"/> -->
+    <!-- <define name="VFF_R_GPS" value="0.01"/> -->
   </section>
 
 
@@ -179,9 +182,14 @@
 
   <section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
     <!-- control effectiveness -->
-    <define name="G1_P" value="0.0431"/>
+    <!-- with SLAMDunk -->
+    <!-- <define name="G1_P" value="0.0431"/>
     <define name="G1_Q" value="0.0366"/>
-    <define name="G1_R" value="0.000247"/>
+    <define name="G1_R" value="0.000247"/> -->
+    <!-- without SLAMDunk -->
+    <define name="G1_P" value="0.05"/>
+    <define name="G1_Q" value="0.025"/>
+    <define name="G1_R" value="0.0022"/>
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
     <define name="FILTER_ROLL_RATE" value="FALSE"/>
