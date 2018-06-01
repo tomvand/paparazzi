@@ -54,9 +54,9 @@
 #define PERCEVITE_ESTIMATE_VELOCITY FALSE
 #endif
 
-// Velocity estimate variance (default SD 10 cm/s = 0.01)
+// Velocity estimate variance (default SD 50 cm/s = 0.25)
 #ifndef PERCEVITE_VELOCITY_R
-#define PERCEVITE_VELOCITY_R 0.01
+#define PERCEVITE_VELOCITY_R 0.25
 #endif
 
 // Max allowed time between images [s]
