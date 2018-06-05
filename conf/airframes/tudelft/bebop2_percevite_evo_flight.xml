@@ -167,7 +167,7 @@
     <define name="G1_R" value="0.000247"/>
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
-    <define name="FILTER_ROLL_RATE" value="FALSE"/>
+    <define name="FILTER_ROLL_RATE" value="TRUE"/>
     <define name="FILTER_PITCH_RATE" value="FALSE"/>
     <define name="FILTER_YAW_RATE" value="FALSE"/>
 
@@ -233,6 +233,7 @@
     <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
     <define name="MODE_AUTO1" value="AP_MODE_GUIDED"/>
     <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
+    <define name="NO_RC_THRUST_LIMIT" value="TRUE" />
   </section>
 
   <section name="BAT">

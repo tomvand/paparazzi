@@ -46,15 +46,21 @@
       !(IndexOfBlock('Holding point') > nav_block) &&
       !(nav_block >= IndexOfBlock('Land here')) &&
       (autopilot_in_flight() == true) )" deroute="Land here"/>
+    <!-- Percevite error -->
+    <exception cond="(!PerceviteOk() &&
+      !(IndexOfBlock('Holding point') > nav_block) &&
+      !(nav_block >= IndexOfBlock('Land here')) &&
+      (autopilot_in_flight() == true) )" deroute="Land here"/>
   </exceptions>
   <blocks>
     <block name="PercEvite init">
       <call_once fun="PerceviteInit(WP_PERCEVITE)"/>
+      <while cond="!PerceviteOk()"/>
     </block>
-    <block name="Wait GPS">
+    <!-- <block name="Wait GPS">
       <call_once fun="NavKillThrottle()"/>
       <while cond="!GpsFixValid()"/>
-    </block>
+    </block> -->
     <block name="Holding point">
       <call_once fun="NavKillThrottle()"/>
       <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
