@@ -55,6 +55,7 @@
   <blocks>
     <block name="PercEvite init">
       <call_once fun="PerceviteInit(WP_PERCEVITE)"/>
+      <while cond="!PerceviteOk()"/>
     </block>
     <block name="Wait GPS">
       <call_once fun="NavKillThrottle()"/>
