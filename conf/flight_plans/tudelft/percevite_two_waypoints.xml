@@ -57,10 +57,6 @@
       <call_once fun="PerceviteInit(WP_PERCEVITE)"/>
       <while cond="!PerceviteOk()"/>
     </block>
-    <!-- <block name="Wait GPS">
-      <call_once fun="NavKillThrottle()"/>
-      <while cond="!GpsFixValid()"/>
-    </block> -->
     <block name="Holding point">
       <call_once fun="NavKillThrottle()"/>
       <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
