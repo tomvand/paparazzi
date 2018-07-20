@@ -61,7 +61,7 @@
 
 // Maximum allowable difference with INS velocity [m/s]
 #ifndef PERCEVITE_VELOCITY_THRESH
-#define PERCEVITE_VELOCITY_THRESH 1.0
+#define PERCEVITE_VELOCITY_THRESH 2.0
 #endif
 
 // Max allowed time between images [s]
