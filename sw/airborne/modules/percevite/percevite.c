@@ -59,6 +59,11 @@
 #define PERCEVITE_VELOCITY_R 0.25
 #endif
 
+// Maximum allowable difference with INS velocity [m/s]
+#ifndef PERCEVITE_VELOCITY_THRESH
+#define PERCEVITE_VELOCITY_THRESH 1.0
+#endif
+
 // Max allowed time between images [s]
 #ifndef PERCEVITE_IMAGE_TIMEOUT
 #define PERCEVITE_IMAGE_TIMEOUT 0.5
@@ -148,15 +153,28 @@ static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
   // Velocity estimate
   printf("[percevite] Velocity: %.1f %.1f %.1f m/s\n",
       msg->vx, msg->vy, msg->vz);
+  // Sanity check
+  struct FloatVect3 vel_body;
+  struct FloatRMat *R = stateGetNedToBodyRMat_f();
+  struct NedCoor_f *vel_ltp = stateGetSpeedNed_f();
+  MAT33_VECT3_MUL(vel_body, *R, *vel_ltp);
+  if(fabsf(msg->vx - vel_body.x) < PERCEVITE_VELOCITY_THRESH &&
+      fabsf(msg->vy - vel_body.y) < PERCEVITE_VELOCITY_THRESH &&
+      fabsf(msg->vz - vel_body.z) < PERCEVITE_VELOCITY_THRESH) {
+    // Velocity seems ok, send to INS
 #if PERCEVITE_ESTIMATE_VELOCITY
-  AbiSendMsgVELOCITY_ESTIMATE(VEL_PERCEVITE_ID, get_sys_time_usec(),
-      msg->vx, msg->vy, msg->vz,
-      PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R);
+    AbiSendMsgVELOCITY_ESTIMATE(VEL_PERCEVITE_ID, get_sys_time_usec(),
+        msg->vx, msg->vy, msg->vz,
+        PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R, PERCEVITE_VELOCITY_R);
 #endif
+    percevite.time_since_velocity = 0.0;
+  } else {
+    // Sanity check failed
+    printf("Velocity change too large! Ignoring...\n");
+  }
   percevite_logging.velocity.x = msg->vx;
   percevite_logging.velocity.y = msg->vy;
   percevite_logging.velocity.z = msg->vz;
-  percevite.time_since_velocity = 0.0;
 }
 
 static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
