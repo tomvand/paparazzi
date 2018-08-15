@@ -1,0 +1,116 @@
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+
+<flight_plan alt="1.5" ground_alt="0" lat0="43.564789" lon0="1.483622" max_dist_from_home="300" name="Rotorcraft Optitrack (Delft)" security_height="0.3">
+  <header>
+#include "autopilot.h"
+#include "subsystems/datalink/datalink.h"
+#include "subsystems/electrical.h"
+#include "modules/percevite/percevite.h"
+</header>
+  <waypoints>
+    <waypoint name="HOME" x="0.0" y="0.0"/>
+    <waypoint name="CLIMB" x="1.2" y="-0.6"/>
+    <waypoint name="STDBY" x="-0.7" y="-0.8"/>
+    <waypoint name="TD" x="0.8" y="-1.7"/>
+    <waypoint name="PERCEVITE" x="0.0" y="0.0"/>
+    <waypoint name="1" lat="43.566465" lon="1.482288"/>
+    <waypoint name="2" lat="43.566345" lon="1.482490"/>
+    <waypoint name="3" lat="43.566068" lon="1.482808"/>
+    <waypoint name="4" lat="43.565569" lon="1.483090"/>
+    <waypoint name="5" lat="43.565311" lon="1.483354"/>
+    <waypoint name="6" lat="43.565021" lon="1.483371"/>
+    <waypoint name="7" lat="43.564789" lon="1.483622"/>
+  </waypoints>
+  <exceptions>
+    <!-- Datalink lost (constant RPM descent) -->  
+    <exception cond="((datalink_time > 2) &&
+      !(IndexOfBlock('Holding point') > nav_block) &&
+      !(nav_block >= IndexOfBlock('Land here')) &&
+      (autopilot_in_flight() == true) )" deroute="Land here"/>
+    <!-- Low battery -->
+    <exception cond="(electrical.bat_low &&
+      !(IndexOfBlock('Holding point') > nav_block) &&
+      !(nav_block >= IndexOfBlock('Land here')) &&
+      (autopilot_in_flight() == true) )" deroute="Land here"/>
+    <exception cond="(electrical.bat_critical &&
+      !(IndexOfBlock('Holding point') > nav_block) &&
+      !(nav_block >= IndexOfBlock('Land here')) &&
+      (autopilot_in_flight() == true) )" deroute="Land here"/>
+    <!-- Percevite error -->
+    <exception cond="(!PerceviteOk() &&
+      !(IndexOfBlock('Holding point') > nav_block) &&
+      !(nav_block >= IndexOfBlock('Land here')) &&
+      (autopilot_in_flight() == true) )" deroute="Land here"/>
+  </exceptions>
+  <blocks>
+    <block name="PercEvite init">
+      <call_once fun="NavKillThrottle()"/>
+      <call_once fun="PerceviteInit(WP_PERCEVITE)"/>
+      <while cond="!PerceviteOk()"/>
+    </block>
+    <block name="GPS init">
+      <call_once fun="NavKillThrottle()"/>
+      <while cond="!GpsFixValid()"/>
+      <while cond="LessThan(NavBlockTime(), 20)"/>
+      <call_once fun="NavSetGroundReferenceHere()"/>
+      <call_once fun="NavSetAltitudeReferenceHere()"/>
+    </block>
+    <block name="Holding point">
+      <call_once fun="NavKillThrottle()"/>
+      <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
+    </block>
+    <block name="Start Engine">
+      <call_once fun="NavResurrect()"/>
+      <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
+    </block>
+    <block name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
+      <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="Standby"/>
+      <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
+      <stay climb="nav_climb_vspeed" vmode="climb" wp="CLIMB"/>
+    </block>
+    
+    <block name="Standby" strip_button="Standby" strip_icon="home.png">
+      <call_once fun="NavSetWaypointHere(WP_STDBY)"/>
+      <stay wp="STDBY"/>
+    </block>
+    
+    <block name="Go 7">
+      <call fun="PerceviteGo(WP_7)"/>
+    </block>
+    <block name="Go 6">
+      <call fun="PerceviteGo(WP_6)"/>
+    </block>
+    <block name="Go 5">
+      <call fun="PerceviteGo(WP_5)"/>
+    </block>
+    <block name="Go 4">
+      <call fun="PerceviteGo(WP_4)"/>
+    </block>
+    <block name="Go 3">
+      <call fun="PerceviteGo(WP_3)"/>
+    </block>
+    <block name="Go 2">
+      <call fun="PerceviteGo(WP_2)"/>
+    </block>
+    <block name="Go 1">
+      <call fun="PerceviteGo(WP_1)"/>
+    </block>
+    
+    <block name="Land here" strip_button="Land Here" strip_icon="land-right.png">
+      <call_once fun="NavSetWaypointHere(WP_TD)"/>
+    </block>
+    <block name="land">
+      <go wp="TD"/>
+    </block>
+    <block name="flare">
+      <exception cond="NavDetectGround()" deroute="Holding point"/>
+      <exception cond="!nav_is_in_flight()" deroute="landed"/>
+      <call_once fun="NavStartDetectGround()"/>
+      <stay climb="nav_descend_vspeed" vmode="climb" wp="TD"/>
+    </block>
+    <block name="landed">
+      <call_once fun="NavKillThrottle()"/>
+      <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
+    </block>
+  </blocks>
+</flight_plan>
