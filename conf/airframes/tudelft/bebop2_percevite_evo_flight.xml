@@ -51,7 +51,7 @@
     </module>
     <module name="percevite">
       <define name="PERCEVITE_ESTIMATE_VELOCITY" value="TRUE"/>
-      <define name="PERCEVITE_VELOCITY_TIMEOUT" value="0.3"/>
+      <!-- <define name="PERCEVITE_VELOCITY_TIMEOUT" value="0.3"/> -->
     </module>
   </firmware>
 

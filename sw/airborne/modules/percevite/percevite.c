@@ -66,12 +66,12 @@
 
 // Max allowed time between images [s]
 #ifndef PERCEVITE_IMAGE_TIMEOUT
-#define PERCEVITE_IMAGE_TIMEOUT 0.5
+#define PERCEVITE_IMAGE_TIMEOUT 1.0
 #endif
 
 // Max allowed time between velocity updates [s]
 #ifndef PERCEVITE_VELOCITY_TIMEOUT
-#define PERCEVITE_VELOCITY_TIMEOUT 0.5
+#define PERCEVITE_VELOCITY_TIMEOUT 1.0
 #endif
 
 #define INVALID_WAYPOINT 255
