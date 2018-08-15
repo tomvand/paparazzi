@@ -13,7 +13,7 @@
   <makefile>
     <!-- Configure default UART port and baudrate -->
     <configure name="PERCEVITE_UDP" default="UDP1" case="upper|lower"/>
-    <configure name="PERCEVITE_HOST" default="192.168.45.255"/>
+    <configure name="PERCEVITE_HOST" default="192.168.43.255"/>
     <configure name="PERCEVITE_PORT_OUT" default="4245"/>
     <configure name="PERCEVITE_PORT_IN" default="4244"/>
     <configure name="PERCEVITE_BROADCAST" default="TRUE"/>
