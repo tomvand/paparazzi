@@ -51,6 +51,7 @@
     </module>
     <module name="percevite">
       <define name="PERCEVITE_ESTIMATE_VELOCITY" value="TRUE"/>
+      <define name="PERCEVITE_VELOCITY_TIMEOUT" value="5.0"/><!-- Redundant with GPS -->
     </module>
   </firmware>
 
