@@ -260,9 +260,13 @@ bool PerceviteGo(uint8_t target_wp) {
       // Safe distance not available. Maintain current position.
       NavSetWaypointHere(percevite.wp);
     } else if (percevite.safe_region.seq > last_seq) {
-      // New safe distance available while facing target_wp. Move waypoint accordingly.
-      set_percevite_wp(target_wp, percevite.safe_region.distance);
+      // New safe distance available while facing target_wp.
       last_seq = percevite.safe_region.seq;
+      if(percevite.safe_region.distance > 0) {
+        // Move waypoint forwards within safe distance.
+        // Note: do not move waypoint if safe distance is 0, causes drift!
+        set_percevite_wp(target_wp, percevite.safe_region.distance);
+      }
     } // else: no new information, maintain safe waypoint
   } else {
     // Not facing target_wp. Maintain current position.
