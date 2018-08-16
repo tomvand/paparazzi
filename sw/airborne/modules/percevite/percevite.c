@@ -29,6 +29,7 @@
 #include "pprzlink/pprz_transport.h"
 #include "mcu_periph/udp.h"
 #include "subsystems/datalink/downlink.h"
+#include "subsystems/datalink/telemetry.h"
 
 #include "firmwares/rotorcraft/navigation.h"
 #include "subsystems/navigation/waypoints.h"
@@ -100,8 +101,11 @@ static void slamdunk_event(void);
 static void slamdunk_parse_message(void);
 static void slamdunk_send_message(union paparazzi_to_slamdunk_msg_t *msg);
 
+static void send_percevite(struct transport_tx *trans, struct link_device *dev);
+
 void percevite_init(void) {
   slamdunk_init();
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_PERCEVITE, send_percevite);
 }
 
 void percevite_periodic(void) {
@@ -180,6 +184,18 @@ static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
 static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
   if(msg->flags & SD_MSG_FLAG_SAFE_DISTANCE) percevite_on_safe_distance(msg);
   if(msg->flags & SD_MSG_FLAG_VELOCITY) percevite_on_velocity(msg);
+}
+
+static void send_percevite(struct transport_tx *trans, struct link_device *dev) {
+  uint8_t ok = PerceviteOk();
+  pprz_msg_send_PERCEVITE(trans, dev, AC_ID,
+      &ok,
+      &percevite_logging.velocity.x, &percevite_logging.velocity.y, &percevite_logging.velocity.z,
+      &percevite.time_since_velocity,
+      &percevite.safe_region.distance, &percevite.safe_region.seq,
+      &percevite_logging.raw_distance, &percevite_logging.valid_pixels,
+      &percevite.time_since_safe_distance,
+      &percevite.wp, &percevite_logging.target_wp);
 }
 
 
