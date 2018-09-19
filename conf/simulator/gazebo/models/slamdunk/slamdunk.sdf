@@ -34,7 +34,7 @@
           <izz> 0.0002 </izz>
         </inertia>
       </inertial>
-      <sensor type="camera" name="left_rgb_rect">
+      <sensor type="depth" name="left_rgb_rect">
         <pose>0.05 0.1 0 0 0 0</pose>
         <update_rate>30.0</update_rate>
         <camera name="left_rgb_rect_cam">
@@ -48,50 +48,29 @@
             <near>0.02</near>
             <far>300</far>
           </clip>
-        </camera>        
-        <plugin name="left_rgb_rect_plugin" filename="libgazebo_ros_camera.so">
-          <alwaysOn>true</alwaysOn>
-          <updateRate>0.0</updateRate>
-          <cameraName>left_rgb_rect</cameraName>
-          <imageTopicName>image_raw</imageTopicName>
-          <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-          <frameName>camera_link</frameName>
-          <hackBaseline>0.0</hackBaseline>
-          <distortionK1>0.0</distortionK1>
-          <distortionK2>0.0</distortionK2>
-          <distortionK3>0.0</distortionK3>
-          <distortionT1>0.0</distortionT1>
-          <distortionT2>0.0</distortionT2>
-        </plugin>
-      </sensor>
-      <sensor type="camera" name="right_rgb_rect">
-        <pose>0.05 -0.1 0 0 0 0</pose>
-        <update_rate>30.0</update_rate>
-        <camera name="right_rgb_rect_cam">
-          <horizontal_fov>0.7175</horizontal_fov>
-          <image>
-            <width>576</width>
-            <height>576</height>
-            <format>R8G8B8</format>
-          </image>
-          <clip>
-            <near>0.02</near>
-            <far>300</far>
-          </clip>
         </camera>
-        <plugin name="right_rgb_rect_plugin" filename="libgazebo_ros_camera.so">
+        <!-- <plugin name="depth_controller" filename="libgazebo_ros_openni_kinect.so"> -->
+        <plugin name="depth_controller" filename="libgazebo_ros_depth_camera.so">
           <alwaysOn>true</alwaysOn>
           <updateRate>0.0</updateRate>
-          <cameraName>right_rgb_rect</cameraName>
-          <imageTopicName>image_raw</imageTopicName>
-          <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-          <frameName>camera_link</frameName>
-          <hackBaseline>0.0</hackBaseline>
-          <distortionK1>0.0</distortionK1>
-          <distortionK2>0.0</distortionK2>
-          <distortionK3>0.0</distortionK3>
-          <distortionT1>0.0</distortionT1>
-          <distortionT2>0.0</distortionT2>
+          <cameraName>slamdunk_camera</cameraName>
+          <imageTopicName>rgb/image_rect_color</imageTopicName>
+          <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+          <depthImageTopicName>/depth_map/image</depthImageTopicName>
+          <depthImageCameraInfoTopicName>/depth_map/camera_info</depthImageCameraInfoTopicName>
+          <pointCloudTopicName>points</pointCloudTopicName>
+          <frameName>cam_optical_frame</frameName>
+          <pointCloudCutoff>0.02</pointCloudCutoff>
+          <!-- <distortionK1>0.00000001</distortionK1>
+          <distortionK2>0.00000001</distortionK2>
+          <distortionK3>0.00000001</distortionK3>
+          <distortionT1>0.00000001</distortionT1>
+          <distortionT2>0.00000001</distortionT2>
+          <CxPrime>0</CxPrime>
+          <Cx>0</Cx>
+          <Cy>0</Cy>
+          <focalLength>0</focalLength>
+          <hackBaseline>0</hackBaseline> -->
         </plugin>
       </sensor>
     </link>
