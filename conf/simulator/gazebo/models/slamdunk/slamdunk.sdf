@@ -34,10 +34,10 @@
           <izz> 0.0002 </izz>
         </inertia>
       </inertial>
-      <sensor type="depth" name="left_rgb_rect">
+      <sensor type="depth" name="depth_camera">
         <pose>0.05 0.1 0 0 0 0</pose>
         <update_rate>30.0</update_rate>
-        <camera name="left_rgb_rect_cam">
+        <camera name="depth_cam">
           <horizontal_fov>0.7175</horizontal_fov>
           <image>
             <width>576</width>
@@ -71,6 +71,44 @@
           <Cy>0</Cy>
           <focalLength>0</focalLength>
           <hackBaseline>0</hackBaseline> -->
+        </plugin>
+      </sensor>
+      <sensor type="camera" name="left_rgb_rect">
+        <pose>0.05 0.1 0 0 0 0</pose>
+        <update_rate>30.0</update_rate>
+        <camera name="left_rgb_rect_cam">
+          <horizontal_fov>0.7175</horizontal_fov>
+          <image>
+            <width>576</width>
+            <height>576</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>300</far>
+          </clip>
+        </camera>
+        <!-- <plugin name="depth_controller" filename="libgazebo_ros_openni_kinect.so"> -->
+        <plugin name="cam_controller" filename="libgazebo_ros_camera.so">
+          <alwaysOn>true</alwaysOn>
+          <updateRate>0.0</updateRate>
+          <cameraName>left_rgb_rect</cameraName>
+          <imageTopicName>image_rect_color</imageTopicName>
+          <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+          <frameName>cam_optical_frame2</frameName>
+        </plugin>
+      </sensor>
+      <sensor type="imu" name="imu_sensor">
+        <update_rate>200</update_rate>
+        <imu>
+        </imu>
+        <plugin name="imu_controller" filename="libgazebo_ros_imu_sensor.so">
+          <alwaysOn>true</alwaysOn>
+          <updateRateHZ>0.0</updateRateHZ>
+          <robotNamespace></robotNamespace>
+          <topicName>imu</topicName>
+          <bodyName>slamdunk_link</bodyName>
+          <frameName>slamdunk_link</frameName>
         </plugin>
       </sensor>
     </link>
