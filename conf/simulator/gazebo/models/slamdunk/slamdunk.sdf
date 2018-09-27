@@ -40,8 +40,8 @@
         <camera name="depth_cam">
           <horizontal_fov>0.7175</horizontal_fov>
           <image>
-            <width>576</width>
-            <height>576</height>
+            <width>96</width>
+            <height>96</height>
             <format>R8G8B8</format>
           </image>
           <clip>
