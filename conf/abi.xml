@@ -151,6 +151,27 @@
       <field name="distance" type="float" unit="m">Distance of object to track</field>
     </message>
 
+    <message name="ACCEL_SP" id="23">
+      <field name="flag" type="uint8_t">0: 2D accel setpoint, 1: 3D accel setpoint</field>
+      <field name="accel_sp" type="struct FloatVect3 *" unit="m/s^2"/>
+    </message>
+
+    <message name="RELATIVE_LOCALIZATION" id="24">
+      <field name="id" type="int32_t"/>
+      <field name="x" type="float" unit="m"/>
+      <field name="y" type="float" unit="m"/>
+      <field name="z" type="float" unit="m"/>
+      <field name="vx" type="float" unit="m/s"/>
+      <field name="vy" type="float" unit="m/s"/>
+      <field name="vz" type="float" unit="m/s"/>
+    </message>
+
+    <message name="INCIDENCE" id="25">
+      <field name="flag" type="uint8_t">bit 1: AoA is updated, bit 2: sideslip is updated</field>
+      <field name="aoa" type="float" unit="rad">Angle of attack</field>
+      <field name="sideslip" type="float" unit="rad">Sideslip angle</field>
+    </message>
+
   </msg_class>
 
 </protocol>
