@@ -332,6 +332,14 @@ static void init_gazebo(void)
   string gazebodir = pprz_home + gazebo_home;
   cout << "Gazebo directory: " << gazebodir << endl;
 
+  if (getenv("ROS_MASTER_URI")) {
+    // Launch with ROS support
+    cout << "Add ROS plugins... ";
+    gazebo::addPlugin("libgazebo_ros_paths_plugin.so");
+    gazebo::addPlugin("libgazebo_ros_api_plugin.so");
+    cout << "ok" << endl;
+  }
+
   if (!gazebo::setupServer(0, NULL)) {
     cout << "Failed to start Gazebo, exiting." << endl;
     std::exit(-1);
