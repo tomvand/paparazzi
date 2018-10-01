@@ -4,28 +4,14 @@
 
   <firmware name="rotorcraft">
     <target name="ap" board="bebop2">
-      <define name="STABILIZATION_INDI_G2_R" value="0.233"/>
     </target>
 
     <target name="nps" board="pc">
       <module name="fdm" type="gazebo"/>
       <!-- rotor inertia not modelled in simple_quad JSBSim model, set G2 to zero -->
-      <define name="STABILIZATION_INDI_G2_R" value="0.0"/>
+      <!-- <define name="STABILIZATION_INDI_G2_R" value="0.0"/> -->
       <configure name="PERCEVITE_HOST" value="127.0.0.1"/>
     </target>
-    
-    <!-- Front Camera parameters -->
-    <define name="MT9F002_INITIAL_OFFSET_X" value="0.09" /> <!-- Offset from center position [-0.5..0.5]. Set to 0.09 to center horizon. -->
-    <define name="MT9F002_INITIAL_OFFSET_Y" value="0." /> <!-- Offset from center position [-0.5..0.5] -->
-    <define name="MT9F002_OUTPUT_WIDTH" value="240" /> <!-- Output dimensions -->
-    <define name="MT9F002_OUTPUT_HEIGHT" value="520" /> <!-- Output dimensions -->
-    <define name="MT9F002_TARGET_FPS" value="30" />
-    <define name="MT9F002_TARGET_EXPOSURE" value="20" />
-    <define name="MT9F002_GAIN_GREEN1" value="4.0" />
-    <define name="MT9F002_GAIN_GREEN2" value="4.0" />
-    <define name="MT9F002_GAIN_RED" value="5.0" />
-    <define name="MT9F002_GAIN_BLUE" value="5.0" />
-    <define name="MT9F002_OUTPUT_SCALER" value="0.25"/>
 
 	  <!-- Subsystem section -->
     <module name="telemetry" type="transparent_udp"/>
@@ -179,9 +165,10 @@
     <define name="G1_P" value="0.0431"/>
     <define name="G1_Q" value="0.0366"/>
     <define name="G1_R" value="0.000247"/>
+    <define name="G2_R" value="0.233"/>
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
-    <define name="FILTER_ROLL_RATE" value="TRUE"/>
+    <define name="FILTER_ROLL_RATE" value="FALSE"/>
     <define name="FILTER_PITCH_RATE" value="FALSE"/>
     <define name="FILTER_YAW_RATE" value="FALSE"/>
 
@@ -241,14 +228,13 @@
     <define name="JSBSIM_MODEL" value="simple_x_quad_ccw" type="string"/>
     <define name="SENSORS_PARAMS" value="nps_sensors_params_default.h" type="string"/>
     
-    <define name="ACTUATOR_THRUSTS" value="2.09, 2.09, 2.09, 2.09" type="float[]"/>
-    <define name="ACTUATOR_TORQUES" value="0.0250, 0.0250, 0.0250, 0.0250" type="float[]"/>
+    <define name="ACTUATOR_THRUSTS" value="2.80, 2.80, 2.80, 2.80" type="float[]"/>
+    <define name="ACTUATOR_TORQUES" value="0.05, 0.05, 0.05, 0.05" type="float[]"/>
     <define name="ACTUATOR_TIME_CONSTANTS" value="0.02, 0.02, 0.02, 0.02" type="float[]"/>
-    <define name="ACTUATOR_MAX_ANGULAR_MOMENTUM" value="0.19, 0.19, 0.19, 0.19" type="float[]"/>
-    <define name="GAZEBO_AC_NAME" value="bebop_with_slamdunk" type="string"/>
+    <define name="ACTUATOR_MAX_ANGULAR_MOMENTUM" value="0.5, 0.5, 0.5, 0.5" type="float[]"/>
+    <define name="GAZEBO_AC_NAME" value="bebop2_with_slamdunk" type="string"/>
     <define name="BYPASS_AHRS" value="1"/>
     <define name="BYPASS_INS" value="1"/>
-    <define name="SIMULATE_MT9F002" value="1"/>
   </section>
 
   <section name="AUTOPILOT">
