@@ -11,6 +11,7 @@
       <module name="fdm" type="gazebo"/>
       <!-- rotor inertia not modelled in simple_quad JSBSim model, set G2 to zero -->
       <define name="STABILIZATION_INDI_G2_R" value="0.0"/>
+      <configure name="PERCEVITE_HOST" value="127.0.0.1"/>
     </target>
     
     <!-- Front Camera parameters -->
