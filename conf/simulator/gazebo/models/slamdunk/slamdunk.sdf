@@ -52,7 +52,7 @@
           </image>
           <clip>
             <near>0.02</near>
-            <far>300</far>
+            <far>1000</far>
           </clip>
         </camera>
         <!-- <plugin name="depth_controller" filename="libgazebo_ros_openni_kinect.so"> -->
@@ -91,7 +91,7 @@
           </image>
           <clip>
             <near>0.02</near>
-            <far>300</far>
+            <far>1000</far>
           </clip>
         </camera>
         <plugin name="left_cam_controller" filename="libgazebo_ros_camera.so">
@@ -115,7 +115,7 @@
           </image>
           <clip>
             <near>0.02</near>
-            <far>300</far>
+            <far>1000</far>
           </clip>
         </camera>
         <plugin name="right_cam_controller" filename="libgazebo_ros_camera.so">
