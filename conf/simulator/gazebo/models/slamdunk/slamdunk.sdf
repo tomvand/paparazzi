@@ -85,7 +85,7 @@
         </camera>
         <plugin name="left_cam_controller" filename="libgazebo_ros_camera.so">
           <alwaysOn>true</alwaysOn>
-          <updateRate>0.0</updateRate>
+          <updateRate>30.0</updateRate>
           <cameraName>left_rgb_rect</cameraName>
           <imageTopicName>image_rect_color</imageTopicName>
           <cameraInfoTopicName>camera_info</cameraInfoTopicName>
@@ -109,7 +109,7 @@
         </camera>
         <plugin name="right_cam_controller" filename="libgazebo_ros_camera.so">
           <alwaysOn>true</alwaysOn>
-          <updateRate>0.0</updateRate>
+          <updateRate>30.0</updateRate>
           <cameraName>right_rgb_rect</cameraName>
           <imageTopicName>image_rect_color</imageTopicName>
           <cameraInfoTopicName>camera_info</cameraInfoTopicName>
