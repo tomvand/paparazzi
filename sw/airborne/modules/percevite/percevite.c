@@ -173,6 +173,7 @@ static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
 #endif
   } else {
     // Sanity check failed
+    printf("INS velocity: %.1f %.1f %.1f m/s\n", vel_body.x, vel_body.y, vel_body.z);
     printf("Velocity change too large! Ignoring...\n");
   }
   percevite_logging.velocity.x = msg->vx;

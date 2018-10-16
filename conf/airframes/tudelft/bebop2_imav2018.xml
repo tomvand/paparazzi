@@ -5,6 +5,7 @@
   <firmware name="rotorcraft">
     <target name="ap" board="bebop2">
       <define name="STABILIZATION_INDI_G2_R" value="0.233"/>
+      <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
     </target>
 
     <target name="nps" board="pc">
@@ -12,6 +13,7 @@
       <module name="udp"/>
       <!-- rotor inertia not modelled in simple_quad JSBSim model, set G2 to zero -->
       <define name="STABILIZATION_INDI_G2_R" value="0.0"/>
+      <define name="FILE_LOGGER_PATH" value="/home/tom/paparazzi/var/logs"/>
     </target>
 
 	  <!-- Subsystem section -->
@@ -35,7 +37,6 @@
     <module name="air_data"/>
     <module name="send_imu_mag_current"/>
     <module name="logger_file">
-      <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
       <define name="FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_AUTOPILOT" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_ATTITUDE" value="TRUE"/>
