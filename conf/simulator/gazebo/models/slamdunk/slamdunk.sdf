@@ -40,11 +40,11 @@
           </box>
         </geometry>
       </collision>
-      <sensor type="depth" name="depth_camera">
+      <!-- <sensor type="depth" name="depth_camera">
         <pose>0.05 0.1 0 0 0 0</pose>
         <update_rate>30.0</update_rate>
         <camera name="depth_cam">
-          <horizontal_fov>0.7175</horizontal_fov>
+          <horizontal_fov>1.19</horizontal_fov>
           <image>
             <width>96</width>
             <height>96</height>
@@ -55,7 +55,6 @@
             <far>1000</far>
           </clip>
         </camera>
-        <!-- <plugin name="depth_controller" filename="libgazebo_ros_openni_kinect.so"> -->
         <plugin name="depth_controller" filename="libgazebo_ros_depth_camera.so">
           <alwaysOn>true</alwaysOn>
           <updateRate>0.0</updateRate>
@@ -67,23 +66,13 @@
           <pointCloudTopicName>points</pointCloudTopicName>
           <frameName>cam_optical_frame</frameName>
           <pointCloudCutoff>0.02</pointCloudCutoff>
-          <!-- <distortionK1>0.00000001</distortionK1>
-          <distortionK2>0.00000001</distortionK2>
-          <distortionK3>0.00000001</distortionK3>
-          <distortionT1>0.00000001</distortionT1>
-          <distortionT2>0.00000001</distortionT2>
-          <CxPrime>0</CxPrime>
-          <Cx>0</Cx>
-          <Cy>0</Cy>
-          <focalLength>0</focalLength>
-          <hackBaseline>0</hackBaseline> -->
         </plugin>
-      </sensor>
+      </sensor> -->
       <sensor type="camera" name="left_rgb_rect">
         <pose>0.05 0.1 0 0 0 0</pose>
         <update_rate>30.0</update_rate>
         <camera name="left_rgb_rect_cam">
-          <horizontal_fov>0.7175</horizontal_fov>
+          <horizontal_fov>1.19</horizontal_fov>
           <image>
             <width>576</width>
             <height>576</height>
@@ -107,7 +96,7 @@
         <pose>0.05 -0.1 0 0 0 0</pose>
         <update_rate>30.0</update_rate>
         <camera name="right_rgb_rect_cam">
-          <horizontal_fov>0.7175</horizontal_fov>
+          <horizontal_fov>1.19</horizontal_fov>
           <image>
             <width>576</width>
             <height>576</height>
