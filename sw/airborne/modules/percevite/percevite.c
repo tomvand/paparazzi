@@ -122,11 +122,6 @@ void percevite_periodic(void) {
     percevite.safe_region.distance = 0.0;
     percevite.safe_region.seq++;
   }
-  // Send dummy message to slamdunk
-  union paparazzi_to_slamdunk_msg_t msg = {
-      .text = "Hello SLAMDunk!"
-  };
-  slamdunk_send_message(&msg);
 }
 
 void percevite_event(void) {
@@ -270,26 +265,23 @@ bool PerceviteInit(uint8_t wp) {
 }
 
 bool PerceviteGo(uint8_t target_wp) {
-  static uint32_t last_seq = 0;
-  percevite_logging.target_wp = target_wp;
-  if(aim_at_waypoint(target_wp)) {
-    if(percevite.time_since_safe_distance > PERCEVITE_IMAGE_TIMEOUT) {
-      // Safe distance not available. Maintain current position.
-      NavSetWaypointHere(percevite.wp);
-    } else if (percevite.safe_region.seq > last_seq) {
-      // New safe distance available while facing target_wp.
-      last_seq = percevite.safe_region.seq;
-      if(percevite.safe_region.distance > 0) {
-        // Move waypoint forwards within safe distance.
-        // Note: do not move waypoint if safe distance is 0, causes drift!
-        set_percevite_wp(target_wp, percevite.safe_region.distance);
-      }
-    } // else: no new information, maintain safe waypoint
-  } else {
-    // Not facing target_wp. Maintain current position.
-    NavSetWaypointHere(percevite.wp);
-  }
-  NavGotoWaypoint(percevite.wp);
+  // Find target_wp coordinates in body frame
+  struct NedCoor_f *pos = stateGetPositionNed_f();
+  struct NedCoor_f wp_pos = { WaypointY(target_wp), WaypointX(target_wp), -WaypointAlt(target_wp) }; // Note: waypoint x, y, z are in ENU!
+  struct FloatVect3 diff;
+  VECT3_DIFF(diff, wp_pos, *pos);
+  struct FloatRMat *R = stateGetNedToBodyRMat_f();
+  struct FloatVect3 target_frd;
+  MAT33_VECT3_MUL(target_frd, *R, diff);
+  // Send request to SLAMDunk
+  union paparazzi_to_slamdunk_msg_t msg = {
+      .tx = target_frd.x,
+      .ty = target_frd.y,
+      .tz = target_frd.z,
+  };
+  slamdunk_send_message(&msg);
+  printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
+  // Do nothing else! Move percevite_wp when reply is received
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp
 }
 
