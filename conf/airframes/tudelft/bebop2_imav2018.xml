@@ -14,6 +14,7 @@
       <!-- rotor inertia not modelled in simple_quad JSBSim model, set G2 to zero -->
       <define name="STABILIZATION_INDI_G2_R" value="0.0"/>
       <define name="FILE_LOGGER_PATH" value="/home/tom/paparazzi/var/logs"/>
+      <configure name="PERCEVITE_HOST" value="127.0.0.1"/>
     </target>
 
 	  <!-- Subsystem section -->
