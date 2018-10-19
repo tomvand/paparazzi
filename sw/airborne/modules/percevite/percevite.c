@@ -128,25 +128,25 @@ void percevite_event(void) {
   slamdunk_event();
 }
 
-static void percevite_on_safe_distance(union slamdunk_to_paparazzi_msg_t *msg) {
-  // Store safe distance for navigation
-  if(msg->valid_pixels > percevite_settings.pixels_threshold * 255) {
-    percevite.safe_region.distance = 0.10 * msg->safe_distance - percevite_settings.minimum_distance;
-    if(percevite.safe_region.distance < 0) {
-      percevite.safe_region.distance = 0.0;
-    }
-  } else {
-    percevite.safe_region.distance = 0.0;
-  }
-  percevite.safe_region.seq++;
-  printf("[percevite] Safe distance: %.1fm (ID: %d, Valid pixels: %.0f%%)\n",
-      percevite.safe_region.distance, percevite.safe_region.seq, msg->valid_pixels / 2.55);
-  // Reset timeout
-  percevite.time_since_safe_distance = 0.0;
-  // Logging
-  percevite_logging.raw_distance = 0.10 * msg->safe_distance;
-  percevite_logging.valid_pixels = msg->valid_pixels / 255.0;
-}
+//static void percevite_on_safe_distance(union slamdunk_to_paparazzi_msg_t *msg) {
+//  // Store safe distance for navigation
+//  if(msg->valid_pixels > percevite_settings.pixels_threshold * 255) {
+//    percevite.safe_region.distance = 0.10 * msg->safe_distance - percevite_settings.minimum_distance;
+//    if(percevite.safe_region.distance < 0) {
+//      percevite.safe_region.distance = 0.0;
+//    }
+//  } else {
+//    percevite.safe_region.distance = 0.0;
+//  }
+//  percevite.safe_region.seq++;
+//  printf("[percevite] Safe distance: %.1fm (ID: %d, Valid pixels: %.0f%%)\n",
+//      percevite.safe_region.distance, percevite.safe_region.seq, msg->valid_pixels / 2.55);
+//  // Reset timeout
+//  percevite.time_since_safe_distance = 0.0;
+//  // Logging
+//  percevite_logging.raw_distance = 0.10 * msg->safe_distance;
+//  percevite_logging.valid_pixels = msg->valid_pixels / 255.0;
+//}
 
 static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
   // Velocity estimate
@@ -177,8 +177,32 @@ static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
   percevite.time_since_velocity = 0.0; // Want to move this to sanity check ok, but this causes timeout during yaw
 }
 
+static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
+  printf("Received vector (FRD): x = %f, y = %f, z = %f\n", msg->gx, msg->gy, msg->gz);
+  if(msg->gx != 0.0 || msg->gy != 0.0 || msg->gz != 0.0) {
+    struct NedCoor_f *pos_ned = stateGetPositionNed_f();
+    struct FloatRMat *R = stateGetNedToBodyRMat_f();
+    printf("Rv = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
+    printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
+    printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]); // ERROR COMPLETELY DIFFERENT THAN IN PERCEVITEGO!!!
+    struct FloatVect3 vector_frd = { msg->gx, msg->gy, msg->gz };
+    struct NedCoor_f vector_ned;
+    MAT33_VECT3_TRANSP_MUL(vector_ned, *R, vector_frd);
+    struct NedCoor_f wp_ned;
+    VECT3_SUM(wp_ned, *pos_ned, vector_ned);
+    printf("pos_ned:    x = %f, y = %f, z = %f\n", pos_ned->x, pos_ned->y, pos_ned->z);
+    printf("vector_ned: x = %f, y = %f, z = %f\n", vector_ned.x, vector_ned.y, vector_ned.z);
+    printf("wp_ned:     x = %f, y = %f, z = %f\n", wp_ned.x, wp_ned.y, wp_ned.z);
+    struct EnuCoor_f wp_enu;
+    ENU_OF_TO_NED(wp_enu, wp_ned);
+    waypoint_set_enu(percevite.wp, &wp_enu);
+    NavGotoWaypoint(percevite.wp);
+  }
+  percevite.time_since_safe_distance = 0.0; // TODO clean up
+}
+
 static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
-  if(msg->flags & SD_MSG_FLAG_SAFE_DISTANCE) percevite_on_safe_distance(msg);
+  if(msg->flags & SD_MSG_FLAG_VECTOR) percevite_on_vector(msg);
   if(msg->flags & SD_MSG_FLAG_VELOCITY) percevite_on_velocity(msg);
 }
 
@@ -271,6 +295,9 @@ bool PerceviteGo(uint8_t target_wp) {
   struct FloatVect3 diff;
   VECT3_DIFF(diff, wp_pos, *pos);
   struct FloatRMat *R = stateGetNedToBodyRMat_f();
+  printf("Rg = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
+  printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
+  printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]);
   struct FloatVect3 target_frd;
   MAT33_VECT3_MUL(target_frd, *R, diff);
   // Send request to SLAMDunk
