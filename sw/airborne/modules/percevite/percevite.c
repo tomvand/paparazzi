@@ -122,11 +122,13 @@ void percevite_periodic(void) {
     percevite.safe_region.distance = 0.0;
     percevite.safe_region.seq++;
   }
+  slamdunk_event(); // HACK
 }
 
-void percevite_event(void) {
-  slamdunk_event();
-}
+// Moved to periodic, see https://github.com/paparazzi/paparazzi/issues/2134
+//void percevite_event(void) {
+//  slamdunk_event();
+//}
 
 //static void percevite_on_safe_distance(union slamdunk_to_paparazzi_msg_t *msg) {
 //  // Store safe distance for navigation

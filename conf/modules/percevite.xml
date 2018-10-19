@@ -8,8 +8,8 @@
     <file name="percevite.h"/>
   </header>
   <init fun="percevite_init()"/>
-  <periodic fun="percevite_periodic()" freq="50"/>
-  <event fun="percevite_event()"/>
+  <periodic fun="percevite_periodic()"/>
+  <!-- <event fun="percevite_event()"/> -->
   <makefile>
     <!-- Configure default UART port and baudrate -->
     <configure name="PERCEVITE_UDP" default="UDP1" case="upper|lower"/>
