@@ -181,25 +181,30 @@ static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
 
 static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
   printf("Received vector (FRD): x = %f, y = %f, z = %f\n", msg->gx, msg->gy, msg->gz);
-  if(msg->gx != 0.0 || msg->gy != 0.0 || msg->gz != 0.0) {
-    struct NedCoor_f *pos_ned = stateGetPositionNed_f();
-    struct FloatRMat *R = stateGetNedToBodyRMat_f();
-    printf("Rv = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
-    printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
-    printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]); // ERROR COMPLETELY DIFFERENT THAN IN PERCEVITEGO!!!
-    struct FloatVect3 vector_frd = { msg->gx, msg->gy, msg->gz };
-    struct NedCoor_f vector_ned;
-    MAT33_VECT3_TRANSP_MUL(vector_ned, *R, vector_frd);
-    struct NedCoor_f wp_ned;
-    VECT3_SUM(wp_ned, *pos_ned, vector_ned);
-    printf("pos_ned:    x = %f, y = %f, z = %f\n", pos_ned->x, pos_ned->y, pos_ned->z);
-    printf("vector_ned: x = %f, y = %f, z = %f\n", vector_ned.x, vector_ned.y, vector_ned.z);
-    printf("wp_ned:     x = %f, y = %f, z = %f\n", wp_ned.x, wp_ned.y, wp_ned.z);
-    struct EnuCoor_f wp_enu;
-    ENU_OF_TO_NED(wp_enu, wp_ned);
+  struct NedCoor_f *pos_ned = stateGetPositionNed_f();
+  struct FloatRMat *R = stateGetNedToBodyRMat_f();
+//  printf("Rv = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
+//  printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
+//  printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]); // ERROR COMPLETELY DIFFERENT THAN IN PERCEVITEGO!!! (When called from event)
+  struct FloatVect3 vector_frd = { msg->gx, msg->gy, msg->gz };
+  struct NedCoor_f vector_ned;
+  MAT33_VECT3_TRANSP_MUL(vector_ned, *R, vector_frd);
+  struct NedCoor_f wp_ned;
+  VECT3_SUM(wp_ned, *pos_ned, vector_ned);
+//  printf("pos_ned:    x = %f, y = %f, z = %f\n", pos_ned->x, pos_ned->y, pos_ned->z);
+//  printf("vector_ned: x = %f, y = %f, z = %f\n", vector_ned.x, vector_ned.y, vector_ned.z);
+//  printf("wp_ned:     x = %f, y = %f, z = %f\n", wp_ned.x, wp_ned.y, wp_ned.z);
+  struct EnuCoor_f wp_enu;
+  ENU_OF_TO_NED(wp_enu, wp_ned);
+  // Only move wp if the difference is large enough, otherwise causes position drift
+  struct EnuCoor_f wp_enu_old = { WaypointX(percevite.wp), WaypointY(percevite.wp), WaypointAlt(percevite.wp) };
+  struct EnuCoor_f wp_diff;
+  VECT3_DIFF(wp_diff, wp_enu, wp_enu_old);
+  float dist = VECT3_NORM2(wp_diff);
+  if(dist > SQUARE(0.50)) {
     waypoint_set_enu(percevite.wp, &wp_enu);
-    NavGotoWaypoint(percevite.wp);
   }
+  NavGotoWaypoint(percevite.wp);
   percevite.time_since_safe_distance = 0.0; // TODO clean up
 }
 
@@ -291,26 +296,28 @@ bool PerceviteInit(uint8_t wp) {
 }
 
 bool PerceviteGo(uint8_t target_wp) {
-  // Find target_wp coordinates in body frame
-  struct NedCoor_f *pos = stateGetPositionNed_f();
-  struct NedCoor_f wp_pos = { WaypointY(target_wp), WaypointX(target_wp), -WaypointAlt(target_wp) }; // Note: waypoint x, y, z are in ENU!
-  struct FloatVect3 diff;
-  VECT3_DIFF(diff, wp_pos, *pos);
-  struct FloatRMat *R = stateGetNedToBodyRMat_f();
-  printf("Rg = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
-  printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
-  printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]);
-  struct FloatVect3 target_frd;
-  MAT33_VECT3_MUL(target_frd, *R, diff);
-  // Send request to SLAMDunk
-  union paparazzi_to_slamdunk_msg_t msg = {
-      .tx = target_frd.x,
-      .ty = target_frd.y,
-      .tz = target_frd.z,
-  };
-  slamdunk_send_message(&msg);
-  printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
-  // Do nothing else! Move percevite_wp when reply is received
+  if(aim_at_waypoint(target_wp)) {
+    // Find target_wp coordinates in body frame
+    struct NedCoor_f *pos = stateGetPositionNed_f();
+    struct NedCoor_f wp_pos = { WaypointY(target_wp), WaypointX(target_wp), -WaypointAlt(target_wp) }; // Note: waypoint x, y, z are in ENU!
+    struct FloatVect3 diff;
+    VECT3_DIFF(diff, wp_pos, *pos);
+    struct FloatRMat *R = stateGetNedToBodyRMat_f();
+    printf("Rg = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
+    printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
+    printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]);
+    struct FloatVect3 target_frd;
+    MAT33_VECT3_MUL(target_frd, *R, diff);
+    // Send request to SLAMDunk
+    union paparazzi_to_slamdunk_msg_t msg = {
+        .tx = target_frd.x,
+        .ty = target_frd.y,
+        .tz = target_frd.z,
+    };
+    slamdunk_send_message(&msg);
+    printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
+    // Do nothing else! Move percevite_wp when reply is received
+  }
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp
 }
 
