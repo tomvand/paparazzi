@@ -196,12 +196,32 @@ static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
 //  printf("wp_ned:     x = %f, y = %f, z = %f\n", wp_ned.x, wp_ned.y, wp_ned.z);
   struct EnuCoor_f wp_enu;
   ENU_OF_TO_NED(wp_enu, wp_ned);
-  // Only move wp if the difference is large enough, otherwise causes position drift
+
+  // Move waypoint, unless:
+  //  - Drone needs to halt at current position (gx, gy, gz = 0)
+  //  - Percevite wp has been placed at current position (halted = TRUE)
+  //  - Percevite wp is still close to current position. This prevents the drone
+  //    halting at a previous wp location, for instance if the Flight Plan used
+  //    other nav functions in the meantime. Threshold should not be too small,
+  //    as wind may cause small deviations between the drone and wp positions.
+  // Not moving the waypoint under these conditions should prevent position
+  // drift when the drone is stopped in front of an obstacle.
+  static bool halted = FALSE; // TRUE after wp has been set to stop at current location
   struct EnuCoor_f wp_enu_old = { WaypointX(percevite.wp), WaypointY(percevite.wp), WaypointAlt(percevite.wp) };
   struct EnuCoor_f wp_diff;
   VECT3_DIFF(wp_diff, wp_enu, wp_enu_old);
   float dist = VECT3_NORM2(wp_diff);
-  if(dist > SQUARE(0.50)) {
+  if(msg->gx == 0.0 && msg->gy == 0.0 && msg->gz == 0.0) {
+    if(!halted) { // Percevite wp has not been set yet
+      halted = TRUE;
+      waypoint_set_enu(percevite.wp, &wp_enu);
+    } else {
+      if(dist > SQUARE(0.5)) { // Drone is too far away from percevite wp
+        waypoint_set_enu(percevite.wp, &wp_enu);
+      } // Else: wp is already set, do *not* move it
+    }
+  } else { // Drone should follow vector
+    halted = FALSE;
     waypoint_set_enu(percevite.wp, &wp_enu);
   }
   NavGotoWaypoint(percevite.wp);
