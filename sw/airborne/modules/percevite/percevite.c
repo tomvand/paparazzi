@@ -344,10 +344,14 @@ bool PerceviteGo(uint8_t target_wp) {
     struct FloatVect3 target_frd;
     MAT33_VECT3_MUL(target_frd, *R, diff);
     // Send request to SLAMDunk
+    struct FloatEulers *eul = stateGetNedToBodyEulers_f();
     union paparazzi_to_slamdunk_msg_t msg = {
         .tx = target_frd.x,
         .ty = target_frd.y,
         .tz = target_frd.z,
+        .phi = eul->phi,
+        .theta = eul->theta,
+        .psi = eul->psi,
     };
     slamdunk_send_message(&msg);
     printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
