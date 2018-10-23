@@ -6,6 +6,7 @@
     <target name="ap" board="bebop2">
       <define name="STABILIZATION_INDI_G2_R" value="0.233"/>
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
+      <define name="PERCEVITE_ESTIMATE_VELOCITY" value="TRUE"/>
     </target>
 
     <target name="nps" board="pc">
@@ -15,6 +16,7 @@
       <define name="STABILIZATION_INDI_G2_R" value="0.0"/>
       <define name="FILE_LOGGER_PATH" value="/home/tom/paparazzi/var/logs"/>
       <configure name="PERCEVITE_HOST" value="127.0.0.1"/>
+      <define name="PERCEVITE_ESTIMATE_VELOCITY" value="FALSE"/>
     </target>
 
 	  <!-- Subsystem section -->
@@ -52,7 +54,6 @@
       <define name="FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS" value="TRUE"/>
     </module>
     <module name="percevite">
-      <define name="PERCEVITE_ESTIMATE_VELOCITY" value="TRUE"/>
       <define name="PERCEVITE_VELOCITY_TIMEOUT" value="5.0"/><!-- Redundant with GPS -->
     </module>
   </firmware>

@@ -197,6 +197,7 @@ static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
   struct EnuCoor_f wp_enu;
   ENU_OF_TO_NED(wp_enu, wp_ned);
 
+  // Horizontal motion
   // Move waypoint, unless:
   //  - Drone needs to halt at current position (gx, gy, gz = 0)
   //  - Percevite wp has been placed at current position (halted = TRUE)
@@ -225,6 +226,20 @@ static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
     waypoint_set_enu(percevite.wp, &wp_enu);
   }
   NavGotoWaypoint(percevite.wp);
+
+  // Vertical motion
+  if(fabsf(pos_ned->z - wp_ned.z) < 0.5) { // Close to target altitude
+    NavVerticalAltitudeMode(-wp_ned.z, 0.0);
+  } else { // Climb/descent required
+    float hspeed = stateGetHorizontalSpeedNorm_f();
+    float hvec = sqrtf(SQUARE(vector_ned.x) + SQUARE(vector_ned.y));
+    float climb = 0.0;
+    if(hspeed > 0.1) {
+      climb = -hspeed / hvec * vector_ned.z;
+    }
+    NavVerticalClimbMode(climb);
+  }
+
   percevite.time_since_safe_distance = 0.0; // TODO clean up
 }
 
