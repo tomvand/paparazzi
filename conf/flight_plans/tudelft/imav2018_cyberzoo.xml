@@ -1,0 +1,87 @@
+<!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
+
+<flight_plan alt="1.5" ground_alt="0" lat0="51.990634" lon0="4.376789" max_dist_from_home="50" name="Rotorcraft Optitrack (Delft)" security_height="0.3">
+  <header>
+#include "autopilot.h"
+#include "subsystems/datalink/datalink.h"
+#include "subsystems/electrical.h"
+#include "modules/percevite/percevite.h"
+
+// Note: use 'git submodule update --init -- sw/ext/tudelft_gazebo_models/'
+// to download the required models.
+#define NPS_GAZEBO_WORLD "imav2018.world"
+  </header>
+  <waypoints>
+    <waypoint name="HOME" x="0.0" y="0.0"/>
+    <waypoint name="CLIMB" x="1.2" y="-0.6"/>
+    <waypoint name="GOAL" x="2.0" y="2.0"/>
+    <waypoint name="STDBY" x="-0.7" y="-0.8"/>
+    <waypoint name="TD" x="0.8" y="-1.7"/>
+    <waypoint name="_PERCEVITE" x="0.0" y="0.0"/>
+  </waypoints>
+  <exceptions>
+    <!-- Datalink lost (constant RPM descent) -->  
+    <!-- <exception cond="((datalink_time > 2) &&
+      !(IndexOfBlock('Holding point') > nav_block) &&
+      !(nav_block >= IndexOfBlock('Land here')) &&
+      (autopilot_in_flight() == true) )" deroute="Land here"/> -->
+    <!-- Low battery -->
+    <exception cond="(electrical.bat_low &&
+      !(IndexOfBlock('Holding point') > nav_block) &&
+      !(nav_block >= IndexOfBlock('Land here')) &&
+      (autopilot_in_flight() == true) )" deroute="Land here"/>
+    <exception cond="(electrical.bat_critical &&
+      !(IndexOfBlock('Holding point') > nav_block) &&
+      !(nav_block >= IndexOfBlock('Land here')) &&
+      (autopilot_in_flight() == true) )" deroute="Land here"/>
+    <!-- Percevite error -->
+    <exception cond="(!PerceviteOk() &&
+      !(IndexOfBlock('Holding point') > nav_block) &&
+      !(nav_block >= IndexOfBlock('Land here')) &&
+      (autopilot_in_flight() == true) )" deroute="Land here"/>
+  </exceptions>
+  <blocks>
+    <block name="PercEvite init">
+      <call_once fun="PerceviteInit(WP__PERCEVITE)"/>
+      <while cond="!PerceviteOk()"/>
+    </block>
+    <block name="Holding point">
+      <call_once fun="NavKillThrottle()"/>
+      <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
+    </block>
+    <block name="Start Engine">
+      <call_once fun="NavResurrect()"/>
+      <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
+    </block>
+    <block name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
+      <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="Standby"/>
+      <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
+      <stay climb="nav_climb_vspeed" vmode="climb" wp="CLIMB"/>
+    </block>
+    
+    <block name="Standby" strip_button="Standby" strip_icon="home.png">
+      <call_once fun="NavSetWaypointHere(WP_STDBY)"/>
+      <stay wp="STDBY"/>
+    </block>
+    <block name="Go">
+      <call fun="PerceviteStay(WP_GOAL)"/>
+    </block>
+    
+    <block name="Land here" strip_button="Land Here" strip_icon="land-right.png">
+      <call_once fun="NavSetWaypointHere(WP_TD)"/>
+    </block>
+    <block name="land">
+      <go wp="TD"/>
+    </block>
+    <block name="flare">
+      <exception cond="NavDetectGround()" deroute="Holding point"/>
+      <exception cond="!nav_is_in_flight()" deroute="landed"/>
+      <call_once fun="NavStartDetectGround()"/>
+      <stay climb="nav_descend_vspeed" vmode="climb" wp="TD"/>
+    </block>
+    <block name="landed">
+      <call_once fun="NavKillThrottle()"/>
+      <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
+    </block>
+  </blocks>
+</flight_plan>
