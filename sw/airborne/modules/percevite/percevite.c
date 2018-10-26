@@ -366,8 +366,8 @@ bool PerceviteStay(uint8_t target_wp) {
 }
 
 bool PerceviteOk(void) {
-  return percevite.time_since_velocity < PERCEVITE_VELOCITY_TIMEOUT &&
-      percevite.time_since_safe_distance < PERCEVITE_IMAGE_TIMEOUT;
+  return percevite.time_since_velocity < PERCEVITE_VELOCITY_TIMEOUT;
+//      && percevite.time_since_safe_distance < PERCEVITE_IMAGE_TIMEOUT;
 }
 
 
