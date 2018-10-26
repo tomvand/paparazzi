@@ -14,7 +14,7 @@
     <module name="motor_mixing"/>
     <module name="actuators" type="bebop"/>
     <module name="imu" type="bebop"/>
-    <module name="gps" type="ublox"/>
+    <module name="gps" type="datalink"/>
     <module name="stabilization" type="indi_simple"/>
     <module name="ahrs" type="int_cmpl_quat">
       <configure name="USE_MAGNETOMETER" value="TRUE"/>
@@ -38,9 +38,6 @@
       <define name="FILE_LOGGER_LOG_SONAR_BEBOP" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_BARO" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_BATTERY" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS" value="TRUE"/>
     </module>
   </firmware>
 
