@@ -17,7 +17,7 @@
     <module name="gps" type="datalink"/>
     <module name="stabilization" type="indi_simple"/>
     <module name="ahrs" type="int_cmpl_quat">
-      <configure name="USE_MAGNETOMETER" value="TRUE"/>
+      <configure name="USE_MAGNETOMETER" value="FALSE"/>
     </module>
     <module name="ins" type="extended"/>
     
