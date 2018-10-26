@@ -25,7 +25,7 @@
     <module name="motor_mixing"/>
     <module name="actuators" type="bebop"/>
     <module name="imu" type="bebop"/>
-    <module name="gps" type="datalink"/>
+    <!-- <module name="gps" type="datalink"/> -->
     <module name="stabilization" type="indi_simple"/>
     <module name="ahrs" type="int_cmpl_quat">
       <configure name="USE_MAGNETOMETER" value="TRUE"/>
@@ -38,7 +38,7 @@
     <define name="USE_SONAR" value="TRUE"/>
     <!-- <define name="USE_BAROMETER" value="TRUE"/> --><!-- Not required, BARO always enabled in vff_extended! -->
 
-    <module name="geo_mag"/><!-- For use in combination with GPS -->
+    <!-- <module name="geo_mag"/> --><!-- For use in combination with GPS -->
     <module name="air_data"/>
     <module name="send_imu_mag_current"/>
     <module name="logger_file">
