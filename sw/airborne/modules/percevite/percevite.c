@@ -300,6 +300,7 @@ bool PerceviteGo(uint8_t target_wp) {
     percevite_logging.request_flags = msg.request_flags;
     // Do nothing else! Move percevite_wp when reply is received
   }
+  percevite_logging.target_wp = target_wp;
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp
 }
 
