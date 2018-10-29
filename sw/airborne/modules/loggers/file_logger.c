@@ -402,6 +402,7 @@ void file_logger_periodic(void)
     FILE_LOGGER_LOG_PERCEVITE_VECTORS || \
     FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
     log_frame.percevite_ok = PerceviteOk();
+    log_frame.percevite_timeout = percevite.timeout;
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE
     log_frame.percevite_vel = percevite_logging.velocity;
