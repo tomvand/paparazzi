@@ -275,7 +275,16 @@ bool PerceviteInit(uint8_t wp) {
 }
 
 bool PerceviteGo(uint8_t target_wp) {
-  if(aim_at_waypoint(target_wp)) {
+  bool heading_ok = FALSE;
+  if(percevite_logging.reply_flags & VECTOR_FLAG_STUCK) {
+    nav_set_heading_rad(stateGetNedToBodyEulers_f()->psi + 0.03);
+    aim_at_waypoint(percevite.wp); // Only writes heading when wp is sufficiently far away
+    heading_ok = TRUE;
+  } else {
+    heading_ok = aim_at_waypoint(target_wp);
+  }
+
+  if(heading_ok) {
     // Find target_wp coordinates in body frame
     struct NedCoor_f *pos = stateGetPositionNed_f();
     struct NedCoor_f wp_pos = { WaypointY(target_wp), WaypointX(target_wp), -WaypointAlt(target_wp) }; // Note: waypoint x, y, z are in ENU!
