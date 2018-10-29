@@ -76,7 +76,9 @@ struct percevite_t percevite = {
 struct percevite_logging_t percevite_logging = {
     .velocity = { 0.0, 0.0, 0.0 },
     .request = { 0.0, 0.0, 0.0},
+    .request_flags = 0x0,
     .reply = { 0.0, 0.0, 0.0},
+    .reply_flags = 0x0,
     .target_wp = INVALID_WAYPOINT,
 };
 
@@ -195,6 +197,7 @@ static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
   }
 
   percevite_logging.reply = vector_frd;
+  percevite_logging.reply_flags = msg->vector_flags;
 }
 
 static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
@@ -211,7 +214,9 @@ static void send_percevite(struct transport_tx *trans, struct link_device *dev) 
       &percevite.timeout, &percevite.time_since_velocity,
       &percevite.wp, &percevite_logging.target_wp,
       &percevite_logging.request.x, &percevite_logging.request.y, &percevite_logging.request.z,
-      &percevite_logging.reply.x, &percevite_logging.reply.y, &percevite_logging.reply.z);
+      &percevite_logging.request_flags,
+      &percevite_logging.reply.x, &percevite_logging.reply.y, &percevite_logging.reply.z,
+      &percevite_logging.reply_flags);
 }
 
 
@@ -284,6 +289,7 @@ bool PerceviteGo(uint8_t target_wp) {
         .tx = target_frd.x,
         .ty = target_frd.y,
         .tz = target_frd.z,
+        .request_flags = 0x0,
         .phi = eul->phi,
         .theta = eul->theta,
         .psi = eul->psi,
@@ -291,6 +297,7 @@ bool PerceviteGo(uint8_t target_wp) {
     slamdunk_send_message(&msg);
     printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
     percevite_logging.request = target_frd;
+    percevite_logging.request_flags = msg.request_flags;
     // Do nothing else! Move percevite_wp when reply is received
   }
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp

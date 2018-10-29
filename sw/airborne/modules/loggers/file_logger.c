@@ -157,7 +157,9 @@ struct log_frame_t {
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VECTORS
   struct FloatVect3 percevite_request;
+  uint8_t percevite_request_flags;
   struct FloatVect3 percevite_reply;
+  uint8_t percevite_reply_flags;
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
   uint8_t percevite_wp_id;
@@ -234,7 +236,7 @@ void *file_logger_thread(void *arg) {
   fprintf(file_logger, "percevite_vx,percevite_vy,percevite_vz,percevite_time_since_vel,");
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VECTORS
-  fprintf(file_logger, "percevite_request_x,percevite_request_y,percevite_request_z,percevite_reply_x,percevite_reply_y,percevite_reply_z,");
+  fprintf(file_logger, "percevite_request_x,percevite_request_y,percevite_request_z,percevite_request_flags,percevite_reply_x,percevite_reply_y,percevite_reply_z,percevite_reply_flags,");
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
   fprintf(file_logger, "percevite_wp_id,percevite_wp_x,percevite_wp_y,percevite_wp_z,percevite_tgt_id,percevite_tgt_x,percevite_tgt_y,percevite_tgt_z,");
@@ -301,13 +303,15 @@ void *file_logger_thread(void *arg) {
         log_frame.percevite_time_since_vel);
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VECTORS
-    fprintf(file_logger, "%f,%f,%f,%f,%f,%f,",
+    fprintf(file_logger, "%f,%f,%f,%u,%f,%f,%f,%u,",
         log_frame.percevite_request.x,
         log_frame.percevite_request.y,
         log_frame.percevite_request.z,
+        log_frame.percevite_request_flags,
         log_frame.percevite_reply.x,
         log_frame.percevite_reply.y,
-        log_frame.percevite_reply.z);
+        log_frame.percevite_reply.z,
+        log_frame.percevite_reply_flags);
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
     fprintf(file_logger, "%u,%f,%f,%f,%u,%f,%f,%f,",
@@ -412,9 +416,11 @@ void file_logger_periodic(void)
     log_frame.percevite_request.x = percevite_logging.request.x;
     log_frame.percevite_request.y = percevite_logging.request.y;
     log_frame.percevite_request.z = percevite_logging.request.z;
+    log_frame.percevite_request_flags = percevite_logging.request_flags;
     log_frame.percevite_reply.x = percevite_logging.reply.x;
     log_frame.percevite_reply.y = percevite_logging.reply.y;
     log_frame.percevite_reply.z = percevite_logging.reply.z;
+    log_frame.percevite_reply_flags = percevite_logging.reply_flags;
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
     struct NedCoor_f wp = {0.0, 0.0, 0.0};
