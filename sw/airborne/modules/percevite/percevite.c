@@ -73,6 +73,10 @@ struct percevite_t percevite = {
     .wp = INVALID_WAYPOINT, // Should cause an error when not initialized in flight plan!
 };
 
+struct percevite_settings_t percevite_settings = {
+  .request_flags = REQUEST_FLAG_ALLOW_HIGHER | REQUEST_FLAG_ALLOW_LOWER, // TODO Check if sensible default
+};
+
 struct percevite_logging_t percevite_logging = {
     .velocity = { 0.0, 0.0, 0.0 },
     .request = { 0.0, 0.0, 0.0},
@@ -289,7 +293,7 @@ bool PerceviteGo(uint8_t target_wp) {
         .tx = target_frd.x,
         .ty = target_frd.y,
         .tz = target_frd.z,
-        .request_flags = 0x0,
+        .request_flags = percevite_settings.request_flags,
         .phi = eul->phi,
         .theta = eul->theta,
         .psi = eul->psi,

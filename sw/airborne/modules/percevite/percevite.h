@@ -37,6 +37,11 @@ struct percevite_t {
 };
 extern struct percevite_t percevite;
 
+struct percevite_settings_t {
+  uint8_t request_flags;
+};
+extern struct percevite_settings_t percevite_settings;
+
 struct percevite_logging_t { ///< Export intermediate values for logging
   struct FloatVect3 velocity; ///< [m/s] Last velocity estimate in body frame
   struct FloatVect3 request; ///< [m] Waypoint requested from SLAMDunk in body frame
