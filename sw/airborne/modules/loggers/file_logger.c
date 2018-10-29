@@ -72,13 +72,13 @@
 #define FILE_LOGGER_LOG_BATTERY FALSE
 #endif
 #ifndef FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE
-#define FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE FALSE
+#define FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE TRUE
 #endif
-#ifndef FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE
-#define FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE FALSE
+#ifndef FILE_LOGGER_LOG_PERCEVITE_VECTORS
+#define FILE_LOGGER_LOG_PERCEVITE_VECTORS TRUE
 #endif
 #ifndef FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
-#define FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS FALSE
+#define FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS TRUE
 #endif
 
 #if FILE_LOGGER_LOG_FLIGHTPLAN_BLOCK_STAGE
@@ -97,7 +97,7 @@
 #include "subsystems/electrical.h"
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE || \
-  FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE || \
+  FILE_LOGGER_LOG_PERCEVITE_VECTORS || \
   FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
 #include "modules/percevite/percevite.h"
 #include "subsystems/navigation/waypoints.h"
@@ -146,20 +146,18 @@ struct log_frame_t {
   bool bat_crit;
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE || \
-    FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE || \
+    FILE_LOGGER_LOG_PERCEVITE_VECTORS || \
     FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
   bool percevite_ok;
+  float percevite_timeout;
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE
   struct FloatVect3 percevite_vel;
   float percevite_time_since_vel;
 #endif
-#if FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE
-  float percevite_safe_dist;
-  uint32_t percevite_safe_dist_seq;
-  float percevite_raw_dist;
-  float percevite_valid_px;
-  float percevite_time_since_dist;
+#if FILE_LOGGER_LOG_PERCEVITE_VECTORS
+  struct FloatVect3 percevite_request;
+  struct FloatVect3 percevite_reply;
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
   uint8_t percevite_wp_id;
@@ -227,15 +225,16 @@ void *file_logger_thread(void *arg) {
   fprintf(file_logger, "v_supply,current,bat_low,bat_crit,");
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE || \
-    FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE || \
+    FILE_LOGGER_LOG_PERCEVITE_VECTORS || \
     FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
   fprintf(file_logger, "percevite_ok,");
+  fprintf(file_logger, "percevite_timeout,");
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE
   fprintf(file_logger, "percevite_vx,percevite_vy,percevite_vz,percevite_time_since_vel,");
 #endif
-#if FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE
-  fprintf(file_logger, "percevite_safe_dist,percevite_safe_dist_seq,percevite_raw_dist,percevite_valid_px,percevite_time_since_dist,");
+#if FILE_LOGGER_LOG_PERCEVITE_VECTORS
+  fprintf(file_logger, "percevite_request_x,percevite_request_y,percevite_request_z,percevite_reply_x,percevite_reply_y,percevite_reply_z,");
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
   fprintf(file_logger, "percevite_wp_id,percevite_wp_x,percevite_wp_y,percevite_wp_z,percevite_tgt_id,percevite_tgt_x,percevite_tgt_y,percevite_tgt_z,");
@@ -288,10 +287,11 @@ void *file_logger_thread(void *arg) {
         log_frame.bat_low, log_frame.bat_crit);
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE || \
-  FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE || \
+  FILE_LOGGER_LOG_PERCEVITE_VECTORS || \
   FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
-    fprintf(file_logger, "%d,",
-        log_frame.percevite_ok);
+    fprintf(file_logger, "%d,%f,",
+        log_frame.percevite_ok,
+        log_frame.percevite_timeout);
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE
     fprintf(file_logger, "%f,%f,%f,%f,",
@@ -300,13 +300,14 @@ void *file_logger_thread(void *arg) {
         log_frame.percevite_vel.z,
         log_frame.percevite_time_since_vel);
 #endif
-#if FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE
-    fprintf(file_logger, "%f,%u,%f,%f,%f,",
-        log_frame.percevite_safe_dist,
-        log_frame.percevite_safe_dist_seq,
-        log_frame.percevite_raw_dist,
-        log_frame.percevite_valid_px,
-        log_frame.percevite_time_since_dist);
+#if FILE_LOGGER_LOG_PERCEVITE_VECTORS
+    fprintf(file_logger, "%f,%f,%f,%f,%f,%f,",
+        log_frame.percevite_request.x,
+        log_frame.percevite_request.y,
+        log_frame.percevite_request.z,
+        log_frame.percevite_reply.x,
+        log_frame.percevite_reply.y,
+        log_frame.percevite_reply.z);
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
     fprintf(file_logger, "%u,%f,%f,%f,%u,%f,%f,%f,",
@@ -398,7 +399,7 @@ void file_logger_periodic(void)
     log_frame.bat_crit = electrical.bat_critical;
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE || \
-    FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE || \
+    FILE_LOGGER_LOG_PERCEVITE_VECTORS || \
     FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
     log_frame.percevite_ok = PerceviteOk();
 #endif
@@ -406,12 +407,13 @@ void file_logger_periodic(void)
     log_frame.percevite_vel = percevite_logging.velocity;
     log_frame.percevite_time_since_vel = percevite.time_since_velocity;
 #endif
-#if FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE
-    log_frame.percevite_safe_dist = percevite.safe_region.distance;
-    log_frame.percevite_safe_dist_seq = percevite.safe_region.seq;
-    log_frame.percevite_raw_dist = percevite_logging.raw_distance;
-    log_frame.percevite_valid_px = percevite_logging.valid_pixels;
-    log_frame.percevite_time_since_dist = percevite.time_since_safe_distance;
+#if FILE_LOGGER_LOG_PERCEVITE_VECTORS
+    log_frame.percevite_request.x = percevite_logging.request.x;
+    log_frame.percevite_request.y = percevite_logging.request.y;
+    log_frame.percevite_request.z = percevite_logging.request.z;
+    log_frame.percevite_reply.x = percevite_logging.reply.x;
+    log_frame.percevite_reply.y = percevite_logging.reply.y;
+    log_frame.percevite_reply.z = percevite_logging.reply.z;
 #endif
 #if FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS
     struct NedCoor_f wp = {0.0, 0.0, 0.0};

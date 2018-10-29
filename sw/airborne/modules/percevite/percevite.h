@@ -31,27 +31,17 @@
 #include <stdint.h>
 
 struct percevite_t {
-  struct {
-    float distance; ///< [m] Distance that can be moved forward whilst maintaining the minimal safe distance.
-    uint32_t seq; ///< Measurement number. Increases by 1 per safe distance measurement.
-  } safe_region;
-  float time_since_safe_distance; ///< [s] Time since last safe distance update
+  float timeout; ///< [s] Time since last message
   float time_since_velocity; ///< [s] Time since last velocity update
   uint8_t wp; ///< Waypoint moved by this module
 };
 extern struct percevite_t percevite;
 
-struct percevite_settings_t {
-  float minimum_distance;
-  float pixels_threshold;
-};
-extern struct percevite_settings_t percevite_settings;
-
 struct percevite_logging_t { ///< Export intermediate values for logging
   struct FloatVect3 velocity; ///< [m/s] Last velocity estimate in body frame
+  struct FloatVect3 request; ///< [m] Waypoint requested from SLAMDunk in body frame
+  struct FloatVect3 reply; ///< [m] Subgoal returned by SLAMDunk in body frame
   uint8_t target_wp;  ///< Waypoint to move towards (Note: for logging only!)
-  float raw_distance; ///< [m] Raw safe distance reported by SLAMDunk (i.e. without safety margin)
-  float valid_pixels; ///< [0..1] Fraction of pixels in the ROI for which depth is available
 };
 extern struct percevite_logging_t percevite_logging;
 

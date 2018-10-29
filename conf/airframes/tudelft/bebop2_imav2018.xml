@@ -50,7 +50,7 @@
       <define name="FILE_LOGGER_LOG_BARO" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_BATTERY" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_PERCEVITE_VELOCITY_ESTIMATE" value="TRUE"/>
-      <define name="FILE_LOGGER_LOG_PERCEVITE_SAFE_DISTANCE" value="TRUE"/>
+      <define name="FILE_LOGGER_LOG_PERCEVITE_VECTORS" value="TRUE"/>
       <define name="FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS" value="TRUE"/>
     </module>
     <module name="percevite">

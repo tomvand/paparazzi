@@ -40,16 +40,6 @@
 
 #include <stdio.h>
 
-// Minimum distance to keep towards obstacle [m]
-#ifndef PERCEVITE_MINIMUM_DISTANCE
-#define PERCEVITE_MINIMUM_DISTANCE 2.0
-#endif
-
-// Fraction of pixels for which a depth measurement must be available
-#ifndef PERCEVITE_VALID_PIXELS_THRESHOLD
-#define PERCEVITE_VALID_PIXELS_THRESHOLD 0.50
-#endif
-
 // Send velocity estimate through ABI
 #ifndef PERCEVITE_ESTIMATE_VELOCITY
 #define PERCEVITE_ESTIMATE_VELOCITY FALSE
@@ -65,9 +55,9 @@
 #define PERCEVITE_VELOCITY_MAX_ERROR 1.0
 #endif
 
-// Max allowed time between images [s]
-#ifndef PERCEVITE_IMAGE_TIMEOUT
-#define PERCEVITE_IMAGE_TIMEOUT 1.0
+// Max allowed time between any SLAMDunk messages [s]
+#ifndef PERCEVITE_TIMEOUT
+#define PERCEVITE_TIMEOUT 1.0
 #endif
 
 // Max allowed time between velocity updates [s]
@@ -78,22 +68,16 @@
 #define INVALID_WAYPOINT 255
 
 struct percevite_t percevite = {
-    .safe_region.distance = 0.0,
-    .safe_region.seq = 0,
-    .time_since_safe_distance = 0.0,
+    .timeout = 0.0,
     .time_since_velocity = 0.0,
     .wp = INVALID_WAYPOINT, // Should cause an error when not initialized in flight plan!
 };
 
-struct percevite_settings_t percevite_settings = {
-    .minimum_distance = PERCEVITE_MINIMUM_DISTANCE,
-    .pixels_threshold = PERCEVITE_VALID_PIXELS_THRESHOLD,
-};
-
 struct percevite_logging_t percevite_logging = {
     .velocity = { 0.0, 0.0, 0.0 },
+    .request = { 0.0, 0.0, 0.0},
+    .reply = { 0.0, 0.0, 0.0},
     .target_wp = INVALID_WAYPOINT,
-    .raw_distance = 0.0,
 };
 
 static void slamdunk_init(void);
@@ -110,17 +94,13 @@ void percevite_init(void) {
 
 void percevite_periodic(void) {
   // Update timeouts
-  percevite.time_since_safe_distance += PERCEVITE_PERIODIC_PERIOD;
   percevite.time_since_velocity += PERCEVITE_PERIODIC_PERIOD;
-  if(percevite.time_since_safe_distance > PERCEVITE_IMAGE_TIMEOUT) {
-    printf("[percevite] WARNING: Image timeout exceeded!\n");
-    percevite.safe_region.distance = 0.0;
-    percevite.safe_region.seq++;
+  percevite.timeout += PERCEVITE_PERIODIC_PERIOD;
+  if(percevite.timeout > PERCEVITE_TIMEOUT) {
+    printf("[percevite] WARNING: Lost communication with SLAMDunk!\n");
   }
   if(percevite.time_since_velocity > PERCEVITE_VELOCITY_TIMEOUT) {
     printf("[percevite] WARNING: Velocity timeout exceeded!\n");
-    percevite.safe_region.distance = 0.0;
-    percevite.safe_region.seq++;
   }
   slamdunk_event(); // HACK
 }
@@ -128,26 +108,6 @@ void percevite_periodic(void) {
 // Moved to periodic, see https://github.com/paparazzi/paparazzi/issues/2134
 //void percevite_event(void) {
 //  slamdunk_event();
-//}
-
-//static void percevite_on_safe_distance(union slamdunk_to_paparazzi_msg_t *msg) {
-//  // Store safe distance for navigation
-//  if(msg->valid_pixels > percevite_settings.pixels_threshold * 255) {
-//    percevite.safe_region.distance = 0.10 * msg->safe_distance - percevite_settings.minimum_distance;
-//    if(percevite.safe_region.distance < 0) {
-//      percevite.safe_region.distance = 0.0;
-//    }
-//  } else {
-//    percevite.safe_region.distance = 0.0;
-//  }
-//  percevite.safe_region.seq++;
-//  printf("[percevite] Safe distance: %.1fm (ID: %d, Valid pixels: %.0f%%)\n",
-//      percevite.safe_region.distance, percevite.safe_region.seq, msg->valid_pixels / 2.55);
-//  // Reset timeout
-//  percevite.time_since_safe_distance = 0.0;
-//  // Logging
-//  percevite_logging.raw_distance = 0.10 * msg->safe_distance;
-//  percevite_logging.valid_pixels = msg->valid_pixels / 255.0;
 //}
 
 static void percevite_on_velocity(union slamdunk_to_paparazzi_msg_t *msg) {
@@ -183,17 +143,11 @@ static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
   printf("Received vector (FRD): x = %f, y = %f, z = %f\n", msg->gx, msg->gy, msg->gz);
   struct NedCoor_f *pos_ned = stateGetPositionNed_f();
   struct FloatRMat *R = stateGetNedToBodyRMat_f();
-//  printf("Rv = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
-//  printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
-//  printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]); // ERROR COMPLETELY DIFFERENT THAN IN PERCEVITEGO!!! (When called from event)
   struct FloatVect3 vector_frd = { msg->gx, msg->gy, msg->gz };
   struct NedCoor_f vector_ned;
   MAT33_VECT3_TRANSP_MUL(vector_ned, *R, vector_frd);
   struct NedCoor_f wp_ned;
   VECT3_SUM(wp_ned, *pos_ned, vector_ned);
-//  printf("pos_ned:    x = %f, y = %f, z = %f\n", pos_ned->x, pos_ned->y, pos_ned->z);
-//  printf("vector_ned: x = %f, y = %f, z = %f\n", vector_ned.x, vector_ned.y, vector_ned.z);
-//  printf("wp_ned:     x = %f, y = %f, z = %f\n", wp_ned.x, wp_ned.y, wp_ned.z);
   struct EnuCoor_f wp_enu;
   ENU_OF_TO_NED(wp_enu, wp_ned);
 
@@ -240,12 +194,13 @@ static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
     NavVerticalClimbMode(climb);
   }
 
-  percevite.time_since_safe_distance = 0.0; // TODO clean up
+  percevite_logging.reply = vector_frd;
 }
 
 static void percevite_on_message(union slamdunk_to_paparazzi_msg_t *msg) {
   if(msg->flags & SD_MSG_FLAG_VECTOR) percevite_on_vector(msg);
   if(msg->flags & SD_MSG_FLAG_VELOCITY) percevite_on_velocity(msg);
+  percevite.timeout = 0.0;
 }
 
 static void send_percevite(struct transport_tx *trans, struct link_device *dev) {
@@ -253,11 +208,10 @@ static void send_percevite(struct transport_tx *trans, struct link_device *dev) 
   pprz_msg_send_PERCEVITE(trans, dev, AC_ID,
       &ok,
       &percevite_logging.velocity.x, &percevite_logging.velocity.y, &percevite_logging.velocity.z,
-      &percevite.time_since_velocity,
-      &percevite.safe_region.distance, &percevite.safe_region.seq,
-      &percevite_logging.raw_distance, &percevite_logging.valid_pixels,
-      &percevite.time_since_safe_distance,
-      &percevite.wp, &percevite_logging.target_wp);
+      &percevite.timeout, &percevite.time_since_velocity,
+      &percevite.wp, &percevite_logging.target_wp,
+      &percevite_logging.request.x, &percevite_logging.request.y, &percevite_logging.request.z,
+      &percevite_logging.reply.x, &percevite_logging.reply.y, &percevite_logging.reply.z);
 }
 
 
@@ -299,25 +253,6 @@ static bool aim_at_waypoint(uint8_t target_wp) {
   return heading_error < threshold;
 }
 
-static void set_percevite_wp(uint8_t target_wp, float distance) {
-  struct EnuCoor_f *pos = stateGetPositionEnu_f();
-  struct EnuCoor_f wp_pos = { WaypointX(target_wp), WaypointY(target_wp), WaypointAlt(target_wp) };
-  struct FloatVect2 diff;
-  VECT2_DIFF(diff, wp_pos, *pos); // Vector from current pos to target_wp
-  printf("[percevite] diff x = %.1f, y = %.1f\n", diff.x, diff.y);
-  float distance_to_wp = float_vect2_norm(&diff); // Distance between current position and target
-  if(distance_to_wp < distance) {
-    // Waypoint is within safe distance, go there directly
-    waypoint_copy(percevite.wp, target_wp);
-  } else {
-    // Move percevite_wp towards target_wp but keep it within the safe distance
-    float_vect2_normalize(&diff); // Unit vector towards target_wp
-    VECT2_SMUL(diff, diff, distance); // Vector of length distance towards target_wp
-    VECT2_SUM(wp_pos, *pos, diff); // Write new wp x and y (pos + move). Keep Z of target wp.
-    waypoint_set_enu(percevite.wp, &wp_pos);
-  }
-}
-
 /**
  * Assign waypoint to PercEvite module. This waypoint will be used for PerceviteGo
  * and PerceviteStay commands. The waypoint will only be placed in regions that
@@ -355,6 +290,7 @@ bool PerceviteGo(uint8_t target_wp) {
     };
     slamdunk_send_message(&msg);
     printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
+    percevite_logging.request = target_frd;
     // Do nothing else! Move percevite_wp when reply is received
   }
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp
@@ -366,8 +302,8 @@ bool PerceviteStay(uint8_t target_wp) {
 }
 
 bool PerceviteOk(void) {
-  return percevite.time_since_velocity < PERCEVITE_VELOCITY_TIMEOUT;
-//      && percevite.time_since_safe_distance < PERCEVITE_IMAGE_TIMEOUT;
+  return percevite.timeout < PERCEVITE_TIMEOUT &&
+      percevite.time_since_velocity < PERCEVITE_VELOCITY_TIMEOUT;
 }
 
 
