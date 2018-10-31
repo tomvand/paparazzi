@@ -282,6 +282,7 @@ bool PerceviteGo(uint8_t target_wp) {
 //    heading_ok = TRUE;
 //  } else {
     heading_ok = aim_at_waypoint(target_wp);
+    heading_ok = TRUE; // HACK HACK HACK
 //  }
 
   if(heading_ok) {
