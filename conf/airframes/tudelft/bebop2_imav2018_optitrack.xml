@@ -6,7 +6,7 @@
     <target name="ap" board="bebop2">
       <define name="STABILIZATION_INDI_G2_R" value="0.233"/>
       <define name="FILE_LOGGER_PATH" value="/data/ftp/internal_000"/>
-      <define name="PERCEVITE_ESTIMATE_VELOCITY" value="TRUE"/>
+      <define name="PERCEVITE_ESTIMATE_VELOCITY" value="FALSE"/>
     </target>
 
     <target name="nps" board="pc">
