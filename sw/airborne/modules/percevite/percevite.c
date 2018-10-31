@@ -275,45 +275,43 @@ bool PerceviteInit(uint8_t wp) {
 }
 
 bool PerceviteGo(uint8_t target_wp) {
-  bool heading_ok = FALSE;
-//  if(percevite_logging.reply_flags & VECTOR_FLAG_STUCK) {
-//    nav_set_heading_rad(stateGetNedToBodyEulers_f()->psi + 0.03);
-//    aim_at_waypoint(percevite.wp); // Only writes heading when wp is sufficiently far away
-//    heading_ok = TRUE;
-//  } else {
-    heading_ok = aim_at_waypoint(target_wp);
-    heading_ok = TRUE; // HACK HACK HACK
-//  }
-
-  if(heading_ok) {
-    // Find target_wp coordinates in body frame
-    struct NedCoor_f *pos = stateGetPositionNed_f();
-    struct NedCoor_f wp_pos = { WaypointY(target_wp), WaypointX(target_wp), -WaypointAlt(target_wp) }; // Note: waypoint x, y, z are in ENU!
-    struct FloatVect3 diff;
-    VECT3_DIFF(diff, wp_pos, *pos);
-    struct FloatRMat *R = stateGetNedToBodyRMat_f();
-    printf("Rg = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
-    printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
-    printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]);
-    struct FloatVect3 target_frd;
-    MAT33_VECT3_MUL(target_frd, *R, diff);
-    // Send request to SLAMDunk
-    struct FloatEulers *eul = stateGetNedToBodyEulers_f();
-    union paparazzi_to_slamdunk_msg_t msg = {
-        .tx = target_frd.x,
-        .ty = target_frd.y,
-        .tz = target_frd.z,
-        .request_flags = percevite_settings.request_flags,
-        .phi = eul->phi,
-        .theta = eul->theta,
-        .psi = eul->psi,
-    };
-    slamdunk_send_message(&msg);
-    printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
-    percevite_logging.request = target_frd;
-    percevite_logging.request_flags = msg.request_flags;
-    // Do nothing else! Move percevite_wp when reply is received
+  if(get_dist2_to_waypoint(target_wp) < SQUARE(ARRIVED_AT_WAYPOINT)) {
+    // Already at (or close to) waypoint, go directly without vectors.
+    waypoint_copy(percevite.wp, target_wp);
+  } else {
+    // Too far from waypoint, request vector (when pointed towards target)
+    if(aim_at_waypoint(target_wp)) {
+      // Find target_wp coordinates in body frame
+      struct NedCoor_f *pos = stateGetPositionNed_f();
+      struct NedCoor_f wp_pos = { WaypointY(target_wp), WaypointX(target_wp), -WaypointAlt(target_wp) }; // Note: waypoint x, y, z are in ENU!
+      struct FloatVect3 diff;
+      VECT3_DIFF(diff, wp_pos, *pos);
+      struct FloatRMat *R = stateGetNedToBodyRMat_f();
+      printf("Rg = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
+      printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
+      printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]);
+      struct FloatVect3 target_frd;
+      MAT33_VECT3_MUL(target_frd, *R, diff);
+      // Send request to SLAMDunk
+      struct FloatEulers *eul = stateGetNedToBodyEulers_f();
+      union paparazzi_to_slamdunk_msg_t msg = {
+          .tx = target_frd.x,
+          .ty = target_frd.y,
+          .tz = target_frd.z,
+          .request_flags = percevite_settings.request_flags,
+          .phi = eul->phi,
+          .theta = eul->theta,
+          .psi = eul->psi,
+      };
+      slamdunk_send_message(&msg);
+      printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
+      percevite_logging.request = target_frd;
+      percevite_logging.request_flags = msg.request_flags;
+      // Do nothing else! Move percevite_wp when reply is received
+    }
   }
+
+
   percevite_logging.target_wp = target_wp;
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp
 }
