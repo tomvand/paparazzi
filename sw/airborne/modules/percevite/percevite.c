@@ -93,6 +93,8 @@ static void slamdunk_send_message(union paparazzi_to_slamdunk_msg_t *msg);
 
 static void send_percevite(struct transport_tx *trans, struct link_device *dev);
 
+static bool aim_at_waypoint(uint8_t target_wp);
+
 void percevite_init(void) {
   slamdunk_init();
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_PERCEVITE, send_percevite);
@@ -157,7 +159,13 @@ static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
   struct EnuCoor_f wp_enu;
   ENU_OF_TO_NED(wp_enu, wp_ned);
 
+  // Heading
+  // TODO handle stuck situations
+  aim_at_waypoint(percevite_logging.target_wp); // TODO move target_wp to main struct
+
   // Horizontal motion
+  // If VECTOR_FLAG_DIRECT: move directly to target wp
+  // Else:
   // Move waypoint, unless:
   //  - Drone needs to halt at current position (gx, gy, gz = 0)
   //  - Percevite wp has been placed at current position (halted = TRUE)
@@ -167,23 +175,31 @@ static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
   //    as wind may cause small deviations between the drone and wp positions.
   // Not moving the waypoint under these conditions should prevent position
   // drift when the drone is stopped in front of an obstacle.
-  static bool halted = FALSE; // TRUE after wp has been set to stop at current location
-  struct EnuCoor_f wp_enu_old = { WaypointX(percevite.wp), WaypointY(percevite.wp), WaypointAlt(percevite.wp) };
-  struct EnuCoor_f wp_diff;
-  VECT3_DIFF(wp_diff, wp_enu, wp_enu_old);
-  float dist = VECT3_NORM2(wp_diff);
-  if(msg->gx == 0.0 && msg->gy == 0.0 && msg->gz == 0.0) {
-    if(!halted) { // Percevite wp has not been set yet
-      halted = TRUE;
-      waypoint_set_enu(percevite.wp, &wp_enu);
-    } else {
-      if(dist > SQUARE(0.5)) { // Drone is too far away from percevite wp
+  if(msg->vector_flags & VECTOR_FLAG_DIRECT) {
+    waypoint_copy(percevite.wp, percevite_logging.target_wp); // TODO move target_wp to main struct
+    wp_enu.x = WaypointX(percevite.wp);
+    wp_enu.y = WaypointY(percevite.wp);
+    wp_enu.z = WaypointAlt(percevite.wp);
+    ENU_OF_TO_NED(wp_ned, wp_enu);
+  } else { // Travel via subgoal
+    static bool halted = FALSE; // TRUE after wp has been set to stop at current location
+    struct EnuCoor_f wp_enu_old = { WaypointX(percevite.wp), WaypointY(percevite.wp), WaypointAlt(percevite.wp) };
+    struct EnuCoor_f wp_diff;
+    VECT3_DIFF(wp_diff, wp_enu, wp_enu_old);
+    float dist = VECT3_NORM2(wp_diff);
+    if(msg->gx == 0.0 && msg->gy == 0.0 && msg->gz == 0.0) {
+      if(!halted) { // Percevite wp has not been set yet
+        halted = TRUE;
         waypoint_set_enu(percevite.wp, &wp_enu);
-      } // Else: wp is already set, do *not* move it
+      } else {
+        if(dist > SQUARE(0.5)) { // Drone is too far away from percevite wp
+          waypoint_set_enu(percevite.wp, &wp_enu);
+        } // Else: wp is already set, do *not* move it
+      }
+    } else { // Drone should follow vector
+      halted = FALSE;
+      waypoint_set_enu(percevite.wp, &wp_enu);
     }
-  } else { // Drone should follow vector
-    halted = FALSE;
-    waypoint_set_enu(percevite.wp, &wp_enu);
   }
   NavGotoWaypoint(percevite.wp);
 
@@ -279,38 +295,35 @@ bool PerceviteGo(uint8_t target_wp) {
     // Already at (or close to) waypoint, go directly without vectors.
     waypoint_copy(percevite.wp, target_wp);
   } else {
-    // Too far from waypoint, request vector (when pointed towards target)
-    if(aim_at_waypoint(target_wp)) {
-      // Find target_wp coordinates in body frame
-      struct NedCoor_f *pos = stateGetPositionNed_f();
-      struct NedCoor_f wp_pos = { WaypointY(target_wp), WaypointX(target_wp), -WaypointAlt(target_wp) }; // Note: waypoint x, y, z are in ENU!
-      struct FloatVect3 diff;
-      VECT3_DIFF(diff, wp_pos, *pos);
-      struct FloatRMat *R = stateGetNedToBodyRMat_f();
-      printf("Rg = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
-      printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
-      printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]);
-      struct FloatVect3 target_frd;
-      MAT33_VECT3_MUL(target_frd, *R, diff);
-      // Send request to SLAMDunk
-      struct FloatEulers *eul = stateGetNedToBodyEulers_f();
-      union paparazzi_to_slamdunk_msg_t msg = {
-          .tx = target_frd.x,
-          .ty = target_frd.y,
-          .tz = target_frd.z,
-          .request_flags = percevite_settings.request_flags,
-          .phi = eul->phi,
-          .theta = eul->theta,
-          .psi = eul->psi,
-      };
-      slamdunk_send_message(&msg);
-      printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
-      percevite_logging.request = target_frd;
-      percevite_logging.request_flags = msg.request_flags;
-      // Do nothing else! Move percevite_wp when reply is received
-    }
+    // Too far from waypoint, request vector.
+    // Find target_wp coordinates in body frame
+    struct NedCoor_f *pos = stateGetPositionNed_f();
+    struct NedCoor_f wp_pos = { WaypointY(target_wp), WaypointX(target_wp), -WaypointAlt(target_wp) }; // Note: waypoint x, y, z are in ENU!
+    struct FloatVect3 diff;
+    VECT3_DIFF(diff, wp_pos, *pos);
+    struct FloatRMat *R = stateGetNedToBodyRMat_f();
+    printf("Rg = [%.2f\t%.2f\t%.2f;\n", R->m[0], R->m[1], R->m[2]);
+    printf("      %.2f\t%.2f\t%.2f;\n", R->m[3], R->m[4], R->m[5]);
+    printf("      %.2f\t%.2f\t%.2f]\n", R->m[6], R->m[7], R->m[8]);
+    struct FloatVect3 target_frd;
+    MAT33_VECT3_MUL(target_frd, *R, diff);
+    // Send request to SLAMDunk
+    struct FloatEulers *eul = stateGetNedToBodyEulers_f();
+    union paparazzi_to_slamdunk_msg_t msg = {
+        .tx = target_frd.x,
+        .ty = target_frd.y,
+        .tz = target_frd.z,
+        .request_flags = percevite_settings.request_flags,
+        .phi = eul->phi,
+        .theta = eul->theta,
+        .psi = eul->psi,
+    };
+    slamdunk_send_message(&msg);
+    printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
+    percevite_logging.request = target_frd;
+    percevite_logging.request_flags = msg.request_flags;
+    // Do nothing else! Move percevite_wp when reply is received
   }
-
 
   percevite_logging.target_wp = target_wp;
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp
