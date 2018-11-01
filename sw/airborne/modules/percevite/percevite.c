@@ -65,6 +65,11 @@
 #define PERCEVITE_VELOCITY_TIMEOUT 1.0
 #endif
 
+// Allow percevite to move away from goal if stuck
+#ifndef PERCEVITE_ALLOW_UNSTUCK
+#define PERCEVITE_ALLOW_UNSTUCK TRUE
+#endif
+
 #define INVALID_WAYPOINT 255
 
 struct percevite_t percevite = {
@@ -160,8 +165,11 @@ static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
   ENU_OF_TO_NED(wp_enu, wp_ned);
 
   // Heading
-  // TODO handle stuck situations
-  aim_at_waypoint(percevite_logging.target_wp); // TODO move target_wp to main struct
+  if(PERCEVITE_ALLOW_UNSTUCK && (msg->vector_flags & VECTOR_FLAG_STUCK)) {
+    nav_set_heading_rad(stateGetNedToBodyEulers_f()->psi + 0.06); // Slowly yaw until the goal is back in view
+  } else {
+    aim_at_waypoint(percevite_logging.target_wp); // TODO move target_wp to main struct
+  }
 
   // Horizontal motion
   // If VECTOR_FLAG_DIRECT: move directly to target wp
