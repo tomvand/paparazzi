@@ -67,7 +67,7 @@
 
 // Allow percevite to move away from goal if stuck
 #ifndef PERCEVITE_ALLOW_UNSTUCK
-#define PERCEVITE_ALLOW_UNSTUCK TRUE
+#define PERCEVITE_ALLOW_UNSTUCK FALSE
 #endif
 
 #define INVALID_WAYPOINT 255
