@@ -1,0 +1,28 @@
+<!DOCTYPE airframe SYSTEM "../airframe.dtd">
+
+<airframe>
+  <section name="IMU" prefix="IMU_">
+    <!-- Accelerometer calibration, guessed by hand for x and y axes -->
+    <define name="ACCEL_X_NEUTRAL" value="25"/>
+    <define name="ACCEL_Y_NEUTRAL" value="-65"/>
+    <define name="ACCEL_Z_NEUTRAL" value="0"/><!-- Not measured -->
+  
+    <!-- Gyro calibration, guessed by hand -->
+    <define name="GYRO_P_NEUTRAL" value="-41"/>
+    <define name="GYRO_Q_NEUTRAL" value="8"/>
+    <define name="GYRO_R_NEUTRAL" value="21"/>
+  
+    <!-- Magneto calibration -->
+    <!-- Not performed yet -->
+    <!-- <define name="MAG_X_NEUTRAL" value="18"/>
+    <define name="MAG_Y_NEUTRAL" value="46"/>
+    <define name="MAG_Z_NEUTRAL" value="202"/>
+    <define name="MAG_X_SENS" value="8.32441255621" integer="16"/>
+    <define name="MAG_Y_SENS" value="8.25720085664" integer="16"/>
+    <define name="MAG_Z_SENS" value="8.60009819293" integer="16"/> -->
+    
+    <define name="BODY_TO_IMU_PHI" value="0." unit="deg"/>
+    <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/>
+    <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
+  </section>
+</airframe>
