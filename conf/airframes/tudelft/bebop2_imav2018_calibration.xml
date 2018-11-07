@@ -25,4 +25,8 @@
     <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/>
     <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
   </section>
+  
+  <section name="ARHS" prefix="AHRS_">
+    <define name="GRAVITY_HEURISTIC_FACTOR" value="0"/>
+  </section>
 </airframe>
