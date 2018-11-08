@@ -73,7 +73,7 @@
 // Lower UDP bandwidth by sending requests only every N frames
 // Autopilot runs at 512Hz (default), so 50 is approx. 10 requests per second
 #ifndef PERCEVITE_REQUEST_CLOCK_DIVIDER
-#define PERCEVITE_REQUEST_CLOCK_DIVIDER 50
+#define PERCEVITE_REQUEST_CLOCK_DIVIDER 20
 #endif
 
 #define INVALID_WAYPOINT 255
