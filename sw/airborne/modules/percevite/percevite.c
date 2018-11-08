@@ -70,12 +70,19 @@
 #define PERCEVITE_ALLOW_UNSTUCK FALSE
 #endif
 
+// Lower UDP bandwidth by sending requests only every N frames
+// Autopilot runs at 512Hz (default), so 50 is approx. 10 requests per second
+#ifndef PERCEVITE_REQUEST_CLOCK_DIVIDER
+#define PERCEVITE_REQUEST_CLOCK_DIVIDER 50
+#endif
+
 #define INVALID_WAYPOINT 255
 
 struct percevite_t percevite = {
     .timeout = 0.0,
     .time_since_velocity = 0.0,
     .wp = INVALID_WAYPOINT, // Should cause an error when not initialized in flight plan!
+    .request_clock_divider = 0,
 };
 
 struct percevite_settings_t percevite_settings = {
@@ -326,13 +333,17 @@ bool PerceviteGo(uint8_t target_wp) {
         .theta = eul->theta,
         .psi = eul->psi,
     };
-    slamdunk_send_message(&msg);
-    printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
-    percevite_logging.request = target_frd;
-    percevite_logging.request_flags = msg.request_flags;
+    if(percevite.request_clock_divider <= 0) {
+      slamdunk_send_message(&msg);
+      printf("Request tx = %f, ty = %f, tz = %f\n", msg.tx, msg.ty, msg.tz);
+      percevite_logging.request = target_frd;
+      percevite_logging.request_flags = msg.request_flags;
+      percevite.request_clock_divider = PERCEVITE_REQUEST_CLOCK_DIVIDER;
+    } else { // Do not send request every frame
+      percevite.request_clock_divider--;
+    }
     // Do nothing else! Move percevite_wp when reply is received
   }
-
   percevite_logging.target_wp = target_wp;
   return sqrtf(get_dist2_to_waypoint(target_wp)) > ARRIVED_AT_WAYPOINT; // Keep looping until arrived at target_wp
 }

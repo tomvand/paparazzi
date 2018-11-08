@@ -34,6 +34,7 @@ struct percevite_t {
   float timeout; ///< [s] Time since last message
   float time_since_velocity; ///< [s] Time since last velocity update
   uint8_t wp; ///< Waypoint moved by this module
+  int request_clock_divider; ///< Count number of times the Go function is called
 };
 extern struct percevite_t percevite;
 
