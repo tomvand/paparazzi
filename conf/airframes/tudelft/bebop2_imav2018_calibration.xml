@@ -14,12 +14,12 @@
   
     <!-- Magneto calibration -->
     <!-- Not performed yet -->
-    <!-- <define name="MAG_X_NEUTRAL" value="18"/>
+    <define name="MAG_X_NEUTRAL" value="18"/>
     <define name="MAG_Y_NEUTRAL" value="46"/>
     <define name="MAG_Z_NEUTRAL" value="202"/>
     <define name="MAG_X_SENS" value="8.32441255621" integer="16"/>
     <define name="MAG_Y_SENS" value="8.25720085664" integer="16"/>
-    <define name="MAG_Z_SENS" value="8.60009819293" integer="16"/> -->
+    <define name="MAG_Z_SENS" value="8.60009819293" integer="16"/>
     
     <define name="BODY_TO_IMU_PHI" value="0." unit="deg"/>
     <define name="BODY_TO_IMU_THETA" value="0." unit="deg"/>
