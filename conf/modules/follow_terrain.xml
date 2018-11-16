@@ -1,0 +1,15 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="follow_terrain">
+  <doc>
+    <description>Adjust a waypoint altitude using the sonar to follow terrain.</description>
+  </doc>
+  <header>
+    <file name="follow_terrain.h"/>
+  </header>
+  <init fun="follow_terrain_init()"/>
+  <makefile>
+    <file name="follow_terrain.c"/>
+  </makefile>
+</module>
+

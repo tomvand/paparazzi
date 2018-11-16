@@ -49,6 +49,7 @@
       <!-- <call_once fun="NavSetAltitudeReferenceHere()"/> -->
     </block>
     <block name="PercEvite init">
+      <call_once fun="FollowTerrainInit(WP_GOAL)"/>
       <call_once fun="PerceviteInit(WP__PERCEVITE)"/>
       <while cond="!PerceviteOk()"/>
     </block>
