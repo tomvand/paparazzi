@@ -176,6 +176,32 @@
       <child>sw_motor</child>
     </joint>
 
+    <link name="sonar">
+      <pose>0 0 0 0 0 0</pose>
+      <inertial>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>0.0001</ixx>
+          <iyy>0.0001</iyy>
+          <izz>0.0001</izz>
+          <ixy>0</ixy>
+          <iyz>0</iyz>
+          <ixz>0</ixz>
+        </inertia>
+      </inertial>
+      <sensor name="sonarsensor" type="sonar">
+        <sonar>
+          <min>0.20</min>
+          <max>5.0</max>
+          <radius>0.50</radius>
+        </sonar>
+      </sensor>
+    </link>
+    
+    <joint name="sonar_joint" type="fixed">
+      <parent>chassis</parent>
+      <child>sonar</child>
+    </joint>
 
     <!-- CAMERAS -->
 
