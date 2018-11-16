@@ -86,7 +86,7 @@ struct percevite_t percevite = {
 };
 
 struct percevite_settings_t percevite_settings = {
-  .request_flags = REQUEST_FLAG_ALLOW_HIGHER | REQUEST_FLAG_ALLOW_LOWER, // TODO Check if sensible default
+  .request_flags = 0x00, //REQUEST_FLAG_ALLOW_HIGHER | REQUEST_FLAG_ALLOW_LOWER, // TODO Check if sensible default
 };
 
 struct percevite_logging_t percevite_logging = {
