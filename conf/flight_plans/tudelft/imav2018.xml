@@ -41,6 +41,13 @@
       (autopilot_in_flight() == true) )" deroute="Land here"/> --><!-- TODO RESTORE -->
   </exceptions>
   <blocks>
+    <block name="GPS init">
+      <call_once fun="NavKillThrottle()"/>
+      <while cond="!GpsFixValid()"/>
+      <while cond="LessThan(NavBlockTime(), 20)"/>
+      <call_once fun="NavSetGroundReferenceHere()"/>
+      <!-- <call_once fun="NavSetAltitudeReferenceHere()"/> -->
+    </block>
     <block name="PercEvite init">
       <call_once fun="PerceviteInit(WP__PERCEVITE)"/>
       <while cond="!PerceviteOk()"/>
