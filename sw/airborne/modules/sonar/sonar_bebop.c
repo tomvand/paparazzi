@@ -80,7 +80,7 @@ static uint8_t pulse_transition_counter;
 #define SONAR_BEBOP_PEAK_THRESHOLD 100
 
 /** SONAR_BEBOP_MIN_PEAK_VAL minimum adc value of reflected peak that will be cosidered */
-#define SONAR_BEBOP_MIN_PEAK_VAL 1024 // max value is 4096
+#define SONAR_BEBOP_MIN_PEAK_VAL 256 // max value is 4096
 
 /** SONAR_BEBOP_MAX_TRANS_TIME maximum time for a reflection to travel and return in the adc measurement window */
 #define SONAR_BEBOP_MAX_TRANS_TIME 270
