@@ -32,7 +32,9 @@
     <module name="ahrs" type="int_cmpl_quat">
       <configure name="USE_MAGNETOMETER" value="TRUE"/>
     </module>
-    <module name="ins" type="hff_extended"/>
+    <module name="ins" type="hff_extended">
+      <define name="VFF_EXTENDED_NON_FLAT_GROUND" value="TRUE"/>
+    </module>
     
     <define name="ARRIVED_AT_WAYPOINT" value="0.5"/>
     <define name="USE_SONAR" value="TRUE"/>
