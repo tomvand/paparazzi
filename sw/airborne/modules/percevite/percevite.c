@@ -67,7 +67,7 @@
 
 // Allow percevite to move away from goal if stuck
 #ifndef PERCEVITE_ALLOW_UNSTUCK
-#define PERCEVITE_ALLOW_UNSTUCK FALSE
+#define PERCEVITE_ALLOW_UNSTUCK TRUE
 #endif
 
 // Lower UDP bandwidth by sending requests only every N frames
@@ -173,7 +173,9 @@ static void percevite_on_vector(union slamdunk_to_paparazzi_msg_t *msg) {
 
   // Heading
   if(PERCEVITE_ALLOW_UNSTUCK && (msg->vector_flags & VECTOR_FLAG_STUCK)) {
-    nav_set_heading_rad(stateGetNedToBodyEulers_f()->psi + 0.06); // Slowly yaw until the goal is back in view
+    if(msg->gx == 0.0) {
+      nav_set_heading_rad(stateGetNedToBodyEulers_f()->psi + 0.06); // Slowly yaw until the goal is back in view
+    }
   } else {
     aim_at_waypoint(percevite_logging.target_wp); // TODO move target_wp to main struct
   }
