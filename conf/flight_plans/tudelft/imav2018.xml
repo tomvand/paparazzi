@@ -47,6 +47,8 @@
       <while cond="LessThan(NavBlockTime(), 20)"/>
       <call_once fun="NavSetGroundReferenceHere()"/>
       <!-- <call_once fun="NavSetAltitudeReferenceHere()"/> -->
+      <call_once fun="geo_mag_periodic()"/>
+      <call_once fun="geo_mag_event()"/>
     </block>
     <block name="PercEvite init">
       <call_once fun="FollowTerrainInit(WP_GOAL)"/>
