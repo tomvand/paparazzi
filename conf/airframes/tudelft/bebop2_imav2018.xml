@@ -59,7 +59,7 @@
     <module name="percevite">
       <define name="PERCEVITE_VELOCITY_TIMEOUT" value="5.0"/><!-- Redundant with GPS -->
     </module>
-    <module name="follow_terrain"/>
+    <!-- <module name="follow_terrain"/> -->
   </firmware>
 
   <commands>
