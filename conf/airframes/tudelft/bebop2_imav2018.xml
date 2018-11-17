@@ -159,9 +159,12 @@
 
   <section name="STABILIZATION_ATTITUDE_INDI" prefix="STABILIZATION_INDI_">
     <!-- control effectiveness -->
-    <define name="G1_P" value="0.0431"/>
+    <!-- <define name="G1_P" value="0.0431"/>
     <define name="G1_Q" value="0.0366"/>
-    <define name="G1_R" value="0.000247"/>
+    <define name="G1_R" value="0.000247"/> -->
+    <define name="G1_P" value="0.05"/>
+    <define name="G1_Q" value="0.025"/>
+    <define name="G1_R" value="0.0022"/>
 
     <!-- For the bebop2 we need to filter the roll rate due to the dampers -->
     <define name="FILTER_ROLL_RATE" value="FALSE"/>
@@ -194,9 +197,9 @@
   </section>
 
   <section name="GUIDANCE_V" prefix="GUIDANCE_V_">
-    <define name="HOVER_KP" value="350"/>
-    <define name="HOVER_KD" value="85"/>
-    <define name="HOVER_KI" value="20"/>
+    <define name="HOVER_KP" value="370"/><!-- was 350 -->
+    <define name="HOVER_KD" value="125"/><!-- was 85 -->
+    <define name="HOVER_KI" value="20"/><!-- was 20 -->
     <define name="NOMINAL_HOVER_THROTTLE" value="0.68"/>
     <define name="ADAPT_THROTTLE_ENABLED" value="TRUE"/>
   </section>
@@ -207,11 +210,11 @@
     <define name="REF_MAX_SPEED" value="1.0" unit="m/s"/>
     <!-- Bad weather -->
     <!-- define name="MAX_BANK" value="32" unit="deg"/ -->
-    <define name="PGAIN" value="120"/>
-    <define name="DGAIN" value="200"/>
-    <define name="IGAIN" value="30"/>
+    <define name="PGAIN" value="120"/><!-- was 120 -->
+    <define name="DGAIN" value="250"/><!-- was 200 -->
+    <define name="IGAIN" value="30"/><!-- was 30 -->
     <!-- Lower reference overshoot -->
-    <define name="REF_ZETA" value="1.2"/>
+    <define name="REF_ZETA" value="1.2"/><!-- was 1.2 -->
   </section>
 
   <section name="NAVIGATION" prefix="NAV_">
