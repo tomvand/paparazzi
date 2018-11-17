@@ -356,8 +356,11 @@ bool PerceviteStay(uint8_t target_wp) {
 }
 
 bool PerceviteOk(void) {
-  return percevite.timeout < PERCEVITE_TIMEOUT &&
-      percevite.time_since_velocity < PERCEVITE_VELOCITY_TIMEOUT;
+  bool ok = percevite.timeout < PERCEVITE_TIMEOUT;
+#if PERCEVITE_ESTIMATE_VELOCITY
+  ok &= percevite.time_since_velocity < PERCEVITE_VELOCITY_TIMEOUT;
+#endif
+  return ok;
 }
 
 
