@@ -58,9 +58,9 @@
       (nav_block > IndexOfBlock('Holding point')) &&
       (IndexOfBlock('flare') > nav_block))" deroute="Land here and kill"/>
     <!--  Horizontal geofence -->
-    <!--<exception cond="((!InsideFlyZone(GetPosX(), GetPosY())) &&
+    <exception cond="((!InsideFlyZone(GetPosX(), GetPosY())) &&
       (nav_block > IndexOfBlock('Holding point')) &&
-      (IndexOfBlock('flare') > nav_block))" deroute="HOME"/>-->
+      (IndexOfBlock('flare') > nav_block))" deroute="HOME"/>
     <exception cond="!InsideRedZone(GetPosX(), GetPosY())" deroute="KILL"/>
     <!-- Vertical geofence -->
     <!-- Note: triggers at 180m MSL, 20m above takeoff elevation -->
