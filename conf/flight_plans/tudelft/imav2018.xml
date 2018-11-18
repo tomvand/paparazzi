@@ -112,6 +112,9 @@
       <call_once fun="NavSetWaypointHere(WP_STDBY)"/>
       <stay wp="STDBY"/>
     </block>
+    <block name="Test">
+      <while cond="TRUE"/>
+    </block>
     <block name="Go">
       <call fun="PerceviteStay(WP_GOAL)"/>
     </block>
