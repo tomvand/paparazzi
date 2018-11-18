@@ -1,6 +1,6 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan ground_alt="160" lat0="-37.623545" lon0="145.125950" max_dist_from_home="450" name="IMAV 2018" alt="165.0" security_height="0.3">
+<flight_plan ground_alt="160" lat0="-37.623545" lon0="145.125950" max_dist_from_home="600" name="IMAV 2018" alt="165.0" security_height="0.3">
   <header>
 #include "autopilot.h"
 #include "subsystems/datalink/datalink.h"
@@ -17,23 +17,33 @@
     <waypoint name="STDBY" x="-0.7" y="-0.8" height="2.0"/>
     <waypoint name="TD" x="0.8" y="-1.7"/>
     <waypoint name="_PERCEVITE" x="0.0" y="0.0"/>
-    <waypoint name="_RED1" lat="-37.622878" lon="145.126976"/>
-    <waypoint name="_RED2" lat="-37.624535" lon="145.126501"/>
-    <waypoint name="_RED3" lat="-37.624522" lon="145.122122"/>
-    <waypoint name="_RED4" lat="-37.623597" lon="145.122882"/>
-    <waypoint name="_RED5" lat="-37.623165" lon="145.122854"/>
-    <waypoint name="_RED6" lat="-37.622681" lon="145.122519"/>
-    <waypoint name="_RED7" lat="-37.622338" lon="145.122849"/>
+    <waypoint name="_YLW1" lat="-37.622878" lon="145.126976"/>
+    <waypoint name="_YLW2" lat="-37.624535" lon="145.126501"/>
+    <waypoint name="_YLW3" lat="-37.624522" lon="145.122122"/>
+    <waypoint name="_YLW4" lat="-37.623597" lon="145.122882"/>
+    <waypoint name="_YLW5" lat="-37.623165" lon="145.122854"/>
+    <waypoint name="_YLW6" lat="-37.622681" lon="145.122519"/>
+    <waypoint name="_YLW7" lat="-37.622338" lon="145.122849"/>
+    <waypoint name="_RED1" lat="-37.622358" lon="145.129117"/>
+    <waypoint name="_RED2" lat="-37.625693" lon="145.128661"/>
+    <waypoint name="_RED3" lat="-37.625117" lon="145.120223"/>
+    <waypoint name="_RED4" lat="-37.621375" lon="145.121965"/>
   </waypoints>
   <sectors>
-    <sector name="FlyZone" color="red" type="dynamic">
+    <sector name="FlyZone" color="yellow" type="dynamic">
+      <corner name="_YLW1"/>
+      <corner name="_YLW2"/>
+      <corner name="_YLW3"/>
+      <corner name="_YLW4"/>
+      <corner name="_YLW5"/>
+      <corner name="_YLW6"/>
+      <corner name="_YLW7"/>
+    </sector>
+    <sector name="RedZone" color="red" type="dynamic">
       <corner name="_RED1"/>
       <corner name="_RED2"/>
       <corner name="_RED3"/>
       <corner name="_RED4"/>
-      <corner name="_RED5"/>
-      <corner name="_RED6"/>
-      <corner name="_RED7"/>
     </sector>
   </sectors>
   <exceptions>
@@ -48,6 +58,7 @@
       (nav_block > IndexOfBlock('Holding point')) &&
       (IndexOfBlock('flare') > nav_block) &&
       (autopilot_in_flight() == true))" deroute="HOME"/>
+    <exception cond="!InsideRedZone(GetPosX(), GetPosY())" deroute="KILL"/>
     <!-- Vertical geofence -->
     <!-- Note: triggers at 180m MSL, 20m above takeoff elevation -->
     <exception cond="((GetPosAlt() > 180.0) && 
