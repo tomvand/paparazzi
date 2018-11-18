@@ -50,7 +50,7 @@
   <exceptions>
     <!-- IMAV2018 REQUIRED EXCEPTIONS -->
     <!-- Control link lost -->
-    <exception cond="((datalink_time > 5) &&
+    <exception cond="((datalink_time > 10) &&
       (nav_block > IndexOfBlock('Holding point')) &&
       (IndexOfBlock('flare') > nav_block))" deroute="Land here and kill"/>
     <!--  Horizontal geofence -->

@@ -58,6 +58,7 @@
       <define name="FILE_LOGGER_LOG_PERCEVITE_WAYPOINTS" value="TRUE"/>
     </module>
     <module name="percevite">
+      <define name="PERCEVITE_TIMEOUT" value="2.0"/>
       <define name="PERCEVITE_VELOCITY_TIMEOUT" value="5.0"/><!-- Redundant with GPS -->
     </module>
     <!-- <module name="follow_terrain"/> -->
