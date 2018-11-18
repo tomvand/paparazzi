@@ -31,7 +31,7 @@
 #include "firmwares/rotorcraft/navigation.h"
 
 #ifndef FOLLOW_TERRAIN_TARGET_AGL
-#define FOLLOW_TERRAIN_TARGET_AGL 3.0
+#define FOLLOW_TERRAIN_TARGET_AGL 2.0
 #endif
 #ifndef FOLLOW_TERRAIN_KP
 #define FOLLOW_TERRAIN_KP 0.30
@@ -39,6 +39,10 @@
 #ifndef FOLLOW_TERRAIN_MAX_ERROR
 #define FOLLOW_TERRAIN_MAX_ERROR 0.30
 #endif
+#ifndef FOLLOW_TERRAIN_SONAR_MIN
+#define FOLLOW_TERRAIN_SONAR_MIN 0.50
+#endif
+
 
 #define INVALID_WAYPOINT 255
 
@@ -58,8 +62,13 @@ static struct follow_terrain_t follow_terrain;
 #endif
 static abi_event agl_ev;                 ///< The agl ABI event
 static void agl_cb(uint8_t sender_id, float distance) {
-  if(follow_terrain.wp != INVALID_WAYPOINT) {
+  if(follow_terrain.wp != INVALID_WAYPOINT && distance > FOLLOW_TERRAIN_SONAR_MIN) {
     float delta = follow_terrain.target_agl - distance;
+    // Maintain waypoint altitude
+//    float alt = GetAltRef() + stateGetPositionEnu_f()->z + delta;
+//    waypoint_set_alt(follow_terrain.wp, alt);
+
+    // Maintain slope towards waypoint
     if(delta > FOLLOW_TERRAIN_MAX_ERROR) delta = FOLLOW_TERRAIN_MAX_ERROR;
     if(delta < -FOLLOW_TERRAIN_MAX_ERROR) delta = -FOLLOW_TERRAIN_MAX_ERROR;
     float dist = sqrtf(get_dist2_to_waypoint(follow_terrain.wp));
