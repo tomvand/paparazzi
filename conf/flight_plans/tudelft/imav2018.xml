@@ -7,7 +7,7 @@
 #include "subsystems/electrical.h"
 #include "modules/percevite/percevite.h"
 
-#include "firmwares/rotorcraft/guidance/guidance_h_ref.h"
+#include "firmwares/rotorcraft/guidance/guidance_h.h"
 
 // Note: use 'git submodule update --init -- sw/ext/tudelft_gazebo_models/'
 // to download the required models.
@@ -58,9 +58,9 @@
       (nav_block > IndexOfBlock('Holding point')) &&
       (IndexOfBlock('flare') > nav_block))" deroute="Land here and kill"/>
     <!--  Horizontal geofence -->
-    <exception cond="((!InsideFlyZone(GetPosX(), GetPosY())) &&
+    <!--<exception cond="((!InsideFlyZone(GetPosX(), GetPosY())) &&
       (nav_block > IndexOfBlock('Holding point')) &&
-      (IndexOfBlock('flare') > nav_block))" deroute="HOME"/>
+      (IndexOfBlock('flare') > nav_block))" deroute="HOME"/>-->
     <exception cond="!InsideRedZone(GetPosX(), GetPosY())" deroute="KILL"/>
     <!-- Vertical geofence -->
     <!-- Note: triggers at 180m MSL, 20m above takeoff elevation -->
@@ -129,18 +129,19 @@
     <block name="START"/>
     <block name="Via">
       <!-- <set var="gh_max_speed" value="3.0"/> -->
+      <call_once fun="guidance_h_SetMaxSpeed(3.0)"/>
       <go wp="VIA"/>
       <go wp="VIA2"/>
       <!-- <set var="gh_max_speed" value="1.0"/> -->
+      <call_once fun="guidance_h_SetMaxSpeed(1.0)"/>
     </block>
     <block name="to firefighter">
       <call fun="PerceviteGo(WP_TARGET)"/>
     </block>
     <block name="leave forest">
-      <call fun="PerceviteGo(WP_TARGET)"/>
+      <call fun="PerceviteGo(WP_VIA)"/>
     </block>
     <block name="return">
-      <go wp="VIA"/>
       <go wp="HOME"/>
     </block>
     
