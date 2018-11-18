@@ -1,6 +1,6 @@
 <!DOCTYPE flight_plan SYSTEM "../flight_plan.dtd">
 
-<flight_plan ground_alt="160" lat0="-37.623545" lon0="145.125950" max_dist_from_home="600" name="IMAV 2018" alt="165.0" security_height="0.3">
+<flight_plan ground_alt="165" lat0="-37.623545" lon0="145.125950" max_dist_from_home="600" name="IMAV 2018" alt="170.0" security_height="0.3">
   <header>
 #include "autopilot.h"
 #include "subsystems/datalink/datalink.h"
@@ -78,6 +78,7 @@
       (autopilot_in_flight() == true) )" deroute="Land here"/>
     <!-- Percevite error -->
     <exception cond="(!PerceviteOk() &&
+      (nav_block > IndexOfBlock('PercEvite init')) &&
       (IndexOfBlock('Takeoff') > nav_block))" deroute="PercEvite init"/>
     <exception cond="(!PerceviteOk() &&
       !(IndexOfBlock('Holding point') > nav_block) &&
