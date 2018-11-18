@@ -38,6 +38,7 @@
     
     <define name="ARRIVED_AT_WAYPOINT" value="0.5"/>
     <define name="USE_SONAR" value="TRUE"/>
+    <define name="SENSOR_SYNC_SEND_SONAR" value="TRUE"/>
     <!-- <define name="USE_BAROMETER" value="TRUE"/> --><!-- Not required, BARO always enabled in vff_extended! -->
 
     <module name="geo_mag"/><!-- For use in combination with GPS -->

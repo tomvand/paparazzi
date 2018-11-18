@@ -31,6 +31,7 @@
       <message name="DIVERGENCE"             period="0.05"/>
       <message name="DRAGSPEED"              period="0.02"/>
       <message name="PERCEVITE"              period="0.02"/>
+      <message name="SONAR"                  period="0.02"/>
     </mode>
 
     <mode name="ppm">

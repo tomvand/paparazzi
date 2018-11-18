@@ -83,7 +83,7 @@ static uint8_t pulse_transition_counter;
 #define SONAR_BEBOP_MIN_PEAK_VAL 256 // max value is 4096
 
 /** SONAR_BEBOP_MAX_TRANS_TIME maximum time for a reflection to travel and return in the adc measurement window */
-#define SONAR_BEBOP_MAX_TRANS_TIME 270
+#define SONAR_BEBOP_MAX_TRANS_TIME 600 // was 270
 
 /** sonar_bebop_spi_d the waveforms emitted by the sonar
  * waveform 0 is long pulse used at high altitude
