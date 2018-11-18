@@ -51,39 +51,33 @@
     <!-- Control link lost -->
     <exception cond="((datalink_time > 5) &&
       (nav_block > IndexOfBlock('Holding point')) &&
-      (IndexOfBlock('flare') > nav_block) &&
-      (autopilot_in_flight() == true))" deroute="Land here and kill"/>
+      (IndexOfBlock('flare') > nav_block))" deroute="Land here and kill"/>
     <!--  Horizontal geofence -->
     <exception cond="((!InsideFlyZone(GetPosX(), GetPosY())) &&
       (nav_block > IndexOfBlock('Holding point')) &&
-      (IndexOfBlock('flare') > nav_block) &&
-      (autopilot_in_flight() == true))" deroute="HOME"/>
+      (IndexOfBlock('flare') > nav_block))" deroute="HOME"/>
     <exception cond="!InsideRedZone(GetPosX(), GetPosY())" deroute="KILL"/>
     <!-- Vertical geofence -->
     <!-- Note: triggers at 180m MSL, 20m above takeoff elevation -->
     <exception cond="((GetPosAlt() > 180.0) && 
       (nav_block > IndexOfBlock('Holding point')) &&
-      (IndexOfBlock('flare') > nav_block) &&
-      (autopilot_in_flight() == true))" deroute="Land here and kill"/>
+      (IndexOfBlock('flare') > nav_block))" deroute="Land here and kill"/>
     
     <!-- OTHER EXCEPTIONS -->
     <!-- Low battery -->
     <exception cond="(electrical.bat_low &&
       !(IndexOfBlock('Holding point') > nav_block) &&
-      !(nav_block >= IndexOfBlock('Land here')) &&
-      (autopilot_in_flight() == true) )" deroute="Land here"/>
+      !(nav_block >= IndexOfBlock('Land here')))" deroute="Land here"/>
     <exception cond="(electrical.bat_critical &&
       !(IndexOfBlock('Holding point') > nav_block) &&
-      !(nav_block >= IndexOfBlock('Land here')) &&
-      (autopilot_in_flight() == true) )" deroute="Land here"/>
+      !(nav_block >= IndexOfBlock('Land here')))" deroute="Land here"/>
     <!-- Percevite error -->
     <exception cond="(!PerceviteOk() &&
       (nav_block > IndexOfBlock('PercEvite init')) &&
       (IndexOfBlock('Takeoff') > nav_block))" deroute="PercEvite init"/>
     <exception cond="(!PerceviteOk() &&
       !(IndexOfBlock('Holding point') > nav_block) &&
-      !(nav_block >= IndexOfBlock('Land here')) &&
-      (autopilot_in_flight() == true) )" deroute="Land here"/>
+      !(nav_block >= IndexOfBlock('Land here')))" deroute="Land here"/>
   </exceptions>
   <blocks>
     <block name="GPS init">
