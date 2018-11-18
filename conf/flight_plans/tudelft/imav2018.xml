@@ -64,9 +64,10 @@
     <exception cond="!InsideRedZone(GetPosX(), GetPosY())" deroute="KILL"/>
     <!-- Vertical geofence -->
     <!-- Note: triggers at 180m MSL, 20m above takeoff elevation -->
-    <exception cond="((GetPosAlt() > 180.0) && 
+    <exception cond="((GetPosAlt() > 200.0) && 
       (nav_block > IndexOfBlock('Holding point')) &&
       (IndexOfBlock('flare') > nav_block))" deroute="Land here and kill"/>
+    <exception cond="(GetPosAlt() > 220.0)" deroute="KILL"/>
     
     <!-- OTHER EXCEPTIONS -->
     <!-- Low battery -->
