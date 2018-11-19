@@ -19,7 +19,7 @@
     <waypoint name="STDBY" x="-0.7" y="-0.8" height="2.0"/>
     <waypoint name="VIA" lat="-37.623082" lon="145.124868" alt="170"/>
     <waypoint name="VIA2" lat="-37.623082" lon="145.124868" alt="150"/>
-    <waypoint name="TARGET" lat="-37.622580" lon="145.123616" alt="140"/>
+    <waypoint name="TARGET" lat="-37.623953" lon="145.123453" alt="140"/>
     <waypoint name="TD" x="0.8" y="-1.7"/>
     <waypoint name="_PERCEVITE" x="0.0" y="0.0"/>
     <waypoint name="_YLW1" lat="-37.622878" lon="145.126976"/>
