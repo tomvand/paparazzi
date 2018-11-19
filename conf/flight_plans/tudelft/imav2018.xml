@@ -71,9 +71,9 @@
     
     <!-- OTHER EXCEPTIONS -->
     <!-- Low battery -->
-    <exception cond="(electrical.bat_low &&
+    <!-- <exception cond="(electrical.bat_low &&
       !(IndexOfBlock('Holding point') > nav_block) &&
-      !(nav_block >= IndexOfBlock('Land here')))" deroute="Land here"/>
+      !(nav_block >= IndexOfBlock('Land here')))" deroute="Land here"/> -->
     <exception cond="(electrical.bat_critical &&
       !(IndexOfBlock('Holding point') > nav_block) &&
       !(nav_block >= IndexOfBlock('Land here')))" deroute="Land here"/>
@@ -81,9 +81,9 @@
     <exception cond="(!PerceviteOk() &&
       (nav_block > IndexOfBlock('PercEvite init')) &&
       (IndexOfBlock('Takeoff') > nav_block))" deroute="PercEvite init"/>
-    <exception cond="(!PerceviteOk() &&
+    <!-- <exception cond="(!PerceviteOk() &&
       !(IndexOfBlock('Holding point') > nav_block) &&
-      !(nav_block >= IndexOfBlock('Land here')))" deroute="Land here"/>
+      !(nav_block >= IndexOfBlock('Land here')))" deroute="Land here"/> -->
   </exceptions>
   <blocks>
     <block name="GPS init">
