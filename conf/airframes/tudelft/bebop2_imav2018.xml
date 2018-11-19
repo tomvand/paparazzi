@@ -49,7 +49,7 @@
       <define name="VFF_EXTENDED_NON_FLAT_GROUND" value="TRUE"/>
     </module>
     
-    <define name="ARRIVED_AT_WAYPOINT" value="0.5"/>
+    <define name="ARRIVED_AT_WAYPOINT" value="1.0"/>
     <define name="USE_SONAR" value="TRUE"/>
     <define name="SENSOR_SYNC_SEND_SONAR" value="TRUE"/>
     <!-- <define name="USE_BAROMETER" value="TRUE"/> --><!-- Not required, BARO always enabled in vff_extended! -->

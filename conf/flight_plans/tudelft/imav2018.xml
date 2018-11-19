@@ -20,6 +20,7 @@
     <waypoint name="VIA" lat="-37.623082" lon="145.124868" alt="170"/>
     <waypoint name="VIA2" lat="-37.623082" lon="145.124868" alt="150"/>
     <waypoint name="TARGET" lat="-37.623953" lon="145.123453" alt="140"/>
+    <waypoint name="LAND" x="0.0" y="0.0" alt="170"/>
     <waypoint name="TD" x="0.8" y="-1.7"/>
     <waypoint name="_PERCEVITE" x="0.0" y="0.0"/>
     <waypoint name="_YLW1" lat="-37.622878" lon="145.126976"/>
@@ -113,6 +114,7 @@
     <block name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
       <exception cond="stateGetPositionEnu_f()->z > 1.0" deroute="Standby"/>
       <call_once fun="NavSetWaypointHere(WP_STDBY)"/>
+      <call_once fun="NavSetWaypointHere(WP_LAND)"/>
       <stay climb="nav_climb_vspeed" vmode="climb" wp="STDBY"/>
     </block>
     
@@ -129,21 +131,31 @@
     
     <block name="START"/>
     <block name="Via">
-      <!-- <set var="gh_max_speed" value="3.0"/> -->
       <call_once fun="guidance_h_SetMaxSpeed(3.0)"/>
       <go wp="VIA"/>
       <go wp="VIA2"/>
-      <!-- <set var="gh_max_speed" value="1.0"/> -->
       <call_once fun="guidance_h_SetMaxSpeed(1.0)"/>
     </block>
     <block name="to firefighter">
+      <exception cond="block_time > 3*60" deroute="leave forest"/>
       <call fun="PerceviteGo(WP_TARGET)"/>
     </block>
     <block name="leave forest">
+      <exception cond="block_time > 3*60" deroute="return"/>
       <call fun="PerceviteGo(WP_VIA)"/>
     </block>
     <block name="return">
-      <go wp="HOME"/>
+      <go wp="LAND"/>
+    </block>
+    <block name="precision landing">
+      <exception cond="NavDetectGround() && block_time > 20.0" deroute="end"/>
+      <exception cond="!nav_is_in_flight() && block_time > 20.0" deroute="end"/>
+      <call_once fun="NavStartDetectGround()"/>
+      <stay wp="LAND" vmode="climb" climb="nav_descend_vspeed"/>
+    </block>
+    <block name="end">
+      <call_once fun="NavKillThrottle()"/>
+      <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
     </block>
     
     <block name="Land here" strip_button="Land Here" strip_icon="land-right.png">
