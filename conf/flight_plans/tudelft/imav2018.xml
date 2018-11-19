@@ -137,11 +137,11 @@
       <call_once fun="guidance_h_SetMaxSpeed(1.0)"/>
     </block>
     <block name="to firefighter">
-      <exception cond="block_time > 3*60" deroute="leave forest"/>
+      <exception cond="block_time > 1*60" deroute="leave forest"/>
       <call fun="PerceviteGo(WP_TARGET)"/>
     </block>
     <block name="leave forest">
-      <exception cond="block_time > 3*60" deroute="return"/>
+      <exception cond="block_time > 1*60" deroute="return"/>
       <call fun="PerceviteGo(WP_VIA)"/>
     </block>
     <block name="return">
