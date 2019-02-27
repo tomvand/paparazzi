@@ -124,7 +124,11 @@
     <define name="USE_GPS_ALT" value="TRUE"/>
     <define name="VFF_R_GPS" value="0.01"/>
   </section>
-
+  
+  <section name="SONAR_BEBOP" prefix="SONAR_BEBOP_">
+    <define name="MIN_PEAK_VAL" value="256"/>
+    <define name="MAX_TRANS_TIME" value="600"/>
+  </section>
 
   <section name="RC_SETPOINT" prefix="STABILIZATION_ATTITUDE_">
     <!-- setpoint limits for attitude stabilization rc flight -->
