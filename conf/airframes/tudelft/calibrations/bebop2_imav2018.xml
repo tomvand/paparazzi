@@ -1,4 +1,4 @@
-<!DOCTYPE airframe SYSTEM "../airframe.dtd">
+<!DOCTYPE airframe SYSTEM "../../airframe.dtd">
 
 <airframe>
   <section name="IMU" prefix="IMU_">
@@ -27,7 +27,7 @@
     <define name="BODY_TO_IMU_PSI" value="0." unit="deg"/>
   </section>
   
-  <section name="ARHS" prefix="AHRS_">
+  <section name="AHRS" prefix="AHRS_">
     <define name="GRAVITY_HEURISTIC_FACTOR" value="0"/>
   </section>
 </airframe>

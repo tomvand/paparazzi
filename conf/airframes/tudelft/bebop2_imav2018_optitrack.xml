@@ -96,7 +96,7 @@
   </section>
 
   <!-- IMU calibration -->
-  <include href="conf/airframes/tudelft/bebop2_imav2018_calibration.xml"/>
+  <include href="conf/airframes/tudelft/calibrations/bebop2_imav2018.xml"/>
 
   <!-- local magnetic field -->
   <!-- http://wiki.paparazziuav.org/wiki/Subsystem/ahrs#Local_Magnetic_Field -->
