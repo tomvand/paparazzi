@@ -7,7 +7,7 @@ export GAZEBO_MODEL_PATH="$PAPARAZZI_HOME/sw/ext/tudelft_gazebo_models/models:$G
 
 # ROS and Gazebo defaults
 ROS_SETUP=`locate --regex 'ros/[a-z]*/setup.sh$'`
-GAZEBO_SETUP=locate --regex 'gazebo/setup.sh$'
+GAZEBO_SETUP=`locate --regex 'gazebo/setup.sh$'`
 . $ROS_SETUP
 . $GAZEBO_SETUP
 
