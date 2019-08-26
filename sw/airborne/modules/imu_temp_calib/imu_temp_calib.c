@@ -90,20 +90,32 @@ static int accel_lut_index = 0;
  * Returns the last index smaller than the query value.
  */
 static int lut_lookup(const int32_t *lut, const int lut_size,
-    const float query, int previous_index) {
+    const float query, const int start_index) {
   //
-  int i = previous_index;
+  int i = start_index;
   for (; (query > lut[i + 1]) && (i < lut_size - 2); i++);
   for (; (query < lut[i]) && (i > 0); i--);
   return i;
 }
 
 static void gyro_temp_cb(uint8_t sender_id, const float temp, struct Imu *imu) {
-
+  if (imu_temp_calib.update_gyro) {
+    gyro_lut_index = lut_lookup(gyro_lut_temp,
+        sizeof(gyro_lut_temp) / sizeof(gyro_lut_temp[0]), temp, gyro_lut_index);
+    imu->gyro_neutral.p = IMU_GYRO_P_NEUTRAL + gyro_lut_p[gyro_lut_index];
+    imu->gyro_neutral.q = IMU_GYRO_Q_NEUTRAL + gyro_lut_q[gyro_lut_index];
+    imu->gyro_neutral.r = IMU_GYRO_R_NEUTRAL + gyro_lut_r[gyro_lut_index];
+  }
 }
 
 static void accel_temp_cb(uint8_t sender_id, const float temp, struct Imu *imu) {
-
+  if (imu_temp_calib.update_accel) {
+    accel_lut_index = lut_lookup(accel_lut_temp,
+        sizeof(accel_lut_temp) / sizeof(accel_lut_temp[0]), temp, accel_lut_index);
+    imu->accel_neutral.x = IMU_ACCEL_X_NEUTRAL + accel_lut_x[accel_lut_index];
+    imu->accel_neutral.y = IMU_ACCEL_Y_NEUTRAL + accel_lut_y[accel_lut_index];
+    imu->accel_neutral.z = IMU_ACCEL_Z_NEUTRAL + accel_lut_z[accel_lut_index];
+  }
 }
 
 
