@@ -26,6 +26,13 @@
 #ifndef IMU_TEMP_CALIB_H
 #define IMU_TEMP_CALIB_H
 
+struct imu_temp_calib_t {
+  bool send_telemetry;
+  bool update_gyro;
+  bool update_accel;
+};
+struct imu_temp_calib_t imu_temp_calib;
+
 void imu_temp_calib_init();
 
 #endif
