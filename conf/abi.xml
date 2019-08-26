@@ -206,12 +206,12 @@
     
     <message name="IMU_GYRO_TEMPERATURE" id="29">
       <field name="temp" type="float">Gyroscope temperature in deg C</field>
-      <field name="imu" type="struct Imu*">Pointer to IMU struct</field>
+      <field name="imu_ptr" type="void*">Pointer to IMU struct</field>
     </message>
     
     <message name="IMU_ACCEL_TEMPERATURE" id="30">
       <field name="temp" type="float">Accelerometer temperature in deg C</field>
-      <field name="imu" type="struct Imu*">Pointer to IMU struct</field>
+      <field name="imu_ptr" type="void*">Pointer to IMU struct</field>
     </message>
 
   </msg_class>

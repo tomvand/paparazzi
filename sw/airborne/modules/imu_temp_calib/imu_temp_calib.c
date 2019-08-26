@@ -37,8 +37,8 @@
 #endif
 
 
-abi_event ev_gyro_temp;
-abi_event ev_accel_temp;
+static abi_event ev_gyro_temp;
+static abi_event ev_accel_temp;
 
 
 static void gyro_temp_cb(uint8_t sender_id, const float temp, struct Imu *imu) {
