@@ -38,7 +38,7 @@
 
 
 #ifndef IMU_TEMP_CALIB_GYRO_LUT_TEMP
-#define IMU_TEMP_CALIB_GYRO_LUT_TEMP { 0, 0 }
+#define IMU_TEMP_CALIB_GYRO_LUT_TEMP { 0., 0. }
 #endif
 #ifndef IMU_TEMP_CALIB_GYRO_LUT_P
 #define IMU_TEMP_CALIB_GYRO_LUT_P { 0, 0 }
@@ -52,7 +52,7 @@
 
 
 #ifndef IMU_TEMP_CALIB_ACCEL_LUT_TEMP
-#define IMU_TEMP_CALIB_ACCEL_LUT_TEMP { 0, 0 }
+#define IMU_TEMP_CALIB_ACCEL_LUT_TEMP { 0., 0. }
 #endif
 #ifndef IMU_TEMP_CALIB_ACCEL_LUT_X
 #define IMU_TEMP_CALIB_ACCEL_LUT_X { 0, 0 }
@@ -69,23 +69,22 @@ static abi_event ev_gyro_temp;
 static abi_event ev_accel_temp;
 
 
-static int32_t gyro_lut_temp[] = IMU_TEMP_CALIB_GYRO_LUT_TEMP;
-static int32_t gyro_lut_p[] =    IMU_TEMP_CALIB_GYRO_LUT_P;
-static int32_t gyro_lut_q[] =    IMU_TEMP_CALIB_GYRO_LUT_Q;
-static int32_t gyro_lut_r[] =    IMU_TEMP_CALIB_GYRO_LUT_R;
+static float gyro_lut_temp[] = IMU_TEMP_CALIB_GYRO_LUT_TEMP;
+static int32_t gyro_lut_p[] =  IMU_TEMP_CALIB_GYRO_LUT_P;
+static int32_t gyro_lut_q[] =  IMU_TEMP_CALIB_GYRO_LUT_Q;
+static int32_t gyro_lut_r[] =  IMU_TEMP_CALIB_GYRO_LUT_R;
 static int gyro_lut_index = 0;
 
-static int32_t accel_lut_temp[] = IMU_TEMP_CALIB_ACCEL_LUT_TEMP;
-static int32_t accel_lut_x[] =    IMU_TEMP_CALIB_ACCEL_LUT_X;
-static int32_t accel_lut_y[] =    IMU_TEMP_CALIB_ACCEL_LUT_Y;
-static int32_t accel_lut_z[] =    IMU_TEMP_CALIB_ACCEL_LUT_Z;
+static float accel_lut_temp[] = IMU_TEMP_CALIB_ACCEL_LUT_TEMP;
+static int32_t accel_lut_x[] =  IMU_TEMP_CALIB_ACCEL_LUT_X;
+static int32_t accel_lut_y[] =  IMU_TEMP_CALIB_ACCEL_LUT_Y;
+static int32_t accel_lut_z[] =  IMU_TEMP_CALIB_ACCEL_LUT_Z;
 static int accel_lut_index = 0;
 
 
 /**
  * Fast LUT lookup
- * Performs a quick linear search starting at [previous_index]
- * only changes the LUT index if the neigbouring value is exceeded.
+ * Performs a linear search starting at [previous_index]
  * Assumes that lut[] is sorted and contains at least two elements.
  * Returns the last index smaller than the query value.
  */
