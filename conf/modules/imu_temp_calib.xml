@@ -1,0 +1,15 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="imu_temp_calib">
+  <doc>
+    <description>IMU temperature bias calibration module</description>
+  </doc>
+  <header>
+    <file name="imu_temp_calib.h"/>
+  </header>
+  <init fun="imu_temp_calib_init()"/>
+  <makefile>
+    <file name="imu_temp_calib.c"/>
+  </makefile>
+</module>
+

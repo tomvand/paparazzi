@@ -203,6 +203,16 @@
       <field name="yaw"       type="int16_t">Yaw input in pprz_t [-9600;9600]</field>
       <field name="throttle"  type="int16_t">Throttle input in pprz_t [0;9600] or [-9600;9600] (for vertical speed control for instance)</field>
     </message>
+    
+    <message name="IMU_GYRO_TEMPERATURE" id="29">
+      <field name="temp" type="float">Gyroscope temperature in deg C</field>
+      <field name="imu" type="struct Imu*">Pointer to IMU struct</field>
+    </message>
+    
+    <message name="IMU_ACCEL_TEMPERATURE" id="30">
+      <field name="temp" type="float">Accelerometer temperature in deg C</field>
+      <field name="imu" type="struct Imu*">Pointer to IMU struct</field>
+    </message>
 
   </msg_class>
 

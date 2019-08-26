@@ -124,6 +124,8 @@ void imu_bebop_event(void)
                  -imu_bebop.mpu.data_accel.vect.z);
 
     imu_bebop.mpu.data_available = false;
+    AbiSendMsgIMU_GYRO_TEMPERATURE(IMU_BOARD_ID, imu_bebop.mpu.temp, &imu);
+    AbiSendMsgIMU_ACCEL_TEMPERATURE(IMU_BOARD_ID, imu_bebop.mpu.temp, &imu);
     imu_scale_gyro(&imu);
     imu_scale_accel(&imu);
     AbiSendMsgIMU_GYRO_INT32(IMU_BOARD_ID, now_ts, &imu.gyro);
