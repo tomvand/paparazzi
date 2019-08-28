@@ -65,13 +65,38 @@ def imu_temp_calib(data_files, ac_id=None, decimals=0, plot_results=False, **kwa
 
     # Generate LUT
     df_gyro_lut = df_gyro.copy()
-    df_gyro_lut['temp'] = np.floor(df_gyro_lut['temp'])
+    df_gyro_lut['temp'] = df_gyro_lut['temp'].round(decimals)
     df_gyro_lut = pandas.pivot_table(df_gyro_lut, values=['p_raw', 'q_raw', 'r_raw'], index='temp', aggfunc=np.mean)
     df_gyro_lut = df_gyro_lut - np.array(neutral[0:3])
+    df_gyro_lut = np.round(df_gyro_lut)
     df_accel_lut = df_accel.copy()
-    df_accel_lut['temp'] = np.floor(df_accel_lut['temp'])
+    df_accel_lut['temp'] = df_accel_lut['temp'].round(decimals)
     df_accel_lut = pandas.pivot_table(df_accel_lut, values=['x_raw', 'y_raw', 'z_raw'], index='temp', aggfunc=np.mean)
     df_accel_lut = df_accel_lut - np.array(neutral[3:6])
+    df_accel_lut = np.round(df_accel_lut)
+
+    # Output results
+    print('''
+  <section name="IMU_TEMP_CALIB" prefix="IMU_TEMP_CALIB_">
+    <define name="GYRO_LUT_TEMP" type="float[]" value="{gyro_temp}"/>
+    <define name="GYRO_LUT_P" type="int[]" value="{gyro_p}"/>
+    <define name="GYRO_LUT_Q" type="int[]" value="{gyro_q}"/>
+    <define name="GYRO_LUT_R" type="int[]" value="{gyro_r}"/>
+    <define name="ACCEL_LUT_TEMP" type="float[]" value="{accel_temp}"/>
+    <define name="ACCEL_LUT_X" type="int[]" value="{accel_x}"/>
+    <define name="ACCEL_LUT_Y" type="int[]" value="{accel_y}"/>
+    <define name="ACCEL_LUT_Z" type="int[]" value="{accel_z}"/>
+  </section>
+    '''.format(
+        gyro_temp=', '.join([str(x) for x in df_gyro_lut.index.values.tolist()]),
+        gyro_p=', '.join([str(int(x)) for x in df_gyro_lut['p_raw'].tolist()]),
+        gyro_q=', '.join([str(int(x)) for x in df_gyro_lut['q_raw'].tolist()]),
+        gyro_r=', '.join([str(int(x)) for x in df_gyro_lut['r_raw'].tolist()]),
+        accel_temp=', '.join([str(x) for x in df_accel_lut.index.values.tolist()]),
+        accel_x=', '.join([str(int(x)) for x in df_accel_lut['x_raw'].tolist()]),
+        accel_y=', '.join([str(int(x)) for x in df_accel_lut['y_raw'].tolist()]),
+        accel_z=', '.join([str(int(x)) for x in df_accel_lut['z_raw'].tolist()])
+    ))
 
     if plot_results:
         import matplotlib.pyplot as plt
@@ -82,7 +107,7 @@ def imu_temp_calib(data_files, ac_id=None, decimals=0, plot_results=False, **kwa
         plt.plot(df_gyro['temp'], df_gyro['q_raw'], 'x')
         plt.plot(df_gyro['temp'], df_gyro['r_raw'], 'x')
         plt.gca().set_prop_cycle(None)
-        plt.plot(df_gyro_lut.index.values + 0.5, df_gyro_lut[['p_raw', 'q_raw', 'r_raw']] + np.array([neutral[0:3]]))
+        plt.plot(df_gyro_lut.index.values, df_gyro_lut[['p_raw', 'q_raw', 'r_raw']] + np.array([neutral[0:3]]))
         plt.xlabel('Temperature [*C]')
         plt.ylabel('Gyro [raw]')
         plt.subplot(2, 1, 2)
@@ -90,7 +115,7 @@ def imu_temp_calib(data_files, ac_id=None, decimals=0, plot_results=False, **kwa
         plt.plot(df_accel['temp'], df_accel['y_raw'], 'x')
         plt.plot(df_accel['temp'], df_accel['z_raw'], 'x')
         plt.gca().set_prop_cycle(None)
-        plt.plot(df_accel_lut.index.values + 0.5, df_accel_lut[['x_raw', 'y_raw', 'z_raw']] + np.array([neutral[3:6]]))
+        plt.plot(df_accel_lut.index.values, df_accel_lut[['x_raw', 'y_raw', 'z_raw']] + np.array([neutral[3:6]]))
         plt.xlabel('Temperature [*C]')
         plt.ylabel('Accel [raw]')
 
@@ -100,6 +125,7 @@ def imu_temp_calib(data_files, ac_id=None, decimals=0, plot_results=False, **kwa
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate IMU temperature LUT from log files')
     parser.add_argument('--ac_id', help='Calibrate only AC_ID')
+    parser.add_argument('--decimals', type=int, help='LUT temperature resolution')
     parser.add_argument('--plot_results', action='store_true', help='Plot calibration results')
     parser.add_argument('data_files', nargs='+', help='Log .data file', metavar='DATA_FILE')
     args = parser.parse_args()
