@@ -1573,7 +1573,6 @@
       <field name="z_neutral" type="int32" unit="adc"/>
     </message>
 
-    <!-- 182 is free -->
     <!-- 183 is free -->
     <!-- 184 is free -->
     <!-- 185 is free -->
