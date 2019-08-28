@@ -31,6 +31,7 @@
     <module name="geo_mag"/>
     <module name="air_data"/>
     <module name="send_imu_mag_current"/>
+    <module name="imu_temp_calib"/>
   </firmware>
   
   <commands>

@@ -26,6 +26,8 @@
 #ifndef IMU_TEMP_CALIB_H
 #define IMU_TEMP_CALIB_H
 
+#include "std.h"
+
 struct imu_temp_calib_t {
   bool send_telemetry;
   bool update_gyro;
@@ -33,7 +35,7 @@ struct imu_temp_calib_t {
 };
 struct imu_temp_calib_t imu_temp_calib;
 
-void imu_temp_calib_init();
+void imu_temp_calib_init(void);
 
 #endif
 
