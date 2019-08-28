@@ -2,8 +2,30 @@
 
 <module name="imu_temp_calib">
   <doc>
-    <description>IMU temperature bias calibration module</description>
+    <description>
+IMU temperature bias calibration module
+
+Usage:
+1. Add the module to the airframe
+2. Place the drone on a flat surface and upload the autopilot. Note that the
+IMU temperature may start to rise as soon as the battery is connected!
+2. In the GCS, settings, imu_temp enable telemetry
+3. Run XXXXX with a path to the log file(s)
+4. Copy the sections produced by the script to your airframe
+5. Recompile and upload the autopilot
+    </description>
+    <define name="IMU_TEMP_CALIB_GYRO_ID" value="ABI_BROADCAST"/>
+    <define name="IMU_TEMP_CALIB_ACCEL_ID" value="ABI_BROADCAST"/>
   </doc>
+  <settings>
+    <dl_settings>
+      <dl_settings name="imu_temp">
+        <dl_setting shortname="send_telemetry" min="0" max="1" step="1" var="imu_temp_calib.send_telemetry"/>
+        <dl_setting shortname="update_gyro" min="0" max="1" step="1" var="imu_temp_calib.update_gyro"/>
+        <dl_setting shortname="update_accel" min="0" max="1" step="1" var="imu_temp_calib.update_accel"/>
+      </dl_settings>
+    </dl_settings>
+  </settings>
   <header>
     <file name="imu_temp_calib.h"/>
   </header>
