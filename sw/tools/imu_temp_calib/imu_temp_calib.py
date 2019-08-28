@@ -5,10 +5,7 @@ import re
 import numpy as np
 
 
-def imu_temp_calib(data_files, ac_id=None, estimate_neutral=False, force_neutral=[], **kwargs):
-    if kwargs['plot_results']:
-        import matplotlib.pyplot as plt
-
+def imu_temp_calib(data_files, ac_id=None, decimals=0, plot_results=False, **kwargs):
     data_gyro = []
     data_accel = []
     for file in data_files:
@@ -56,83 +53,53 @@ def imu_temp_calib(data_files, ac_id=None, estimate_neutral=False, force_neutral
     df_gyro = pandas.DataFrame(data_gyro)
     df_accel = pandas.DataFrame(data_accel)
 
-    if kwargs['plot_results']:
+    # Find and neutral values (incl. gravity)
+    neutral = [
+        np.mean(df_gyro['p_raw']),
+        np.mean(df_gyro['q_raw']),
+        np.mean(df_gyro['r_raw']),
+        np.mean(df_accel['x_raw']),
+        np.mean(df_accel['y_raw']),
+        np.mean(df_accel['z_raw'])
+    ]
+
+    # Generate LUT
+    df_gyro_lut = df_gyro.copy()
+    df_gyro_lut['temp'] = np.floor(df_gyro_lut['temp'])
+    df_gyro_lut = pandas.pivot_table(df_gyro_lut, values=['p_raw', 'q_raw', 'r_raw'], index='temp', aggfunc=np.mean)
+    df_gyro_lut = df_gyro_lut - np.array(neutral[0:3])
+    df_accel_lut = df_accel.copy()
+    df_accel_lut['temp'] = np.floor(df_accel_lut['temp'])
+    df_accel_lut = pandas.pivot_table(df_accel_lut, values=['x_raw', 'y_raw', 'z_raw'], index='temp', aggfunc=np.mean)
+    df_accel_lut = df_accel_lut - np.array(neutral[3:6])
+
+    if plot_results:
+        import matplotlib.pyplot as plt
+
         plt.figure()
         plt.subplot(2, 1, 1)
         plt.plot(df_gyro['temp'], df_gyro['p_raw'], 'x')
         plt.plot(df_gyro['temp'], df_gyro['q_raw'], 'x')
         plt.plot(df_gyro['temp'], df_gyro['r_raw'], 'x')
+        plt.gca().set_prop_cycle(None)
+        plt.plot(df_gyro_lut.index.values + 0.5, df_gyro_lut[['p_raw', 'q_raw', 'r_raw']] + np.array([neutral[0:3]]))
         plt.xlabel('Temperature [*C]')
         plt.ylabel('Gyro [raw]')
         plt.subplot(2, 1, 2)
         plt.plot(df_accel['temp'], df_accel['x_raw'], 'x')
         plt.plot(df_accel['temp'], df_accel['y_raw'], 'x')
         plt.plot(df_accel['temp'], df_accel['z_raw'], 'x')
+        plt.gca().set_prop_cycle(None)
+        plt.plot(df_accel_lut.index.values + 0.5, df_accel_lut[['x_raw', 'y_raw', 'z_raw']] + np.array([neutral[3:6]]))
         plt.xlabel('Temperature [*C]')
         plt.ylabel('Accel [raw]')
 
-    # Find and correct neutral values
-    neutral = []
-    if force_neutral:
-        print('Using provided neutral values:')
-        print(force_neutral)
-        neutral = force_neutral
-    elif estimate_neutral or \
-            len(set(df_gyro['p_neutral'])) != 1 or \
-            len(set(df_gyro['q_neutral'])) != 1 or \
-            len(set(df_gyro['r_neutral'])) != 1 or \
-            len(set(df_accel['x_neutral'])) != 1 or \
-            len(set(df_accel['y_neutral'])) != 1 or \
-            len(set(df_accel['z_neutral'])) != 1:
-        print('Warning: neutral values vary within log files!')
-        print('Neutral values will be estimated instead...')
-        neutral = [
-            np.mean(df_gyro['p_raw']),
-            np.mean(df_gyro['q_raw']),
-            np.mean(df_gyro['r_raw']),
-            np.mean(df_accel['x_raw']),
-            np.mean(df_accel['y_raw']),
-            np.mean(df_accel['z_raw'])
-        ]
-    else:
-        print('Using neutral values from log file.')
-        neutral = [
-            df_gyro['p_neutral'][0],
-            df_gyro['q_neutral'][0],
-            df_gyro['r_neutral'][0],
-            df_accel['x_neutral'][0],
-            df_accel['y_neutral'][0],
-            df_accel['z_neutral'][0]
-        ]
-
-    # Estimate gravity
-    if np.abs(np.mean(df_accel['z_raw'])) > 50 * np.abs(np.mean(df_accel['x_raw'])) and \
-            np.abs(np.mean(df_accel['z_raw'])) > 50 * np.abs(np.mean(df_accel['y_raw'])):
-        print('Assume gravity along z axis.')
-        gravity = np.array([0., 0., np.mean(df_accel['z_raw'])]) - np.array(neutral[3:6])
-    else:
-        print('Error: gravity not along z axis!')
-        print('Will not ignore gravity in bias estimation...')
-        gravity = np.array([0., 0., 0.])
-
-    # Generate LUT
-    df_gyro['temp'] = np.floor(df_gyro['temp'])
-    df_gyro_bias = pandas.pivot_table(df_gyro, values=['p_raw', 'q_raw', 'r_raw'], index='temp', aggfunc=np.mean)
-    df_gyro_bias = df_gyro_bias - np.array(neutral[0:3])
-    df_accel['temp'] = np.floor(df_accel['temp'])
-    df_accel_bias = pandas.pivot_table(df_accel, values=['x_raw', 'y_raw', 'z_raw'], index='temp', aggfunc=np.mean)
-    df_accel_bias = df_accel_bias - np.array(neutral[3:6]) - gravity
-
-    if kwargs['plot_results']:
         plt.show()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate IMU temperature LUT from log files')
     parser.add_argument('--ac_id', help='Calibrate only AC_ID')
-    parser.add_argument('--estimate_neutral', action='store_true', help='Estimate neutral values from log data')
-    parser.add_argument('--force_neutral', nargs=6, type=int, help='Use the given neutral values',
-                        metavar=('P', 'Q', 'R', 'X', 'Y', 'Z'))
     parser.add_argument('--plot_results', action='store_true', help='Plot calibration results')
     parser.add_argument('data_files', nargs='+', help='Log .data file', metavar='DATA_FILE')
     args = parser.parse_args()
