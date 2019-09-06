@@ -201,10 +201,18 @@ Changes:
     </block>
     <block name="Bat low">
       <go wp="HOME"/>
-      <deroute block="Land here"/>
+      <call_once fun="NavSetWaypointHere(WP_TD)"/>
+      <go wp="TD" vmode="climb" climb="nav_descend_vspeed"/>
+      <while cond="nav_is_in_flight()"/>
+      <call_once fun="NavKillThrottle()"/>
+      <attitude pitch="0" roll="0" throttle="0" vmode="throttle" until="FALSE"/>
     </block>
     <block name="Bat crit">
-      <deroute block="Land here"/>
+      <call_once fun="NavSetWaypointHere(WP_TD)"/>
+      <go wp="TD" vmode="climb" climb="nav_descend_vspeed"/>
+      <while cond="nav_is_in_flight()"/>
+      <call_once fun="NavKillThrottle()"/>
+      <attitude pitch="0" roll="0" throttle="0" vmode="throttle" until="FALSE"/>
     </block>
     <block name="RC loss">
       <call_once fun="autopilot_set_mode(AP_MODE_NAV)"/>
