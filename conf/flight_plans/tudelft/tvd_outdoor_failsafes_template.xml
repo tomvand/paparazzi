@@ -56,19 +56,21 @@ Changes:
 - 2019-09-06: (TvD) First version
  -->
 
-<flight_plan name="failsafe_template" lat0="51.990634" lon0="4.376789" alt="0.0" ground_alt="0.0" max_dist_from_home="100"  security_height="0.5">
+<flight_plan name="failsafe_template" lat0="51.990634" lon0="4.376789" alt="1.0" ground_alt="0.0" max_dist_from_home="100"  security_height="0.5">
   <header>
 #include "autopilot.h"
 #include "airframe.h"
-#include "radio_control.h"
 #include "gps.h"
+#include "modules.h"
+#include "subsystems/datalink/datalink.h"
 #include "subsystems/electrical.h"
+#include "subsystems/radio_control.h"
 
 // Safety defines
 #define FP_HEIGHT_YELLOW 40.0
 #define FP_ALT_YELLOW 9999.9
 #define FP_HEIGHT_RED 50.0
-#define FP_ALT_REF 9999.9
+#define FP_ALT_RED 9999.9
 #define FP_RC_LOST_TIME 3.0
 #define FP_LINK_LOST_TIME 30.0
 
@@ -76,10 +78,10 @@ Changes:
 #define FP_PREFLIGHT_VSUPPLY 11.5
   </header>
   <waypoints>
-    <waypoint name="HOME" x="0.0" y="0.0"/>
-    <waypoint name="CLIMB" x="1.2" y="-0.6"/>
-    <waypoint name="STDBY" x="-0.7" y="-0.8"/>
-    <waypoint name="TD" x="0.8" y="-1.7"/>
+    <waypoint name="HOME" x="0.0" y="0.0" height="1.0"/>
+    <waypoint name="CLIMB" x="1.2" y="-0.6" height="1.0"/>
+    <waypoint name="STDBY" x="-0.7" y="-0.8" height="1.0"/>
+    <waypoint name="TD" x="0.8" y="-1.7" height="1.0"/>
     <waypoint name="_YELLOW1" lat="51.990630" lon="4.376823"/>
     <waypoint name="_YELLOW2" lat="51.990614" lon="4.376779"/>
     <waypoint name="_YELLOW3" lat="51.990636" lon="4.376759"/>
@@ -112,12 +114,12 @@ Changes:
         MoreThan(nav_block, IndexOfBlock('Holding point')) @AND
         LessThan(nav_block, IndexOfBlock('Geofence red'))" deroute="Geofence red"/>
     <!-- Altitude limit -->
-    <exception cond="(MoreThan(stateGetPositionEnu_f() @DEREF z, FP_HEIGHT_YELLOW) @OR
-        MoreThan(stateGetPositionLla_f() @DEREF alt, FP_ALT_YELLOW)) @AND
+    <exception cond="(MoreThan(stateGetPositionEnu_f()->z, FP_HEIGHT_YELLOW) @OR
+        MoreThan(stateGetPositionLla_f()->alt, FP_ALT_YELLOW)) @AND
         MoreThan(nav_block, IndexOfBlock('Holding point')) @AND
         LessThan(nav_block, IndexOfBlock('Altitude yellow'))" deroute="Altitude yellow"/>
-    <exception cond="(MoreThan(stateGetPositionEnu_f() @DEREF z, FP_HEIGHT_RED) @OR
-        MoreThan(stateGetPositionLla_f() @DEREF alt, FP_ALT_RED)) @AND
+    <exception cond="(MoreThan(stateGetPositionEnu_f()->z, FP_HEIGHT_RED) @OR
+        MoreThan(stateGetPositionLla_f()->alt, FP_ALT_RED)) @AND
         MoreThan(nav_block, IndexOfBlock('Holding point')) @AND
         LessThan(nav_block, IndexOfBlock('Altitude red'))" deroute="Altitude red"/>
     <!-- RC and link loss -->
@@ -126,7 +128,7 @@ Changes:
         LessThan(nav_block, IndexOfBlock('RC loss'))" deroute="RC loss"/>
     <exception cond="MoreThan(datalink_time, FP_LINK_LOST_TIME) @AND
         MoreThan(nav_block, IndexOfBlock('Holding point')) @AND
-        LessThan(nav_block, IndexOfBlock('Link loss))" deroute="Link loss"/>
+        LessThan(nav_block, IndexOfBlock('Link loss'))" deroute="Link loss"/>
     <!-- GPS loss -->
     <exception cond="GpsIsLost() @AND
         MoreThan(nav_block, IndexOfBlock('Holding point')) @AND
@@ -135,7 +137,7 @@ Changes:
     <exception cond="electrical.bat_low @AND
         MoreThan(nav_block, IndexOfBlock('Holding point')) @AND
         LessThan(nav_block, IndexOfBlock('Bat low'))" deroute="Bat low"/>
-    <exception cond="electrical.bat_crit @AND
+    <exception cond="electrical.bat_critical @AND
         MoreThan(nav_block, IndexOfBlock('Holding point')) @AND
         LessThan(nav_block, IndexOfBlock('Bat crit'))" deroute="Bat crit"/>
   </exceptions>
@@ -175,7 +177,7 @@ Changes:
       <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
     </block>
     <block name="Takeoff">
-      <exception cond="MoreThan(stateGetPositionEnu_f() @DEREF z, 1.0)" deroute="Standby"/>
+      <exception cond="MoreThan(stateGetPositionEnu_f()->z, 1.0)" deroute="Standby"/>
       <call_once fun="NavSetWaypointHere(WP_CLIMB)"/>
       <stay climb="nav_climb_vspeed" vmode="climb" wp="CLIMB"/>
     </block>
@@ -183,13 +185,13 @@ Changes:
       <stay wp="STDBY"/>
     </block>
     <block name="Land here" strip_button="Land Here" strip_icon="land-right.png">
-      <call_once fun="NavSetWaypointHere(WP_TD)"
+      <call_once fun="NavSetWaypointHere(WP_TD)"/>
       <go wp="TD" vmode="climb" climb="nav_descend_vspeed"/>
       <while cond="nav_is_in_flight()"/>
     </block>
     <block name="Landed">
       <call_once fun="NavKillThrottle()"/>
-      <call_once fun="logger_file_file_logger_periodic_status = MODULES_STOP"
+      <call_once fun="logger_file_file_logger_periodic_status = MODULES_STOP"/>
       <deroute block="Holding point"/>
     </block>
     
