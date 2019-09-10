@@ -157,9 +157,9 @@ Changes:
       <call_once fun="geo_mag_periodic()"/>
       <call_once fun="geo_mag_event()"/>
     </block>
-    <block name="Set ground reference">
+    <block name="Set height reference">
       <call_once fun="NavKillThrottle()"/>
-      <call_once fun="NavSetGroundReferenceHere()"/>
+      <call_once fun="NavSetAltitudeReferenceHere()"/><!-- Do NOT move ground reference horizontally as it will shift the geofence! -->
     </block>
     
     <block name="FLIGHT">
