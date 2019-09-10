@@ -188,11 +188,7 @@ Changes:
       <call_once fun="NavSetWaypointHere(WP_TD)"/>
       <call_once fun="NavStartDetectGround()" />
       <stay wp="TD" vmode="climb" climb="nav_descend_vspeed" until="!nav_is_in_flight() || NavDetectGround()"/>
-    </block>
-    <block name="Landed">
-      <call_once fun="NavKillThrottle()"/>
-      <call_once fun="logger_file_file_logger_periodic_status = MODULES_STOP"/>
-      <deroute block="Holding point"/>
+      <deroute block="LANDED"/>
     </block>
     
     <!-- Contingency plans in order of severity -->
@@ -225,30 +221,40 @@ Changes:
       <call_once fun="NavSetWaypointHere(WP_TD)"/>
       <call_once fun="NavStartDetectGround()" />
       <stay wp="TD" vmode="climb" climb="nav_descend_vspeed" until="!nav_is_in_flight() || NavDetectGround()"/>
-      <call_once fun="NavKillThrottle()"/>
-      <attitude pitch="0" roll="0" throttle="0" vmode="throttle" until="FALSE"/>
+      <deroute block="LANDED"/>
     </block>
     <block name="Land here low thrust">
       <call_once fun="autopilot_set_mode(AP_MODE_NAV)"/>
       <call_once fun="NavSetWaypointHere(WP_TD)"/>
       <call_once fun="NavStartDetectGround()" />
       <stay wp="HOME" vmode="throttle" throttle="0.50 * GUIDANCE_V_NOMINAL_HOVER_THROTTLE" until="!nav_is_in_flight() || NavDetectGround()"/>
-      <call_once fun="NavKillThrottle()"/>
-      <attitude pitch="0" roll="0" throttle="0" vmode="throttle" until="FALSE"/>
+      <deroute block="LANDED"/>
     </block>
     <block name="GPS loss">
       <call_once fun="autopilot_set_mode(AP_MODE_FAILSAFE)"/>
-      <stay wp="HOME"/>
+      <call_once fun="NavStartDetectGround()" />
+      <stay wp="HOME" until="!nav_is_in_flight() || NavDetectGround()"/>
+      <deroute block="LANDED"/>
     </block>
     <block name="Altitude red">
       <call_once fun="NavKillThrottle()"/>
       <call_once fun="autopilot_set_mode(AP_MODE_KILL)"/>
-      <stay wp="HOME"/>
+      <call_once fun="NavStartDetectGround()" />
+      <stay wp="HOME" until="!nav_is_in_flight() || NavDetectGround()"/>
+      <deroute block="LANDED"/>
     </block>
     <block name="Geofence red">
       <call_once fun="NavKillThrottle()"/>
       <call_once fun="autopilot_set_mode(AP_MODE_KILL)"/>
-      <stay wp="HOME"/>
+      <call_once fun="NavStartDetectGround()" />
+      <stay wp="HOME" until="!nav_is_in_flight() || NavDetectGround()"/>
+      <deroute block="LANDED"/>
+    </block>
+    
+    <block name="LANDED">
+      <call_once fun="NavKillThrottle()"/>
+      <call_once fun="logger_file_file_logger_periodic_status = MODULES_STOP"/>
+      <attitude pitch="0" roll="0" throttle="0" vmode="throttle" until="FALSE"/>
     </block>
 
   </blocks>
