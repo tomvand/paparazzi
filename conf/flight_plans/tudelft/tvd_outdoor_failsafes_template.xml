@@ -31,6 +31,8 @@ Modification checklist:
     - max_dist_from_home. Max 100m from pilot (CAT2-2.3)
     - security_height. Minimal height above ground.
     - home_mode_height (optional). Set high enough to cross obstacles near HOME. 
+    - DO NOT SET GROUND REFERENCE as this will shift the geofence. The geofence
+      is hardcoded in local coordinates.
 - Safety defines (in header)
 - Waypoints:
     - HOME in LTP or lat/lon
