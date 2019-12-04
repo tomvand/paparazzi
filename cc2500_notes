@@ -64,5 +64,15 @@ rxUpdateCheck                       [Calls .rcFrameStatusFn (always). Handles si
 
 
 
+Smartport notes:
+processSmartPortTelemetry: <== TODO replace with own function rather than porting? Or add paparazzilink ID and keep frsky telemetry?
+                           <== OR do both: keep FrSky telemetry as-is, separately call smartPortSendMessage for paparazzilink.
+- Handles MSP (will do later)
+- Calls smartPortSendPackage per message.
+That's it.
+
+
+
+
 
 

@@ -7,6 +7,7 @@
 #include "cc2500_frsky_common.h"
 #include "cc2500_frsky_shared.h"
 #include "cc2500_frsky_x.h"
+#include "cc2500_smartport.h"
 
 #define UNUSED(x) (void)(x)
 
