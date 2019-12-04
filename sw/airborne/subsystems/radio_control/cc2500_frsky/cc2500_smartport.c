@@ -43,9 +43,9 @@
 #include <math.h>
 
 //#include "platform.h"
-//
-//#if defined(USE_TELEMETRY_SMARTPORT)
-//
+
+#if defined(USE_TELEMETRY_SMARTPORT)
+
 //#include "common/axis.h"
 //#include "common/color.h"
 //#include "common/maths.h"
@@ -612,7 +612,6 @@ void processSmartPortTelemetry(smartPortPayload_t *payload, volatile bool *clear
 #ifdef USE_ESC_SENSOR_TELEMETRY
         escSensorData_t *escData;
 #endif
-
         switch (id) {
             case FSSP_DATAID_VFAS       :
                 vfasVoltage = getBatteryVoltage();
@@ -900,4 +899,4 @@ void processSmartPortTelemetry(smartPortPayload_t *payload, volatile bool *clear
 //            processSmartPortTelemetry(payload, &clearToSend, &requestTimeout);
 //    }
 //}
-//#endif
+#endif

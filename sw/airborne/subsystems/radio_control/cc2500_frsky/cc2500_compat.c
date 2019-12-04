@@ -45,7 +45,7 @@ struct pidProfile_s *currentPidProfile; // Dummy values
 
 // main/config/feature.h:
 bool bf_featureIsEnabled(const uint32_t mask) {
-  uint32_t features = FEATURE_RX_SPI;
+  uint32_t features = FEATURE_RX_SPI | FEATURE_TELEMETRY;
   return features & mask;
 }
 
