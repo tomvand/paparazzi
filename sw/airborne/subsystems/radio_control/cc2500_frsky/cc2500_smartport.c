@@ -4,6 +4,8 @@
 #include "cc2500_settings.h"
 #include "cc2500_smartport.h"
 
+#include "subsystems/datalink/downlink.h"
+
 #define UNUSED(x) (void)(x)
 
 #ifdef USE_GPS

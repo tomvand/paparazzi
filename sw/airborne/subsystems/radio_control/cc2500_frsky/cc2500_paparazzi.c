@@ -44,6 +44,8 @@ static uint32_t counter = 0;
 
 static uint32_t rc_raw[4];
 
+static bool auxiliaryProcessingRequired = false;
+
 static uint16_t frsky_raw[RADIO_CTL_NB];
 
 void radio_control_impl_init(void) {
@@ -58,8 +60,9 @@ void radio_control_impl_init(void) {
 }
 
 void radio_control_impl_event(void (* _received_frame_handler)(void)) {
-  if (rxRuntimeState.rcFrameStatusFn(&rxRuntimeState) & RX_FRAME_COMPLETE) {
-    rxRuntimeState.rcProcessFrameFn(&rxRuntimeState);
+  status = rxRuntimeState.rcFrameStatusFn(&rxRuntimeState);
+
+  if (status & RX_FRAME_COMPLETE) {
     radio_control.frame_cpt++;
     radio_control.time_since_last_frame = 0;
     if (radio_control.radio_ok_cpt > 0) {
@@ -77,6 +80,14 @@ void radio_control_impl_event(void (* _received_frame_handler)(void)) {
         (sizeof(frsky_raw) / sizeof(frsky_raw[0])),
         frsky_raw);
 #endif
+  }
+
+  if (status & RX_FRAME_PROCESSING_REQUIRED) {
+      auxiliaryProcessingRequired = true;
+  }
+
+  if (auxiliaryProcessingRequired) {
+      auxiliaryProcessingRequired = !rxRuntimeState.rcProcessFrameFn(&rxRuntimeState);
   }
 
 

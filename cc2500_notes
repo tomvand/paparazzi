@@ -43,7 +43,10 @@ rxUpdateCheck                       [Calls .rcFrameStatusFn (always). Handles si
 --> frSkySpiDataReceived            [protocolState machine (binding). Calls handlePacket in non-binding states]
 --> handlePacket                    [ptr]
 --> frSkyXHandlePacket              [Very complex packet and telemetry handling]
+--> buildTelemetryFrame             [// check syncronization at startup ok if not no sport telemetry]
+--> appendSmartportData             [adds bytes to ringbuffer]
 
+(fc/core.c:processRx)                   [also calls updateRssi]
 (calculateRxChannelsAndUpdateFailsafe)  [If auxiliaryProcessingRequired calls .rcProcessFrame. Calls readRxChannelsApplyRanges based on timing.]
 (readRxChannelsApplyRanges)             [Calls .rcReadRawFn per channel (always). Applies calibration. Sets rcRaw]
 --> rxRuntimeState.rcReadRawFn          [ptr]
@@ -53,13 +56,14 @@ rxUpdateCheck                       [Calls .rcFrameStatusFn (always). Handles si
 --> setRcData                           [ptr]
 --> frSkyXSetRcData                     [Copies from packet to rcData array]
 
+(fc/core.c:processRx)
 (calculateRxChannelsAndUpdateFailsafe)  [If auxiliaryProcessingRequired calls .rcProcessFrame. Calls readRxChannelsApplyRanges based on timing.]
 --> rxRuntimeState.rcProcessFrameFn
 --> rxSpiProcessFrame     [Calls protocolProcessFrame (always). Sets rxSpiNewPacketAvailable.]
 --> protocolProcessFrame  [ptr]
 --> frSkySpiProcessFrame  [Calls processFrame (always)]
 --> processFrame          [ptr]
---> frSkyXProcessFrame    [Telemtry/smartport stuff]
+--> frSkyXProcessFrame    [Telemetry/smartport stuff]
 
 
 
@@ -71,6 +75,18 @@ processSmartPortTelemetry: <== TODO replace with own function rather than portin
 - Calls smartPortSendPackage per message.
 That's it.
 
+
+
+
+frsky_x.c: telemetryWriteFrame, SendByte write to telemtryOutBuffer but do not actually send!
+
+rxUpdateCheck
+...
+frSkyXHandlePacket (STATE_DATA) STATE_TELEMETRY? -> contains delay in event function!
+==> buildTelemetryFrame   // check syncronization at startup ok if not no sport telemetry
+==> appendSmartportData
+
+IDEA: move receiver code to periodic function with correct frequency?
 
 
 
