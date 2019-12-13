@@ -91,4 +91,13 @@ IDEA: move receiver code to periodic function with correct frequency?
 
 
 
+Trace telemetry from writeFifo:
+(rcFrameStatusFn, see above)
+...
+--> frSkyXHandlePacket
+--> cc2500WriteFifo       [Is actually reached already...]
+
+
+
+
 

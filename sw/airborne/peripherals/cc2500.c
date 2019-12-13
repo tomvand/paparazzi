@@ -178,6 +178,7 @@ void cc2500WriteFifo(uint8_t *dpbuffer, uint8_t len)
     rxSpiWriteCommandMulti(CC2500_3F_TXFIFO | CC2500_WRITE_BURST,
                                  dpbuffer, len);
     cc2500Strobe(CC2500_STX); // 0x35
+    DOWNLINK_SEND_CC2500_PACKET(DefaultChannel, DefaultDevice, len, dpbuffer);
 }
 
 void cc2500ReadRegisterMulti(uint8_t address, uint8_t *data, uint8_t length)
