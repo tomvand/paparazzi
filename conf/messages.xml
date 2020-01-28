@@ -445,7 +445,10 @@
     </message>
 
     <message name="CC2500_PACKET" id="55">
-      <field name="packet" type="uint8[]"/>
+      <field name="dt_read" type="uint32"/>
+      <field name="fifo_read" type="uint8[]"/>
+      <field name="dt_write" type="uint32"/>
+      <field name="fifo_write" type="uint8[]"/>
     </message>
 
     <message name="BARO_ETS" id="56">

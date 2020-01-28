@@ -39,6 +39,15 @@ static struct spi_transaction cc2500_spi_t;
 static uint8_t cc2500_input_buf[64];
 static uint8_t cc2500_output_buf[64];
 
+static uint8_t db_read_buf[64];
+static uint8_t db_write_buf[64];
+static uint8_t db_read_len = 1;
+static uint32_t db_read_time = 0;
+static uint32_t db_read_dt = 0;
+static uint8_t db_write_len = 1;
+static uint32_t db_write_time = 0;
+static uint32_t db_write_dt = 0 ;
+
 
 void cc2500_init(void) {
   /* Set spi peripheral */
@@ -169,7 +178,17 @@ static void rxSpiWriteByte(uint8_t data) {
 void cc2500ReadFifo(uint8_t *dpbuffer, uint8_t len)
 {
     rxSpiReadCommandMulti(CC2500_3F_RXFIFO | CC2500_READ_BURST, NOP, dpbuffer, len);
-//    DOWNLINK_SEND_CC2500_PACKET(DefaultChannel, DefaultDevice,len, dpbuffer);
+
+    uint32_t now = get_sys_time_usec();
+    db_read_dt = now - db_read_time;
+    db_read_time = now;
+    db_read_len = len;
+    memcpy(db_read_buf, dpbuffer, 64);
+    DOWNLINK_SEND_CC2500_PACKET(DefaultChannel, DefaultDevice,
+        &db_read_dt,
+        db_read_len, db_read_buf,
+        &db_write_dt,
+        db_write_len, db_write_buf);
 }
 
 void cc2500WriteFifo(uint8_t *dpbuffer, uint8_t len)
@@ -178,7 +197,17 @@ void cc2500WriteFifo(uint8_t *dpbuffer, uint8_t len)
     rxSpiWriteCommandMulti(CC2500_3F_TXFIFO | CC2500_WRITE_BURST,
                                  dpbuffer, len);
     cc2500Strobe(CC2500_STX); // 0x35
-    DOWNLINK_SEND_CC2500_PACKET(DefaultChannel, DefaultDevice, len, dpbuffer);
+
+    uint32_t now = get_sys_time_usec();
+    db_write_dt = now - db_write_time;
+    db_write_time = now;
+    db_write_len = len;
+    memcpy(db_write_buf, dpbuffer, 64);
+    DOWNLINK_SEND_CC2500_PACKET(DefaultChannel, DefaultDevice,
+        &db_read_dt,
+        db_read_len, db_read_buf,
+        &db_write_dt,
+        db_write_len, db_write_buf);
 }
 
 void cc2500ReadRegisterMulti(uint8_t address, uint8_t *data, uint8_t length)
