@@ -100,4 +100,45 @@ Trace telemetry from writeFifo:
 
 
 
+Are all telemetry functions called?
+cc2500_frsky_x.c:
+  bool telemetryEnabled <= initSmartPortTelemetryExternal <= true or false TODO check
+  calculateCrc <= buildTelemetryFrame, isValidPacket
+  appendSmartPortData <= buildTelemetryFrame
+  buildTelemetryFrame <= frSkyXHandlePacket
+  frSkyXReadyToSend <= frSkyXProcessFrame
+  frSkyXTelemetrySendByte <= frSkyXTelemetryWriteFrame
+  frSkyXTelemetryWriteFrame <= frSkyXInit (arg to initSmartPortTelemetryExternal)
+  isValidPacket <= frSkyXHandlePacket
+  frSkyXHandlePacket <= frSkySpiInit (handlepacket = )
+  frSkyXProcessFrame <= frSkySpiInit (processFrame = )
+  frSkySpiXInit <= frSkySpiInit
+cc2500_frsky_shared.c:
+  handlePacket <= frSkySpiDataReceived
+  frSkySpiDataReceived <= rxSpiSetProtocol (protocolDataReceived = )
+  processFrame <= frSkySpiProcessFrame
+  frSkySpiProcessFrame <= rxSpiSetProtocol (protocolProcessFrame = )
+cc2500_rx_spi.c:
+  rxSpiSetProtocol <= rxSpiInit
+  protocolDataReceived <= rxSpiFrameStatus
+  rxSpiFrameStatus <= rxSpiInit (rxRuntimeState->rcFrameStatusFn = )
+  protocolProcessFrame <= rxSpiProcessFrame
+  rxSpiProcessFrame <= rxSpiInit (rxRuntimeState->rcProcessFrameFn = )
+cc2500_rx.c:
+  rxInit <= radio_control_impl_init
+  rxRuntimeState.rcFrameStatusFn <= radio_control_impl_event
+  rxRuntimeState.rcProcessFrameFn <= radio_control_impl_event
+cc2500_smartport.c:
+  smartPortDataReceive <= frSkyXProcessFrame
+  smartPortSendPackage <= processSmartPortTelemetry
+  processSmartPortTelemetry <= frSkyXProcessFrame
+  initSmartPortSensors <= initSmartPortTelemetryExternal
+  initSmartPortTelemetryExternal <= frSkyXInit
+
+
+
+handleSmartPortTelemetry is called by telemetry task in betaflight, but not in paparazzi!
+Same for initSmartPortTelemetry
+Maybe serial port needs to be initialized anyway, even though it is not used.
+Check out  betaflight/src/main/telemetry/telemetry.c  which is not ported right now...
 
