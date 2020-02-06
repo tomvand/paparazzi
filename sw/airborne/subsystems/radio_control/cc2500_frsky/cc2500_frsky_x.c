@@ -122,6 +122,15 @@ typedef struct telemetrySequenceMarkerData_s {
     unsigned int initResponse: 1;
 } __attribute__ ((__packed__)) telemetrySequenceMarkerData_t;
 
+//typedef struct telemetrySequenceMarkerData_s {
+//    unsigned int initResponse: 1;
+//    unsigned int retransmissionRequested: 1;
+//    unsigned int ackSequenceId: 2;
+//    unsigned int initRequest: 1;
+//    unsigned int unused: 1;
+//    unsigned int packetSequenceId: 2;
+//} __attribute__ ((__packed__)) telemetrySequenceMarkerData_t;
+
 typedef union telemetrySequenceMarker_s {
     uint8_t raw;
     telemetrySequenceMarkerData_t data;
