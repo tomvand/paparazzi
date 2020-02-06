@@ -46,7 +46,7 @@ void bf_writeEEPROM(void);
 
 typedef struct rxConfig_s {
 //    uint8_t rcmap[RX_MAPPABLE_CHANNEL_COUNT];  // mapping of radio channels to internal RPYTA+ order
-//    uint8_t serialrx_provider;              // type of UART-based receiver (0 = spek 10, 1 = spek 11, 2 = sbus). Must be enabled by FEATURE_RX_SERIAL first.
+    uint8_t serialrx_provider;              // type of UART-based receiver (0 = spek 10, 1 = spek 11, 2 = sbus). Must be enabled by FEATURE_RX_SERIAL first.
 //    uint8_t serialrx_inverted;              // invert the serial RX protocol compared to it's default setting
 //    uint8_t halfDuplex;                     // allow rx to operate in half duplex mode on F4, ignored for F1 and F3.
 //    ioTag_t spektrum_bind_pin_override_ioTag;

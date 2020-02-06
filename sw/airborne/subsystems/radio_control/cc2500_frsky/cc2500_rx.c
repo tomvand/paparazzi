@@ -81,13 +81,13 @@
 //
 //
 //const char rcChannelLetters[] = "AERT12345678abcdefgh";
-//
-//static uint16_t rssi = 0;                  // range: [0;1023]
+
+static uint16_t rssi = 0;                  // range: [0;1023]
 //static uint8_t rssi_dbm = 130;             // range: [0;130] display 0 to -130
 //static timeUs_t lastMspRssiUpdateUs = 0;
-//
-//static pt1Filter_t frameErrFilter;
-//
+
+static pt1Filter_t frameErrFilter;
+
 //#ifdef USE_RX_LINK_QUALITY_INFO
 //static uint16_t linkQuality = 0;
 //#endif
@@ -96,8 +96,8 @@
 //
 //#define RSSI_ADC_DIVISOR (4096 / 1024)
 //#define RSSI_OFFSET_SCALING (1024 / 100.0f)
-//
-//rssiSource_e rssiSource;
+
+rssiSource_e rssiSource;
 //linkQualitySource_e linkQualitySource;
 //
 //static bool rxDataProcessingRequired = false;
@@ -106,31 +106,31 @@
 //static bool rxSignalReceived = false;
 //static bool rxFlightChannelsValid = false;
 //static bool rxIsInFailsafeMode = true;
-//static uint8_t rxChannelCount;
-//
+static uint8_t rxChannelCount;
+
 //static timeUs_t rxNextUpdateAtUs = 0;
 //static uint32_t needRxSignalBefore = 0;
-//static uint32_t needRxSignalMaxDelayUs;
+static uint32_t needRxSignalMaxDelayUs;
 //static uint32_t suspendRxSignalUntil = 0;
 //static uint8_t  skipRxSamples = 0;
 //
 //static int16_t rcRaw[MAX_SUPPORTED_RC_CHANNEL_COUNT];     // interval [1000;2000]
-//int16_t rcData[MAX_SUPPORTED_RC_CHANNEL_COUNT];     // interval [1000;2000]
-//uint32_t rcInvalidPulsPeriod[MAX_SUPPORTED_RC_CHANNEL_COUNT];
-//
-//#define MAX_INVALID_PULS_TIME    300
+int16_t rcData[MAX_SUPPORTED_RC_CHANNEL_COUNT];     // interval [1000;2000]
+uint32_t rcInvalidPulsPeriod[MAX_SUPPORTED_RC_CHANNEL_COUNT];
+
+#define MAX_INVALID_PULS_TIME    300
 //#define PPM_AND_PWM_SAMPLE_COUNT 3
 //
 //#define DELAY_50_HZ (1000000 / 50)
 //#define DELAY_33_HZ (1000000 / 33)
-//#define DELAY_10_HZ (1000000 / 10)
+#define DELAY_10_HZ (1000000 / 10)
 //#define DELAY_5_HZ (1000000 / 5)
 //#define SKIP_RC_ON_SUSPEND_PERIOD 1500000           // 1.5 second period in usec (call frequency independent)
 //#define SKIP_RC_SAMPLES_ON_RESUME  2                // flush 2 samples to drop wrong measurements (timing independent)
-//
-//rxRuntimeConfig_t rxRuntimeConfig;
-//static uint8_t rcSampleIndex = 0;
-//
+
+rxRuntimeConfig_t rxRuntimeConfig;
+static uint8_t rcSampleIndex = 0;
+
 //PG_REGISTER_ARRAY_WITH_RESET_FN(rxChannelRangeConfig_t, NON_AUX_CHANNEL_COUNT, rxChannelRangeConfigs, PG_RX_CHANNEL_RANGE_CONFIG, 0);
 //void pgResetFn_rxChannelRangeConfigs(rxChannelRangeConfig_t *rxChannelRangeConfigs)
 //{
@@ -160,29 +160,29 @@
 //        rxChannelRangeConfig++;
 //    }
 //}
-//
-//static uint16_t nullReadRawRC(const rxRuntimeConfig_t *rxRuntimeConfig, uint8_t channel)
-//{
-//    UNUSED(rxRuntimeConfig);
-//    UNUSED(channel);
-//
-//    return PPM_RCVR_TIMEOUT;
-//}
-//
-//static uint8_t nullFrameStatus(rxRuntimeConfig_t *rxRuntimeConfig)
-//{
-//    UNUSED(rxRuntimeConfig);
-//
-//    return RX_FRAME_PENDING;
-//}
-//
-//static bool nullProcessFrame(const rxRuntimeConfig_t *rxRuntimeConfig)
-//{
-//    UNUSED(rxRuntimeConfig);
-//
-//    return true;
-//}
-//
+
+static uint16_t nullReadRawRC(const rxRuntimeConfig_t *rxRuntimeConfig, uint8_t channel)
+{
+    UNUSED(rxRuntimeConfig);
+    UNUSED(channel);
+
+    return PPM_RCVR_TIMEOUT;
+}
+
+static uint8_t nullFrameStatus(rxRuntimeConfig_t *rxRuntimeConfig)
+{
+    UNUSED(rxRuntimeConfig);
+
+    return RX_FRAME_PENDING;
+}
+
+static bool nullProcessFrame(const rxRuntimeConfig_t *rxRuntimeConfig)
+{
+    UNUSED(rxRuntimeConfig);
+
+    return true;
+}
+
 //STATIC_UNIT_TESTED bool isPulseValid(uint16_t pulseDuration)
 //{
 //    return  pulseDuration >= rxConfig()->rx_min_usec &&
@@ -259,34 +259,34 @@
 //    return enabled;
 //}
 //#endif
-//
-//void rxInit(void)
-//{
-//    if (featureIsEnabled(FEATURE_RX_PARALLEL_PWM)) {
-//        rxRuntimeConfig.rxProvider = RX_PROVIDER_PARALLEL_PWM;
-//    } else if (featureIsEnabled(FEATURE_RX_PPM)) {
-//        rxRuntimeConfig.rxProvider = RX_PROVIDER_PPM;
-//    } else if (featureIsEnabled(FEATURE_RX_SERIAL)) {
-//        rxRuntimeConfig.rxProvider = RX_PROVIDER_SERIAL;
-//    } else if (featureIsEnabled(FEATURE_RX_MSP)) {
-//        rxRuntimeConfig.rxProvider = RX_PROVIDER_MSP;
-//    } else if (featureIsEnabled(FEATURE_RX_SPI)) {
-//        rxRuntimeConfig.rxProvider = RX_PROVIDER_SPI;
-//    } else {
-//        rxRuntimeConfig.rxProvider = RX_PROVIDER_NONE;
-//    }
-//    rxRuntimeConfig.serialrxProvider = rxConfig()->serialrx_provider;
-//    rxRuntimeConfig.rcReadRawFn = nullReadRawRC;
-//    rxRuntimeConfig.rcFrameStatusFn = nullFrameStatus;
-//    rxRuntimeConfig.rcProcessFrameFn = nullProcessFrame;
-//    rcSampleIndex = 0;
-//    needRxSignalMaxDelayUs = DELAY_10_HZ;
-//
-//    for (int i = 0; i < MAX_SUPPORTED_RC_CHANNEL_COUNT; i++) {
-//        rcData[i] = rxConfig()->midrc;
-//        rcInvalidPulsPeriod[i] = millis() + MAX_INVALID_PULS_TIME;
-//    }
-//
+
+void rxInit(void)
+{
+    if (featureIsEnabled(FEATURE_RX_PARALLEL_PWM)) {
+        rxRuntimeConfig.rxProvider = RX_PROVIDER_PARALLEL_PWM;
+    } else if (featureIsEnabled(FEATURE_RX_PPM)) {
+        rxRuntimeConfig.rxProvider = RX_PROVIDER_PPM;
+    } else if (featureIsEnabled(FEATURE_RX_SERIAL)) {
+        rxRuntimeConfig.rxProvider = RX_PROVIDER_SERIAL;
+    } else if (featureIsEnabled(FEATURE_RX_MSP)) {
+        rxRuntimeConfig.rxProvider = RX_PROVIDER_MSP;
+    } else if (featureIsEnabled(FEATURE_RX_SPI)) {
+        rxRuntimeConfig.rxProvider = RX_PROVIDER_SPI;
+    } else {
+        rxRuntimeConfig.rxProvider = RX_PROVIDER_NONE;
+    }
+    rxRuntimeConfig.serialrxProvider = rxConfig()->serialrx_provider;
+    rxRuntimeConfig.rcReadRawFn = nullReadRawRC;
+    rxRuntimeConfig.rcFrameStatusFn = nullFrameStatus;
+    rxRuntimeConfig.rcProcessFrameFn = nullProcessFrame;
+    rcSampleIndex = 0;
+    needRxSignalMaxDelayUs = DELAY_10_HZ;
+
+    for (int i = 0; i < MAX_SUPPORTED_RC_CHANNEL_COUNT; i++) {
+        rcData[i] = rxConfig()->midrc;
+        rcInvalidPulsPeriod[i] = millis() + MAX_INVALID_PULS_TIME;
+    }
+
 //    rcData[THROTTLE] = (featureIsEnabled(FEATURE_3D)) ? rxConfig()->midrc : rxConfig()->rx_min_usec;
 //
 //    // Initialize ARM switch to OFF position when arming via switch is defined
@@ -305,69 +305,69 @@
 //            rcData[modeActivationCondition->auxChannelIndex + NON_AUX_CHANNEL_COUNT] = value;
 //        }
 //    }
-//
-//    switch (rxRuntimeConfig.rxProvider) {
-//    default:
-//
-//        break;
-//#ifdef USE_SERIAL_RX
-//    case RX_PROVIDER_SERIAL:
-//        {
-//            const bool enabled = serialRxInit(rxConfig(), &rxRuntimeConfig);
-//            if (!enabled) {
-//                rxRuntimeConfig.rcReadRawFn = nullReadRawRC;
-//                rxRuntimeConfig.rcFrameStatusFn = nullFrameStatus;
-//            }
-//        }
-//
-//        break;
-//#endif
-//
-//#ifdef USE_RX_MSP
-//    case RX_PROVIDER_MSP:
-//        rxMspInit(rxConfig(), &rxRuntimeConfig);
-//        needRxSignalMaxDelayUs = DELAY_5_HZ;
-//
-//        break;
-//#endif
-//
-//#ifdef USE_RX_SPI
-//    case RX_PROVIDER_SPI:
-//        {
-//            const bool enabled = rxSpiInit(rxSpiConfig(), &rxRuntimeConfig);
-//            if (!enabled) {
-//                rxRuntimeConfig.rcReadRawFn = nullReadRawRC;
-//                rxRuntimeConfig.rcFrameStatusFn = nullFrameStatus;
-//            }
-//        }
-//
-//        break;
-//#endif
-//
-//#if defined(USE_PWM) || defined(USE_PPM)
-//    case RX_PROVIDER_PPM:
-//    case RX_PROVIDER_PARALLEL_PWM:
-//        rxPwmInit(rxConfig(), &rxRuntimeConfig);
-//
-//        break;
-//#endif
-//    }
-//
-//#if defined(USE_ADC)
-//    if (featureIsEnabled(FEATURE_RSSI_ADC)) {
-//        rssiSource = RSSI_SOURCE_ADC;
-//    } else
-//#endif
-//    if (rxConfig()->rssi_channel > 0) {
-//        rssiSource = RSSI_SOURCE_RX_CHANNEL;
-//    }
-//
-//    // Setup source frame RSSI filtering to take averaged values every FRAME_ERR_RESAMPLE_US
-//    pt1FilterInit(&frameErrFilter, pt1FilterGain(GET_FRAME_ERR_LPF_FREQUENCY(rxConfig()->rssi_src_frame_lpf_period), FRAME_ERR_RESAMPLE_US/1000000.0));
-//
-//    rxChannelCount = MIN(rxConfig()->max_aux_channel + NON_AUX_CHANNEL_COUNT, rxRuntimeConfig.channelCount);
-//}
-//
+
+    switch (rxRuntimeConfig.rxProvider) {
+    default:
+
+        break;
+#ifdef USE_SERIAL_RX
+    case RX_PROVIDER_SERIAL:
+        {
+            const bool enabled = serialRxInit(rxConfig(), &rxRuntimeConfig);
+            if (!enabled) {
+                rxRuntimeConfig.rcReadRawFn = nullReadRawRC;
+                rxRuntimeConfig.rcFrameStatusFn = nullFrameStatus;
+            }
+        }
+
+        break;
+#endif
+
+#ifdef USE_RX_MSP
+    case RX_PROVIDER_MSP:
+        rxMspInit(rxConfig(), &rxRuntimeConfig);
+        needRxSignalMaxDelayUs = DELAY_5_HZ;
+
+        break;
+#endif
+
+#ifdef USE_RX_SPI
+    case RX_PROVIDER_SPI:
+        {
+            const bool enabled = rxSpiInit(rxSpiConfig(), &rxRuntimeConfig);
+            if (!enabled) {
+                rxRuntimeConfig.rcReadRawFn = nullReadRawRC;
+                rxRuntimeConfig.rcFrameStatusFn = nullFrameStatus;
+            }
+        }
+
+        break;
+#endif
+
+#if defined(USE_PWM) || defined(USE_PPM)
+    case RX_PROVIDER_PPM:
+    case RX_PROVIDER_PARALLEL_PWM:
+        rxPwmInit(rxConfig(), &rxRuntimeConfig);
+
+        break;
+#endif
+    }
+
+#if defined(USE_ADC)
+    if (featureIsEnabled(FEATURE_RSSI_ADC)) {
+        rssiSource = RSSI_SOURCE_ADC;
+    } else
+#endif
+    if (rxConfig()->rssi_channel > 0) {
+        rssiSource = RSSI_SOURCE_RX_CHANNEL;
+    }
+
+    // Setup source frame RSSI filtering to take averaged values every FRAME_ERR_RESAMPLE_US
+    pt1FilterInit(&frameErrFilter, pt1FilterGain(GET_FRAME_ERR_LPF_FREQUENCY(rxConfig()->rssi_src_frame_lpf_period), FRAME_ERR_RESAMPLE_US/1000000.0));
+
+    rxChannelCount = MIN(rxConfig()->max_aux_channel + NON_AUX_CHANNEL_COUNT, rxRuntimeConfig.channelCount);
+}
+
 //bool rxIsReceivingSignal(void)
 //{
 //    return rxSignalReceived;
@@ -696,45 +696,45 @@
 //        }
 //    }
 //}
-//
-//void setRssiDirect(uint16_t newRssi, rssiSource_e source)
-//{
-//    if (source != rssiSource) {
-//        return;
-//    }
-//
-//    rssi = newRssi;
-//}
-//
-//#define RSSI_SAMPLE_COUNT 16
-//
-//static uint16_t updateRssiSamples(uint16_t value)
-//{
-//    static uint16_t samples[RSSI_SAMPLE_COUNT];
-//    static uint8_t sampleIndex = 0;
-//    static unsigned sum = 0;
-//
-//    sum += value - samples[sampleIndex];
-//    samples[sampleIndex] = value;
-//    sampleIndex = (sampleIndex + 1) % RSSI_SAMPLE_COUNT;
-//    return sum / RSSI_SAMPLE_COUNT;
-//}
-//
-//void setRssi(uint16_t rssiValue, rssiSource_e source)
-//{
-//    if (source != rssiSource) {
-//        return;
-//    }
-//
-//    // Filter RSSI value
-//    if (source == RSSI_SOURCE_FRAME_ERRORS) {
-//        rssi = pt1FilterApply(&frameErrFilter, rssiValue);
-//    } else {
-//        // calculate new sample mean
-//        rssi = updateRssiSamples(rssiValue);
-//    }
-//}
-//
+
+void setRssiDirect(uint16_t newRssi, rssiSource_e source)
+{
+    if (source != rssiSource) {
+        return;
+    }
+
+    rssi = newRssi;
+}
+
+#define RSSI_SAMPLE_COUNT 16
+
+static uint16_t updateRssiSamples(uint16_t value)
+{
+    static uint16_t samples[RSSI_SAMPLE_COUNT];
+    static uint8_t sampleIndex = 0;
+    static unsigned sum = 0;
+
+    sum += value - samples[sampleIndex];
+    samples[sampleIndex] = value;
+    sampleIndex = (sampleIndex + 1) % RSSI_SAMPLE_COUNT;
+    return sum / RSSI_SAMPLE_COUNT;
+}
+
+void setRssi(uint16_t rssiValue, rssiSource_e source)
+{
+    if (source != rssiSource) {
+        return;
+    }
+
+    // Filter RSSI value
+    if (source == RSSI_SOURCE_FRAME_ERRORS) {
+        rssi = pt1FilterApply(&frameErrFilter, rssiValue);
+    } else {
+        // calculate new sample mean
+        rssi = updateRssiSamples(rssiValue);
+    }
+}
+
 //void setRssiMsp(uint8_t newMspRssi)
 //{
 //    if (rssiSource == RSSI_SOURCE_NONE) {

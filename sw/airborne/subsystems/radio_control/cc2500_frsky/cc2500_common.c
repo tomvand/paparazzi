@@ -3,6 +3,7 @@
 #include "peripherals/cc2500.h"
 #include "cc2500_settings.h"
 #include "cc2500_common.h"
+#include "cc2500_rx.h"
 
 // betaflight/src/main/rx/cc2500_common.c  @ 50bbe0b
 /*

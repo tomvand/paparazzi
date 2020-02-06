@@ -24,7 +24,7 @@
 
 #pragma once
 
-#include "rx/rx_spi.h"
+//#include "rx/rx_spi.h"
 
 bool frSkySpiInit(const rxSpiConfig_t *rxSpiConfig, rxRuntimeConfig_t *rxRuntimeConfig);
 rx_spi_received_e frSkySpiDataReceived(uint8_t *packet);
