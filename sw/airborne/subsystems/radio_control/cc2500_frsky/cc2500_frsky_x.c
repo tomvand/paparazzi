@@ -210,6 +210,9 @@ static void buildTelemetryFrame(uint8_t *packet)
 
     static bool evenRun = false;
 
+    extern uint8_t buildTelemetryFrame_cnt;
+    buildTelemetryFrame_cnt++;
+
     frame[0] = 0x0E;//length
     frame[1] = rxCc2500SpiConfig()->bindTxId[0];
     frame[2] = rxCc2500SpiConfig()->bindTxId[1];
@@ -241,6 +244,9 @@ static void buildTelemetryFrame(uint8_t *packet)
         outFrameMarker->data.initRequest = 1;
         outFrameMarker->data.initResponse = 1;
 
+        extern uint8_t buildTelemetryFrame_sync_cnt;
+        buildTelemetryFrame_sync_cnt++;
+
         localPacketId = 0;
     } else {
         if (inFrameMarker->data.retransmissionRequested) {
@@ -248,6 +254,8 @@ static void buildTelemetryFrame(uint8_t *packet)
             outFrameMarker->raw = responseToSend.raw & SEQUENCE_MARKER_REMOTE_PART;
             outFrameMarker->data.packetSequenceId = retransmissionFrameId;
 
+            extern uint8_t buildTelemetryFrame_retransmission_cnt;
+            buildTelemetryFrame_retransmission_cnt++;
             memcpy(&frame[6], &telemetryTxBuffer[retransmissionFrameId], TELEMETRY_FRAME_SIZE);
         } else {
             uint8_t localAckId = inFrameMarker->data.ackSequenceId;
@@ -255,6 +263,8 @@ static void buildTelemetryFrame(uint8_t *packet)
                 outFrameMarker->raw = responseToSend.raw & SEQUENCE_MARKER_REMOTE_PART;
                 outFrameMarker->data.packetSequenceId = localPacketId;
 
+                extern uint8_t buildTelemetryFrame_append_cnt;
+                buildTelemetryFrame_append_cnt++;
                 frame[6] = appendSmartPortData(&frame[7]);
                 memcpy(&telemetryTxBuffer[localPacketId], &frame[6], TELEMETRY_FRAME_SIZE);
 

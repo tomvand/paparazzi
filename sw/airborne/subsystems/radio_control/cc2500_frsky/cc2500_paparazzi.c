@@ -48,6 +48,11 @@ static bool auxiliaryProcessingRequired = false;
 
 static uint16_t frsky_raw[RADIO_CTL_NB];
 
+uint8_t buildTelemetryFrame_cnt = 0;
+uint8_t buildTelemetryFrame_retransmission_cnt = 0;
+uint8_t buildTelemetryFrame_append_cnt = 0;
+uint8_t buildTelemetryFrame_sync_cnt = 0;
+
 void radio_control_impl_init(void) {
   cc2500_settings_init();
   cc2500_init();
@@ -88,6 +93,17 @@ void radio_control_impl_event(void (* _received_frame_handler)(void)) {
 
   if (auxiliaryProcessingRequired) {
       auxiliaryProcessingRequired = !rxRuntimeState.rcProcessFrameFn(&rxRuntimeState);
+  }
+
+  static int cnt = 0;
+  cnt++;
+  if(cnt == 1000) {
+    DOWNLINK_SEND_CC2500_TRACE(DefaultChannel, DefaultDevice,
+        &buildTelemetryFrame_cnt,
+        &buildTelemetryFrame_retransmission_cnt,
+        &buildTelemetryFrame_append_cnt,
+        &buildTelemetryFrame_sync_cnt);
+    cnt = 0;
   }
 
 

@@ -635,6 +635,13 @@
       <field name="sbas"  type="uint8" />
       <field name="gnss"  type="uint8" values="NONE|GPS|GLONAS|GPS+GLONAS|BEIDOU|GPS+BEIDOU|GLONAS+BEIDOU|GPS+GLONAS+BEIDOU|GALILEO"/>
     </message>
+    
+    <message name="CC2500_TRACE" id="75">
+      <field name="buildTelemetryFrame" type="uint8"/>
+      <field name="buildTF_retransmission" type="uint8"/>
+      <field name="buildTF_append" type="uint8"/>
+      <field name="buildTF_sync" type="uint8"/>
+    </message>
 
     <!-- 75 is free -->
     <!-- 76 is free -->
