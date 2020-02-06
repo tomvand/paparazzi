@@ -4,7 +4,7 @@
 #include "cc2500_settings.h"
 #include "cc2500_common.h"
 
-// betaflight/src/main/rx/cc2500_common.c  @ 4a79046
+// betaflight/src/main/rx/cc2500_common.c  @ 50bbe0b
 /*
  * This file is part of Cleanflight and Betaflight.
  *
@@ -25,6 +25,8 @@
  * If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
+
 //#include "platform.h"
 
 #if defined(USE_RX_FRSKY_SPI) || defined(USE_RX_SFHSS_SPI)
@@ -35,7 +37,7 @@
 //#include "drivers/rx/rx_cc2500.h"
 //#include "drivers/time.h"
 //
-//#include "config/config.h"
+//#include "fc/config.h"
 //
 //#include "pg/pg.h"
 //#include "pg/pg_ids.h"
@@ -175,4 +177,3 @@ bool cc2500SpiInit(void)
     return true;
 }
 #endif
-

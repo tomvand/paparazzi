@@ -11,7 +11,7 @@
 
 #define UNUSED(x) (void)(x)
 
-// betaflight/src/main/rx/cc2500_frsky_x.c @ 4a79046
+// betaflight/src/main/rx/cc2500_frsky_x.c @ e78f976
 /*
  * This file is part of Cleanflight and Betaflight.
  *
@@ -55,7 +55,7 @@
 //#include "drivers/system.h"
 //#include "drivers/time.h"
 //
-//#include "config/config.h"
+//#include "fc/config.h"
 //
 //#include "pg/rx.h"
 //#include "pg/rx_spi.h"
@@ -121,15 +121,6 @@ typedef struct telemetrySequenceMarkerData_s {
     unsigned int retransmissionRequested: 1;
     unsigned int initResponse: 1;
 } __attribute__ ((__packed__)) telemetrySequenceMarkerData_t;
-
-//typedef struct telemetrySequenceMarkerData_s {
-//    unsigned int initResponse: 1;
-//    unsigned int retransmissionRequested: 1;
-//    unsigned int ackSequenceId: 2;
-//    unsigned int initRequest: 1;
-//    unsigned int unused: 1;
-//    unsigned int packetSequenceId: 2;
-//} __attribute__ ((__packed__)) telemetrySequenceMarkerData_t;
 
 typedef union telemetrySequenceMarker_s {
     uint8_t raw;
@@ -219,9 +210,6 @@ static void buildTelemetryFrame(uint8_t *packet)
 
     static bool evenRun = false;
 
-    extern uint8_t buildTelemetryFrame_cnt;
-    buildTelemetryFrame_cnt++;
-
     frame[0] = 0x0E;//length
     frame[1] = rxCc2500SpiConfig()->bindTxId[0];
     frame[2] = rxCc2500SpiConfig()->bindTxId[1];
@@ -253,9 +241,6 @@ static void buildTelemetryFrame(uint8_t *packet)
         outFrameMarker->data.initRequest = 1;
         outFrameMarker->data.initResponse = 1;
 
-        extern uint8_t buildTelemetryFrame_sync_cnt;
-        buildTelemetryFrame_sync_cnt++;
-
         localPacketId = 0;
     } else {
         if (inFrameMarker->data.retransmissionRequested) {
@@ -263,8 +248,6 @@ static void buildTelemetryFrame(uint8_t *packet)
             outFrameMarker->raw = responseToSend.raw & SEQUENCE_MARKER_REMOTE_PART;
             outFrameMarker->data.packetSequenceId = retransmissionFrameId;
 
-            extern uint8_t buildTelemetryFrame_retransmission_cnt;
-            buildTelemetryFrame_retransmission_cnt++;
             memcpy(&frame[6], &telemetryTxBuffer[retransmissionFrameId], TELEMETRY_FRAME_SIZE);
         } else {
             uint8_t localAckId = inFrameMarker->data.ackSequenceId;
@@ -272,8 +255,6 @@ static void buildTelemetryFrame(uint8_t *packet)
                 outFrameMarker->raw = responseToSend.raw & SEQUENCE_MARKER_REMOTE_PART;
                 outFrameMarker->data.packetSequenceId = localPacketId;
 
-                extern uint8_t buildTelemetryFrame_append_cnt;
-                buildTelemetryFrame_append_cnt++;
                 frame[6] = appendSmartPortData(&frame[7]);
                 memcpy(&telemetryTxBuffer[localPacketId], &frame[6], TELEMETRY_FRAME_SIZE);
 
@@ -287,7 +268,7 @@ static void buildTelemetryFrame(uint8_t *packet)
     frame[14]=lcrc;
 }
 
-static bool frSkyXReadyToSend(void)
+static bool frSkyXCheckQueueEmpty(void)
 {
     return true;
 }
@@ -586,7 +567,7 @@ rx_spi_received_e frSkyXProcessFrame(uint8_t * const packet)
             }
 
             while (remoteToProcessIndex < telemetryRxBuffer[remoteToProcessId].data.dataLength && !payload) {
-                payload = smartPortDataReceive(telemetryRxBuffer[remoteToProcessId].data.data[remoteToProcessIndex], &clearToSend, frSkyXReadyToSend, false);
+                payload = smartPortDataReceive(telemetryRxBuffer[remoteToProcessId].data.data[remoteToProcessIndex], &clearToSend, frSkyXCheckQueueEmpty, false);
                 remoteToProcessIndex = remoteToProcessIndex + 1;
             }
         }

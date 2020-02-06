@@ -1,7 +1,7 @@
 #include "cc2500_compat.h"
 
 // CAUTION: LARGE PARTS OF THIS FILE ARE COMMENTED OUT!
-// betaflight/src/main/rx/rx.h @ 79dd6b6
+// betaflight/src/main/rx/rx.h @ 4e8249e
 /*
  * This file is part of Cleanflight and Betaflight.
  *
@@ -47,15 +47,15 @@
 //#define DEFAULT_SERVO_MIN 1000
 //#define DEFAULT_SERVO_MIDDLE 1500
 //#define DEFAULT_SERVO_MAX 2000
-
-typedef enum {
-    RX_FRAME_PENDING = 0,
-    RX_FRAME_COMPLETE = (1 << 0),
-    RX_FRAME_FAILSAFE = (1 << 1),
-    RX_FRAME_PROCESSING_REQUIRED = (1 << 2),
-    RX_FRAME_DROPPED = (1 << 3)
-} rxFrameState_e;
-
+//
+//typedef enum {
+//    RX_FRAME_PENDING = 0,
+//    RX_FRAME_COMPLETE = (1 << 0),
+//    RX_FRAME_FAILSAFE = (1 << 1),
+//    RX_FRAME_PROCESSING_REQUIRED = (1 << 2),
+//    RX_FRAME_DROPPED = (1 << 3)
+//} rxFrameState_e;
+//
 //typedef enum {
 //    SERIALRX_SPEKTRUM1024 = 0,
 //    SERIALRX_SPEKTRUM2048 = 1,
@@ -75,9 +75,9 @@ typedef enum {
 //
 //#define MAX_SUPPORTED_RC_PPM_CHANNEL_COUNT          12
 //#define MAX_SUPPORTED_RC_PARALLEL_PWM_CHANNEL_COUNT  8
-#define MAX_SUPPORTED_RC_CHANNEL_COUNT              18
-
-#define NON_AUX_CHANNEL_COUNT 4
+//#define MAX_SUPPORTED_RC_CHANNEL_COUNT              18
+//
+//#define NON_AUX_CHANNEL_COUNT 4
 //#define MAX_AUX_CHANNEL_COUNT (MAX_SUPPORTED_RC_CHANNEL_COUNT - NON_AUX_CHANNEL_COUNT)
 //
 //#if MAX_SUPPORTED_RC_PARALLEL_PWM_CHANNEL_COUNT > MAX_SUPPORTED_RC_PPM_CHANNEL_COUNT
@@ -124,58 +124,56 @@ typedef enum {
 //} rxChannelRangeConfig_t;
 //
 //PG_DECLARE_ARRAY(rxChannelRangeConfig_t, NON_AUX_CHANNEL_COUNT, rxChannelRangeConfigs);
-
-struct rxRuntimeState_s;
-typedef uint16_t (*rcReadRawDataFnPtr)(const struct rxRuntimeState_s *rxRuntimeState, uint8_t chan); // used by receiver driver to return channel data
-typedef uint8_t (*rcFrameStatusFnPtr)(struct rxRuntimeState_s *rxRuntimeState);
-typedef bool (*rcProcessFrameFnPtr)(const struct rxRuntimeState_s *rxRuntimeState);
-//typedef timeDelta_t (*rcGetFrameDeltaFnPtr)(void);  // used to retrieve the time interval in microseconds for the last channel data frame
-
-typedef enum {
-    RX_PROVIDER_NONE = 0,
-    RX_PROVIDER_PARALLEL_PWM,
-    RX_PROVIDER_PPM,
-    RX_PROVIDER_SERIAL,
-    RX_PROVIDER_MSP,
-    RX_PROVIDER_SPI,
-} rxProvider_t;
-
-typedef struct rxRuntimeState_s {
-    rxProvider_t        rxProvider;
+//
+//struct rxRuntimeConfig_s;
+//typedef uint16_t (*rcReadRawDataFnPtr)(const struct rxRuntimeConfig_s *rxRuntimeConfig, uint8_t chan); // used by receiver driver to return channel data
+//typedef uint8_t (*rcFrameStatusFnPtr)(struct rxRuntimeConfig_s *rxRuntimeConfig);
+//typedef bool (*rcProcessFrameFnPtr)(const struct rxRuntimeConfig_s *rxRuntimeConfig);
+//
+//typedef enum {
+//    RX_PROVIDER_NONE = 0,
+//    RX_PROVIDER_PARALLEL_PWM,
+//    RX_PROVIDER_PPM,
+//    RX_PROVIDER_SERIAL,
+//    RX_PROVIDER_MSP,
+//    RX_PROVIDER_SPI,
+//} rxProvider_t;
+//
+//typedef struct rxRuntimeConfig_s {
+//    rxProvider_t        rxProvider;
 //    SerialRXType        serialrxProvider;
-    uint8_t             channelCount; // number of RC channels as reported by current input driver
-    uint16_t            rxRefreshRate;
-    rcReadRawDataFnPtr  rcReadRawFn;
-    rcFrameStatusFnPtr  rcFrameStatusFn;
-    rcProcessFrameFnPtr rcProcessFrameFn;
-//    rcGetFrameDeltaFnPtr rcFrameDeltaFn;
-    uint16_t            *channelData;
-    void                *frameData;
-} rxRuntimeState_t;
-
-typedef enum {
-    RSSI_SOURCE_NONE = 0,
-    RSSI_SOURCE_ADC,
-    RSSI_SOURCE_RX_CHANNEL,
-    RSSI_SOURCE_RX_PROTOCOL,
+//    uint8_t             channelCount; // number of RC channels as reported by current input driver
+//    uint16_t            rxRefreshRate;
+//    rcReadRawDataFnPtr  rcReadRawFn;
+//    rcFrameStatusFnPtr  rcFrameStatusFn;
+//    rcProcessFrameFnPtr rcProcessFrameFn;
+//    uint16_t            *channelData;
+//    void                *frameData;
+//} rxRuntimeConfig_t;
+//
+//typedef enum {
+//    RSSI_SOURCE_NONE = 0,
+//    RSSI_SOURCE_ADC,
+//    RSSI_SOURCE_RX_CHANNEL,
+//    RSSI_SOURCE_RX_PROTOCOL,
 //    RSSI_SOURCE_MSP,
-    RSSI_SOURCE_FRAME_ERRORS,
+//    RSSI_SOURCE_FRAME_ERRORS,
 //    RSSI_SOURCE_RX_PROTOCOL_CRSF,
-} rssiSource_e;
-
-extern rssiSource_e rssiSource;
-
+//} rssiSource_e;
+//
+//extern rssiSource_e rssiSource;
+//
 //typedef enum {
 //    LQ_SOURCE_NONE = 0,
 //    LQ_SOURCE_RX_PROTOCOL_CRSF,
 //} linkQualitySource_e;
 //
 //extern linkQualitySource_e linkQualitySource;
-
-extern rxRuntimeState_t rxRuntimeState; //!!TODO remove this extern, only needed once for channelCount
-
-void rxInit(void);
-bool rxUpdateCheck(timeUs_t currentTimeUs, timeDelta_t currentDeltaTimeUs);
+//
+//extern rxRuntimeConfig_t rxRuntimeConfig; //!!TODO remove this extern, only needed once for channelCount
+//
+//void rxInit(void);
+//bool rxUpdateCheck(timeUs_t currentTimeUs, timeDelta_t currentDeltaTimeUs);
 //bool rxIsReceivingSignal(void);
 //bool rxAreFlightChannelsValid(void);
 //bool calculateRxChannelsAndUpdateFailsafe(timeUs_t currentTimeUs);
@@ -183,11 +181,11 @@ bool rxUpdateCheck(timeUs_t currentTimeUs, timeDelta_t currentDeltaTimeUs);
 //struct rxConfig_s;
 //
 //void parseRcChannels(const char *input, struct rxConfig_s *rxConfig);
-
-#define RSSI_MAX_VALUE 1023
-
-void setRssiDirect(uint16_t newRssi, rssiSource_e source);
-void setRssi(uint16_t rssiValue, rssiSource_e source);
+//
+//#define RSSI_MAX_VALUE 1023
+//
+//void setRssiDirect(uint16_t newRssi, rssiSource_e source);
+//void setRssi(uint16_t rssiValue, rssiSource_e source);
 //void setRssiMsp(uint8_t newMspRssi);
 //void updateRSSI(timeUs_t currentTimeUs);
 //uint16_t getRssi(void);
@@ -210,5 +208,3 @@ void setRssi(uint16_t rssiValue, rssiSource_e source);
 //void resumeRxPwmPpmSignal(void);
 //
 //uint16_t rxGetRefreshRate(void);
-//
-//bool rxGetFrameDelta(timeDelta_t *deltaUs);
