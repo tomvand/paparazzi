@@ -637,10 +637,12 @@
     </message>
     
     <message name="CC2500_TRACE" id="75">
-      <field name="buildTelemetryFrame" type="uint8"/>
-      <field name="buildTF_retransmission" type="uint8"/>
-      <field name="buildTF_append" type="uint8"/>
-      <field name="buildTF_sync" type="uint8"/>
+      <field name="TelSendByte" type="uint8"/>
+      <field name="AppendSport" type="uint8"/>
+      <field name="AppendSportWrite" type="uint8"/>
+      <field name="BuildTelFrameCase1" type="uint8"/>
+      <field name="BuildTelFrameCase2" type="uint8"/>
+      <field name="BuildTelFrameCase3" type="uint8"/>
     </message>
 
     <!-- 75 is free -->

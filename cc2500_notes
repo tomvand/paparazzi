@@ -142,3 +142,16 @@ Same for initSmartPortTelemetry
 Maybe serial port needs to be initialized anyway, even though it is not used.
 Check out  betaflight/src/main/telemetry/telemetry.c  which is not ported right now...
 
+
+Why is there no telemetry stream?
+cc2500_frsky_x.c::frSkyXTelemetrySendByte is called
+cc2500_frsky_x.c::appendSmartPortData NOT CALLED, NOT WRITING
+cc2500_frsky_x.c::buildTelemetryFrame (TX in Telem OFF mode, also during sensor discovery)
+    ONLY CASE 1 CALLED ( if (inFrameMarker->data.initRequest) )
+    CASE 3 called ONCE
+cc2500_frsky_x.c::buildTelemetryFrame (TX in Telem ON mode, also during sensor discovery)
+    ONLY CASE 1 CALLED ( if (inFrameMarker->data.initRequest) )
+cc2500_frsky_x.c::buildTelemetryFrame (case 1 disabled, TX in Telem OFF/ON mode, also during sensor discovery)
+    CASE 3 CALLED ONLY ONCE
+cc2500_frsky_x.c::buildTelemetryFrame (force case 3 without checks)
+    Telemetry stream present, but not received. No response in TX request byte.

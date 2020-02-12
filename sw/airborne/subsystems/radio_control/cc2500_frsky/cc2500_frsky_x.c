@@ -189,6 +189,9 @@ static uint16_t calculateCrc(const uint8_t *data, uint8_t len) {
 #if defined(USE_TELEMETRY_SMARTPORT)
 static uint8_t appendSmartPortData(uint8_t *buf)
 {
+    extern uint8_t appendSport_cnt;
+    appendSport_cnt++;
+
     static uint8_t telemetryOutReader = 0;
 
     uint8_t index;
@@ -198,6 +201,8 @@ static uint8_t appendSmartPortData(uint8_t *buf)
         }
         buf[index] = telemetryOutBuffer[telemetryOutReader];
         telemetryOutReader = (telemetryOutReader + 1) % TELEMETRY_OUT_BUFFER_SIZE;
+        extern uint8_t appendSportWrite_cnt;
+        appendSportWrite_cnt++;
     }
 
     return index;
@@ -242,6 +247,8 @@ static void buildTelemetryFrame(uint8_t *packet)
         outFrameMarker->data.initResponse = 1;
 
         localPacketId = 0;
+        extern uint8_t buildTelFrameCase1_cnt;
+        buildTelFrameCase1_cnt++;
     } else {
         if (inFrameMarker->data.retransmissionRequested) {
             uint8_t retransmissionFrameId = inFrameMarker->data.ackSequenceId;
@@ -249,6 +256,8 @@ static void buildTelemetryFrame(uint8_t *packet)
             outFrameMarker->data.packetSequenceId = retransmissionFrameId;
 
             memcpy(&frame[6], &telemetryTxBuffer[retransmissionFrameId], TELEMETRY_FRAME_SIZE);
+            extern uint8_t buildTelFrameCase2_cnt;
+            buildTelFrameCase2_cnt++;
         } else {
             uint8_t localAckId = inFrameMarker->data.ackSequenceId;
             if (localPacketId != (localAckId + 1) % TELEMETRY_SEQUENCE_LENGTH) {
@@ -259,6 +268,8 @@ static void buildTelemetryFrame(uint8_t *packet)
                 memcpy(&telemetryTxBuffer[localPacketId], &frame[6], TELEMETRY_FRAME_SIZE);
 
                 localPacketId = (localPacketId + 1) % TELEMETRY_SEQUENCE_LENGTH;
+                extern uint8_t buildTelFrameCase3_cnt;
+                buildTelFrameCase3_cnt++;
             }
         }
     }
@@ -284,6 +295,8 @@ static void frSkyXTelemetrySendByte(uint8_t c) {
         telemetryOutBuffer[telemetryOutWriter] = c;
         telemetryOutWriter = (telemetryOutWriter + 1) % TELEMETRY_OUT_BUFFER_SIZE;
     }
+    extern uint8_t telSendByte_cnt;
+    telSendByte_cnt++;
 }
 
 static void frSkyXTelemetryWriteFrame(const smartPortPayload_t *payload)

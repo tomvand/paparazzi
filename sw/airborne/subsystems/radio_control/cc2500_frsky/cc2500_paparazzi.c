@@ -48,10 +48,12 @@ static bool auxiliaryProcessingRequired = false;
 
 static uint16_t frsky_raw[RADIO_CTL_NB];
 
-uint8_t buildTelemetryFrame_cnt = 0;
-uint8_t buildTelemetryFrame_retransmission_cnt = 0;
-uint8_t buildTelemetryFrame_append_cnt = 0;
-uint8_t buildTelemetryFrame_sync_cnt = 0;
+uint8_t telSendByte_cnt = 0;
+uint8_t appendSport_cnt = 0;
+uint8_t appendSportWrite_cnt = 0;
+uint8_t buildTelFrameCase1_cnt = 0;
+uint8_t buildTelFrameCase2_cnt = 0;
+uint8_t buildTelFrameCase3_cnt = 0;
 
 void radio_control_impl_init(void) {
   cc2500_settings_init();
@@ -99,10 +101,10 @@ void radio_control_impl_event(void (* _received_frame_handler)(void)) {
   cnt++;
   if(cnt == 1000) {
     DOWNLINK_SEND_CC2500_TRACE(DefaultChannel, DefaultDevice,
-        &buildTelemetryFrame_cnt,
-        &buildTelemetryFrame_retransmission_cnt,
-        &buildTelemetryFrame_append_cnt,
-        &buildTelemetryFrame_sync_cnt);
+        &telSendByte_cnt,
+        &appendSport_cnt,
+        &appendSportWrite_cnt,
+        &buildTelFrameCase1_cnt, &buildTelFrameCase2_cnt, &buildTelFrameCase3_cnt);
     cnt = 0;
   }
 
