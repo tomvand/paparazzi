@@ -155,3 +155,77 @@ cc2500_frsky_x.c::buildTelemetryFrame (case 1 disabled, TX in Telem OFF/ON mode,
     CASE 3 CALLED ONLY ONCE
 cc2500_frsky_x.c::buildTelemetryFrame (force case 3 without checks)
     Telemetry stream present, but not received. No response in TX request byte.
+
+
+Removing debug downlink does not fix telemetry
+
+
+
+frsky_x.c::frSkyXHandlePacket timing:
+STATE_STARTING
+  ==> STATE_UPDATE
+
+STATE_UPDATE
+  packetTimerUs = micros()
+  ==> STATE_DATA
+  receiveDelayUs = 5300
+  if SpiBindRequested
+    packetTimerUs = 0
+    timeoutUs = 50
+    missingPackets = 0
+    ==> STATE_INIT
+  !FALLTHROUGH!
+
+STATE_DATA
+  if GDO and !frameReceived
+    ReadFifo
+    if isValidPacket
+      missingPackets = 0
+      timeoutUs = 1
+      receiveDelayUs = 0
+      telemetryReceived = true
+      packetTimerUs = micros()
+      frameReceived = true
+    if !frameReceived
+      SFRX
+  if telemetryReceived
+    if micros() > packetTimerUs + receiveDelayUs
+      ==> STATE_TELEMETRY
+      buildTelemetryFrame
+  if micros() > packetTimerUs + timeoutUs * SYNC_DELAY_MAX (9000)
+    SpiLedToggle
+    Rssi 0
+    ==> STATE_UPDATE
+  if frameReceived
+    ret |= RX_SPI_RECEIVED_DATA
+
+STATE_TELEMETRY
+  if micros() > packetTimerUs (STATE_UPDATE) + receiveDelayUs (0 if valid packet received, 5300 otherwise) + telemetryDelayUs (1400 for LBT)
+    SFRX
+    WriteFifo
+    if telemetryEnabled
+      ret |= RX_SPI_PROCESSING_REQUIRED
+    ==> STATE_RESUME
+
+STATE_RESUME
+  if micros() > packetTimerUs + receiveDelayUs (0 or 5300) + 3700
+    packetTimerUs = micros()
+    receiveDelay = 5300
+    frameReceived = false
+    if missingPackets > MAX_MISSING_PKT
+      timeoutUs = 50
+      telemetryReceived = false
+      ==> STATE_UPDATE
+      !BREAK!
+    missingPackets++
+    ==> STATE_DATA
+
+
+State entry times:
+packetTimerUs + 100-150 (Required: < 6700): STATE_TELEMETRY *first entry*
+packetTimerUs + 1700-1800 (Required: < 9000): STATE_RESUME *first entry*
+Both of the times show occasional spikes
+
+If-block entry times:
+packetTimerUs + ~1405, sometimes ~6711: STATE_TELEMETRY
+packetTimerUs + ~3712, sometimes ~9011: STATE_RESUME

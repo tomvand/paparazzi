@@ -364,6 +364,9 @@ rx_spi_received_e frSkyXHandlePacket(uint8_t * const packet, uint8_t * const pro
     static uint8_t channelsToSkip = 1;
     static uint32_t packetErrors = 0;
 
+    extern uint32_t resume_time;
+    extern uint32_t telemetry_time;
+
 #if defined(USE_RX_FRSKY_SPI_TELEMETRY)
     static bool telemetryReceived = false;
 #endif
@@ -501,6 +504,7 @@ rx_spi_received_e frSkyXHandlePacket(uint8_t * const packet, uint8_t * const pro
 #ifdef USE_RX_FRSKY_SPI_TELEMETRY
     case STATE_TELEMETRY:
         if (cmpTimeUs(micros(), packetTimerUs) >= receiveDelayUs + telemetryDelayUs) { // if received or not received in this time sent telemetry data
+            if (!telemetry_time) telemetry_time = micros() - packetTimerUs;
             cc2500Strobe(CC2500_SIDLE);
             cc2500SetPower(6);
             cc2500Strobe(CC2500_SFRX);
@@ -523,6 +527,7 @@ rx_spi_received_e frSkyXHandlePacket(uint8_t * const packet, uint8_t * const pro
 #endif // USE_RX_FRSKY_SPI_TELEMETRY
     case STATE_RESUME:
         if (cmpTimeUs(micros(), packetTimerUs) > receiveDelayUs + 3700) {
+            if (!resume_time) resume_time = micros() - packetTimerUs;
             packetTimerUs = micros();
             receiveDelayUs = 5300;
             frameReceived = false; // again set for receive

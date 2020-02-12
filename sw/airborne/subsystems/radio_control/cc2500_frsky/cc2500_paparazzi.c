@@ -55,6 +55,9 @@ uint8_t buildTelFrameCase1_cnt = 0;
 uint8_t buildTelFrameCase2_cnt = 0;
 uint8_t buildTelFrameCase3_cnt = 0;
 
+uint32_t telemetry_time = 0;
+uint32_t resume_time = 0;
+
 void radio_control_impl_init(void) {
   cc2500_settings_init();
   cc2500_init();
@@ -104,7 +107,10 @@ void radio_control_impl_event(void (* _received_frame_handler)(void)) {
         &telSendByte_cnt,
         &appendSport_cnt,
         &appendSportWrite_cnt,
-        &buildTelFrameCase1_cnt, &buildTelFrameCase2_cnt, &buildTelFrameCase3_cnt);
+        &buildTelFrameCase1_cnt, &buildTelFrameCase2_cnt, &buildTelFrameCase3_cnt,
+        &telemetry_time, &resume_time);
+    telemetry_time = 0;
+    resume_time = 0;
     cnt = 0;
   }
 
