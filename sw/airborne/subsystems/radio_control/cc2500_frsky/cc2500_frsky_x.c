@@ -555,6 +555,9 @@ rx_spi_received_e frSkyXHandlePacket(uint8_t * const packet, uint8_t * const pro
         break;
     }
 
+    extern uint32_t missingPackets_cnt;
+    missingPackets_cnt = missingPackets;
+
     return ret;
 }
 

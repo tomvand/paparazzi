@@ -645,6 +645,7 @@
       <field name="BuildTelFrameCase3" type="uint8"/>
       <field name="TelemetryTime" type="uint32"/>
       <field name="ResumeTime" type="uint32"/>
+      <field name="MissingPackets" type="uint32"/>
     </message>
 
     <!-- 75 is free -->

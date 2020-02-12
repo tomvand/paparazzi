@@ -229,3 +229,5 @@ Both of the times show occasional spikes
 If-block entry times:
 packetTimerUs + ~1405, sometimes ~6711: STATE_TELEMETRY
 packetTimerUs + ~3712, sometimes ~9011: STATE_RESUME
+
+missingPackets: 0-1
