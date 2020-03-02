@@ -33,10 +33,11 @@ void pidtuner_periodic(void) {
   float gain1 = radio_control.values[RADIO_GAIN1];
   float gain2 = radio_control.values[RADIO_GAIN2];
 
-//  stabilization_gains.d.x = (gain1 / 9600.0) * 70 * 2;
-//  stabilization_gains.d.y = (gain1 / 9600.0) * 70 * 2;
+  stabilization_gains.d.x = (gain1 / 9600.0) * 70 * 2;
+  stabilization_gains.d.y = (gain1 / 9600.0) * 70 * 2;
 
-  ahrs_fc.gravity_heuristic_factor = (gain2 / 9600.0) * 30 * 2;
+  stabilization_gains.p.x = (gain2 / 9600.0) * 70 * 2;
+  stabilization_gains.p.y = (gain2 / 9600.0) * 70 * 2;
 }
 
 
