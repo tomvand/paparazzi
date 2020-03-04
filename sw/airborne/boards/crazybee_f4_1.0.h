@@ -198,7 +198,7 @@
 #define ADC_1_GPIO_PIN GPIO0
 
 #define ADC_CHANNEL_VSUPPLY ADC_1
-#define DefaultVoltageOfAdc(adc) (0.009*adc)// TODO: determine 100% correct value
+#define DefaultVoltageOfAdc(adc) (0.008870757*adc)
 #endif
 
 /* Current */
