@@ -118,7 +118,7 @@
 
             <configure name="USE_MAGNETOMETER" value="FALSE"/>
             <define name="AHRS_USE_GPS_HEADING" value="TRUE"/> <!-- True for Optitrack false for real magneto-->
-            <define name="AHRS_GRAVITY_HEURISTIC_FACTOR" value="20"/> <!-- TODO: determine best... Default is 30. Reduce accelerometer cut-off frequency when the vehicle is accelerating: norm(ax,ay,az) 9,81 m/s2. WARNING: when the IMU is not well damped, the norm of accelerometers never equals to 9,81 m/s2. As a result, the GRAVITY_HEURISTIC_FACTOR will reduce the accelerometer bandwith even if the vehicle is not accelerating. -->
+            <define name="AHRS_GRAVITY_HEURISTIC_FACTOR" value="60"/> <!-- TODO: determine best... Default is 30. Reduce accelerometer cut-off frequency when the vehicle is accelerating: norm(ax,ay,az) 9,81 m/s2. WARNING: when the IMU is not well damped, the norm of accelerometers never equals to 9,81 m/s2. As a result, the GRAVITY_HEURISTIC_FACTOR will reduce the accelerometer bandwith even if the vehicle is not accelerating. -->
             <define name="AHRS_PROPAGATE_LOW_PASS_RATES" value="FALSE"/> <!-- apply a low pass filter on rotational velocity"-->
        </module>
 
@@ -302,11 +302,11 @@
         <define name="REF_MAX_R"    value="600." unit="deg/s"/>
         <define name="REF_MAX_RDOT" value="RadOfDeg(1800.)"/>
 
-        <define name="PHI_PGAIN" value="70"/>
+        <define name="PHI_PGAIN" value="90"/>
         <define name="PHI_DGAIN" value="50"/>
         <define name="PHI_IGAIN" value="10"/>
 
-        <define name="THETA_PGAIN" value="70"/>
+        <define name="THETA_PGAIN" value="90"/>
         <define name="THETA_DGAIN" value="50"/>
         <define name="THETA_IGAIN" value="10"/>
 

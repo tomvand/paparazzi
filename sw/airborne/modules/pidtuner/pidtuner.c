@@ -39,7 +39,7 @@ void pidtuner_periodic(void) {
 //  stabilization_gains.p.z = (gain2 / 9600.0) * 350 * 2;
 //  stabilization_gains.i.y = (gain2 / 9600.0) * 10 * 2;
 
-  ahrs_fc.gravity_heuristic_factor = (gain2 / 9600.0) * 15 * 2;
+//  ahrs_fc.gravity_heuristic_factor = (gain2 / 9600.0) * 15 * 2;
 }
 
 
