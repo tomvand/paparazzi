@@ -57,7 +57,7 @@
   
   
   <servos driver="Pwm">
-    <servo name="FL" no="3" min="1000" neutral="1150" max="2000" /> <!-- maybe shorter on the cost of resolution... but low high differcnce MUST be bigger than 140 -->
+    <servo name="FL" no="3" min="1000" neutral="1150" max="2000" />
     <servo name="FR" no="1" min="1000" neutral="1150" max="2000" />
     <servo name="BR" no="0" min="1000" neutral="1150" max="2000" />
     <servo name="BL" no="2" min="1000" neutral="1150" max="2000" />

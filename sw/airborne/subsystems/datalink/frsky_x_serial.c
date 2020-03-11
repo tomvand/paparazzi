@@ -20,9 +20,8 @@
  */
 
 #include "subsystems/radio_control/cc2500_frsky/cc2500_smartport.h"
-#include "subsystems/datalink/frsky_x.h"
-
 #include <string.h>
+#include "frsky_x_serial.h"
 
 static uint32_t counter = 0;
 
@@ -146,7 +145,7 @@ static bool smartPortDownlink_cb(uint32_t *data) {
 }
 
 
-void datalink_frsky_x_init(void) {
+void frsky_x_serial_init(void) {
   /* Set up link device */
   fifo_init(&frsky_x_serial.downlink_fifo, frsky_x_serial.downlink_buf, DOWNLINK_BUFFER_SIZE);
   fifo_init(&frsky_x_serial.uplink_fifo, frsky_x_serial.uplink_buf, UPLINK_BUFFER_SIZE);

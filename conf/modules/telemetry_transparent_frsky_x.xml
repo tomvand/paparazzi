@@ -1,6 +1,6 @@
 <!DOCTYPE module SYSTEM "module.dtd">
 
-<module name="telemetry_transparent_usb" dir="datalink" task="datalink">
+<module name="telemetry_transparent_frsky_x" dir="datalink" task="datalink">
   <doc>
     <description>
       Telemetry using pprzlink protocol over FrSky X SmartPort serial link
@@ -9,7 +9,7 @@
       Uplink is not implemented yet.
       
       Use the sw/tools/opentx-lua/sp2ser.lua script to receive these messages
-      on the TX and forward them to the USB port. The 'datalink' script can
+      on the TX and forward them to the USB port. The 'datalink' program can
       read the pprzlink stream as a regular serial port.
       
       The data rate is very limited (max ~160 bytes/s). The limitation comes
@@ -23,13 +23,13 @@
   <autoload name="telemetry" type="sim"/>
   <header>
     <file name="pprz_dl.h"/>
-    <file name="frsky_x.h" dir="subsystems/datalink"/>
+    <file name="frsky_x_serial.h" dir="subsystems/datalink"/>
   </header>
-  <init fun="datalink_frsky_x_init()"/>
+  <init fun="frsky_x_serial_init()"/>
   <init fun="pprz_dl_init()"/>
   <event fun="pprz_dl_event()"/>
   <makefile>
-    <file name="frsky_x.c" dir="subsystems/datalink"/>
+    <file name="frsky_x_serial.c" dir="subsystems/datalink"/>
   </makefile>
   
   <makefile target="!fbw|sim|nps|hitl">
@@ -45,7 +45,7 @@
     <file name="datalink.c" dir="subsystems/datalink"/>
     <file name="telemetry.c" dir="subsystems/datalink"/>
     <file name="pprz_transport.c" dir="pprzlink/src"/>
-    <file name="frsky_x.c" dir="subsystems/datalink"/>
+    <file name="frsky_x_serial.c" dir="subsystems/datalink"/>
   </makefile>
   <makefile target="ap" firmware="fixedwing">
     <file name="fixedwing_datalink.c" dir="$(SRC_FIRMWARE)"/>

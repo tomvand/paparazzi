@@ -19,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef DATALINK_FRSKY_X_H
-#define DATALINK_FRSKY_X_H
+#ifndef DATALINK_FRSKY_X_SERIAL_H
+#define DATALINK_FRSKY_X_SERIAL_H
 
 #include "pprzlink/pprzlink_device.h"
 
@@ -46,6 +46,6 @@ struct frsky_x_serial_periph {
 };
 extern struct frsky_x_serial_periph frsky_x_serial;
 
-void datalink_frsky_x_init(void);
+void frsky_x_serial_init(void);
 
-#endif // DATALINK_FRSKY_X_H
+#endif // DATALINK_FRSKY_X_SERIAL_H
