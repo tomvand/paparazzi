@@ -23,8 +23,6 @@
 #include <string.h>
 #include "frsky_x_serial.h"
 
-static uint32_t counter = 0;
-
 struct frsky_x_serial_periph frsky_x_serial;
 
 
