@@ -73,6 +73,7 @@
         <module name="imu"           type="mpu60x0_i2c">
           <configure name="IMU_MPU60X0_I2C_DEV" value="softi2c0"/>
           <define name="USE_LED_STRIP"/>
+          <define name="SOFTI2C0_CLOCK_SPEED" value="10000"/>
           <define name="SOFTI2C0_SDA_GPIO" value="LED_STRIP_GPIO_PORT"/>
           <define name="SOFTI2C0_SDA_PIN" value="LED_STRIP_GPIO_PIN"/>
           <define name="SOFTI2C0_SCL_GPIO" value="UART1_GPIO_PORT_TX"/>
