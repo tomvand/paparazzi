@@ -38,10 +38,6 @@
 #include <time.h>
 #include <math.h>
 
-int8_t VL53L1_WriteMulti( uint16_t dev, uint16_t index, uint8_t *pdata, uint32_t count) {
-	return 0; // to be implemented
-}
-
 int8_t VL53L1_ReadMulti(uint16_t dev, uint16_t index, uint8_t *pdata, uint32_t count){
 	return 0; // to be implemented
 }
@@ -67,9 +63,5 @@ int8_t VL53L1_RdWord(uint16_t dev, uint16_t index, uint16_t *data) {
 }
 
 int8_t VL53L1_RdDWord(uint16_t dev, uint16_t index, uint32_t *data) {
-	return 0; // to be implemented
-}
-
-int8_t VL53L1_WaitMs(uint16_t dev, int32_t wait_ms){
 	return 0; // to be implemented
 }
