@@ -62,6 +62,7 @@
       <board name="chimera_.*"/>
       <board name="tawaki_.*"/>
       <board name="crazyflie_.*"/>
+      <board name="crazybee_f4_.*"/>
     </boards>
   </mode>
   <mode name="STLink (SWD)">
@@ -77,6 +78,7 @@
       <board name="chimera_.*"/>
       <board name="tawaki_.*"/>
       <board name="crazyflie_.*"/>
+      <board name="crazybee_f4_.*"/>
     </boards>
   </mode>
   <mode name="BlackMagic Probe (SWD)">
