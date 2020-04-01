@@ -27,6 +27,7 @@
     <define name="USE_$(SONAR_VL53L1X_I2C_DEV_UPPER)"/>
     <file name="vl53l1_platform.c" dir="peripherals"/>
     <file name="vl53l1_api.c" dir="peripherals"/>
+    <file name="vl53l1_nonblocking.c" dir="peripherals"/>
   </makefile>
 
 </module>
