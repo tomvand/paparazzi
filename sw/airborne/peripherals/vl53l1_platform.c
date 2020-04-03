@@ -38,30 +38,68 @@
 #include <time.h>
 #include <math.h>
 
-int8_t VL53L1_ReadMulti(uint16_t dev, uint16_t index, uint8_t *pdata, uint32_t count){
-	return 0; // to be implemented
+int8_t VL53L1_WriteMulti(VL53L1_DEV dev, uint16_t index, uint8_t *pdata, uint32_t count) {
+  dev->i2c_trans.type = I2CTransTx;
+  dev->i2c_trans.len_w = 2 + count; // index[2] + pdata[count]
+  dev->i2c_trans.buf[0] = (index & 0xFF00) >> 8; // MSB first
+  dev->i2c_trans.buf[1] = (index & 0x00FF);
+  memcpy((uint8_t *) dev->i2c_trans.buf + 2, pdata, count);
+  dev->i2c_trans.len_r = 0;
+  return !i2c_blocking_transmit(dev->i2c_p, &dev->i2c_trans,
+      dev->i2c_trans.slave_addr, dev->i2c_trans.len_w);
 }
 
-int8_t VL53L1_WrByte(uint16_t dev, uint16_t index, uint8_t data) {
-	return 0; // to be implemented
+int8_t VL53L1_ReadMulti(VL53L1_DEV dev, uint16_t index, uint8_t *pdata, uint32_t count){
+  dev->i2c_trans.type = I2CTransTxRx;
+  dev->i2c_trans.len_w = 2;
+  dev->i2c_trans.buf[0] = (index & 0xFF00) >> 8; // MSB first
+  dev->i2c_trans.buf[1] = (index & 0x00FF);
+  dev->i2c_trans.len_r = count;
+	int8_t ret = !i2c_blocking_transceive(dev->i2c_p, &dev->i2c_trans,
+	    dev->i2c_trans.slave_addr, dev->i2c_trans.len_w, dev->i2c_trans.len_r);
+	memcpy(pdata, (uint8_t *) dev->i2c_trans.buf, count);
+	return ret;
 }
 
-int8_t VL53L1_WrWord(uint16_t dev, uint16_t index, uint16_t data) {
-	return 0; // to be implemented
+int8_t VL53L1_WrByte(VL53L1_DEV dev, uint16_t index, uint8_t data) {
+	return VL53L1_WriteMulti(dev, index, &data, 1);
 }
 
-int8_t VL53L1_WrDWord(uint16_t dev, uint16_t index, uint32_t data) {
-	return 0; // to be implemented
+int8_t VL53L1_WrWord(VL53L1_DEV dev, uint16_t index, uint16_t data) {
+  uint8_t data_u8[] = {
+      (data & 0xFF00) >> 8,
+      (data & 0x00FF)
+  };
+  return VL53L1_WriteMulti(dev, index, data_u8, 2);
 }
 
-int8_t VL53L1_RdByte(uint16_t dev, uint16_t index, uint8_t *data) {
-	return 0; // to be implemented
+int8_t VL53L1_WrDWord(VL53L1_DEV dev, uint16_t index, uint32_t data) {
+  uint8_t data_u8[] = {
+      (data & 0xFF000000) >> 24,
+      (data & 0x00FF0000) >> 16,
+      (data & 0x0000FF00) >> 8,
+      (data & 0x000000FF)
+  };
+  return VL53L1_WriteMulti(dev, index, data_u8, 4);
 }
 
-int8_t VL53L1_RdWord(uint16_t dev, uint16_t index, uint16_t *data) {
-	return 0; // to be implemented
+int8_t VL53L1_RdByte(VL53L1_DEV dev, uint16_t index, uint8_t *data) {
+	return VL53L1_ReadMulti(dev, index, data, 1);
 }
 
-int8_t VL53L1_RdDWord(uint16_t dev, uint16_t index, uint32_t *data) {
-	return 0; // to be implemented
+int8_t VL53L1_RdWord(VL53L1_DEV dev, uint16_t index, uint16_t *data) {
+  uint8_t data_u8[2];
+  int8_t ret = VL53L1_ReadMulti(dev, index, data_u8, 2);
+  *data = (data_u8[0] << 8) | data_u8[1];
+	return ret;
+}
+
+int8_t VL53L1_RdDWord(VL53L1_DEV dev, uint16_t index, uint32_t *data) {
+  uint8_t data_u8[4];
+  int8_t ret = VL53L1_ReadMulti(dev, index, data_u8, 4);
+  *data = (data_u8[0] << 24) |
+           data_u8[1] << 16 |
+           data_u8[2] << 8 |
+           data_u8[3];
+  return ret;
 }

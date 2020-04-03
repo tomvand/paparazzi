@@ -15,8 +15,8 @@
     <file name="sonar_vl53l1x.h"/>
   </header>
 
-  <init fun="sonar_vl53l1x_init()"/>
-  <periodic fun="sonar_vl53l1x_read()" freq="20"/>
+  <!-- <init fun="sonar_vl53l1x_init()"/> -->
+  <!-- <periodic fun="sonar_vl53l1x_read()" freq="20"/> -->
 
   <makefile target="ap|sim">
     <file name="sonar_vl53l1x.c"/>
@@ -26,8 +26,8 @@
     <define name="SONAR_VL53L1X_I2C_DEV" value="$(SONAR_VL53L1X_I2C_DEV_LOWER)"/>
     <define name="USE_$(SONAR_VL53L1X_I2C_DEV_UPPER)"/>
     <file name="vl53l1_platform.c" dir="peripherals"/>
-    <file name="vl53l1_api.c" dir="peripherals"/>
-    <file name="vl53l1_nonblocking.c" dir="peripherals"/>
+    <file name="vl53l1x_api.c" dir="peripherals"/>
+    <file name="vl53l1x_nonblocking.c" dir="peripherals"/>
   </makefile>
 
 </module>

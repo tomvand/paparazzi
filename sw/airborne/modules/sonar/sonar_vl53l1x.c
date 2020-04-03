@@ -60,33 +60,33 @@ static struct adc_buf sonar_adc_buf;
 
 void sonar_adc_init(void)
 {
-  sonar_adc.meas = 0;
-  sonar_adc.offset = SONAR_OFFSET;
-
-#ifndef SITL
-  adc_buf_channel(ADC_CHANNEL_SONAR, &sonar_adc_buf, DEFAULT_AV_NB_SAMPLE);
-#endif
+//  sonar_adc.meas = 0;
+//  sonar_adc.offset = SONAR_OFFSET;
+//
+//#ifndef SITL
+//  adc_buf_channel(ADC_CHANNEL_SONAR, &sonar_adc_buf, DEFAULT_AV_NB_SAMPLE);
+//#endif
 }
 
 /** Read ADC value to update sonar measurement
  */
 void sonar_adc_read(void)
 {
-#ifndef SITL
-  sonar_adc.meas = sonar_adc_buf.sum / sonar_adc_buf.av_nb_sample;
-  sonar_adc.distance = (float)(sonar_adc.meas - sonar_adc.offset) * SONAR_SCALE;
-#else // SITL
-  sonar_adc.distance = stateGetPositionEnu_f()->z;
-  Bound(sonar_adc.distance, 0.1f, 7.0f);
-#endif // SITL
-
-  // Send ABI message
-  uint32_t now_ts = get_sys_time_usec();
-  AbiSendMsgAGL(AGL_SONAR_ADC_ID, now_ts, sonar_adc.distance);
-
-#ifdef SENSOR_SYNC_SEND_SONAR
-  // Send Telemetry report
-  DOWNLINK_SEND_SONAR(DefaultChannel, DefaultDevice, &sonar_adc.meas, &sonar_adc.distance);
-#endif
+//#ifndef SITL
+//  sonar_adc.meas = sonar_adc_buf.sum / sonar_adc_buf.av_nb_sample;
+//  sonar_adc.distance = (float)(sonar_adc.meas - sonar_adc.offset) * SONAR_SCALE;
+//#else // SITL
+//  sonar_adc.distance = stateGetPositionEnu_f()->z;
+//  Bound(sonar_adc.distance, 0.1f, 7.0f);
+//#endif // SITL
+//
+//  // Send ABI message
+//  uint32_t now_ts = get_sys_time_usec();
+//  AbiSendMsgAGL(AGL_SONAR_ADC_ID, now_ts, sonar_adc.distance);
+//
+//#ifdef SENSOR_SYNC_SEND_SONAR
+//  // Send Telemetry report
+//  DOWNLINK_SEND_SONAR(DefaultChannel, DefaultDevice, &sonar_adc.meas, &sonar_adc.distance);
+//#endif
 }
 

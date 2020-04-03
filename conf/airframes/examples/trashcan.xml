@@ -60,6 +60,12 @@
         </module>
         
         <module name="sonar" type="vl53l1x">
+          <configure name="SONAR_VL53L1X_I2C_DEV" value="softi2c0"/>
+          <define name="USE_LED_STRIP"/>
+          <define name="SOFTI2C0_SDA_GPIO" value="LED_STRIP_GPIO_PORT"/>
+          <define name="SOFTI2C0_SDA_PIN" value="LED_STRIP_GPIO_PIN"/>
+          <define name="SOFTI2C0_SCL_GPIO" value="UART1_GPIO_PORT_TX"/>
+          <define name="SOFTI2C0_SCL_PIN" value="UART1_GPIO_TX"/>
         </module>
 
         <module name="motor_mixing"/>
