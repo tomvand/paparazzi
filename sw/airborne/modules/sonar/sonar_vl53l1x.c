@@ -20,73 +20,88 @@
  *
  */
 
-#include "modules/sonar/sonar_adc.h"
-#include "generated/airframe.h"
-#include "mcu_periph/adc.h"
+#include "sonar_vl53l1x.h"
+
+#include "mcu_periph/i2c.h"
+#include "peripherals/vl53l1x_nonblocking.h"
 #include "subsystems/abi.h"
+
 #ifdef SITL
 #include "state.h"
 #endif
 
-#include "mcu_periph/uart.h"
-#include "pprzlink/messages.h"
 #include "subsystems/datalink/downlink.h"
 
+#ifndef SONAR_VL53L1X_I2C_DEV
+#define SONAR_VL53L1X_I2C_DEV i2c1
+#endif
 
 #ifndef SONAR_VL53L1X_I2C_ADDR
 #define SONAR_VL53L1X_I2C_ADDR 0x52
 #endif
 
-/** Sonar offset.
- *  Offset value in ADC
- *  equals to the ADC value so that height is zero
- */
-#ifndef SONAR_OFFSET
-#define SONAR_OFFSET 0
+// Sonar offset in mm
+#ifndef SONAR_VL53L1X_OFFSET
+#define SONAR_VL53L1X_OFFSET 0
 #endif
 
-/** Sonar scale.
- *  Sensor sensitivity in m/adc (float)
- */
-#ifndef SONAR_SCALE
-#define SONAR_SCALE 0.0166
+struct sonar_vl53l1x_dev sonar_vl53l1x;
+
+
+static void sonar_vl53l1x_publish(uint16_t range_mm) {
+  float range_m = range_mm * 1.0e-3f;
+
+  // Send ABI message
+  uint32_t now_ts = get_sys_time_usec();
+  AbiSendMsgAGL(AGL_VL53L1X_ID, now_ts, range_m);
+
+#ifdef SENSOR_SYNC_SEND_SONAR
+  // Send Telemetry report
+  DOWNLINK_SEND_SONAR(DefaultChannel, DefaultDevice, &range_mm, &range_m);
 #endif
+}
 
-struct SonarAdc sonar_adc;
 
+void sonar_vl53l1x_init(void) {
+  // Set up structs
+  sonar_vl53l1x.dev->i2c_p = &SONAR_VL53L1X_I2C_DEV;
+  sonar_vl53l1x.dev->i2c_trans.slave_addr = SONAR_VL53L1X_I2C_ADDR;
+  sonar_vl53l1x.offset_mm = SONAR_VL53L1X_OFFSET;
+
+  // Initialize sensor
+  uint8_t state;
+  while (!VL53L1X_BootState(sonar_vl53l1x.dev, &state)) /* spin */;
+  VL53L1X_SensorInit(sonar_vl53l1x.dev);
+  /* TODO Configuration */
+  VL53L1X_StartRanging(sonar_vl53l1x.dev);
+}
+
+
+void sonar_vl53l1x_read(void) {
 #ifndef SITL
-static struct adc_buf sonar_adc_buf;
-#endif
-
-void sonar_adc_init(void)
-{
-//  sonar_adc.meas = 0;
-//  sonar_adc.offset = SONAR_OFFSET;
-//
-//#ifndef SITL
-//  adc_buf_channel(ADC_CHANNEL_SONAR, &sonar_adc_buf, DEFAULT_AV_NB_SAMPLE);
-//#endif
+  uint8_t isDataReady;
+  uint16_t range_mm;
+  switch (sonar_vl53l1x.read_state) {
+    case 0:
+      // Wait for data ready
+      if (!VL53L1X_NonBlocking_CheckForDataReady(sonar_vl53l1x.dev, &isDataReady)) return; // Check in progress
+      sonar_vl53l1x.read_state++;
+      /* Falls through. */
+    case 1:
+      // Get ranging data
+      if (!VL53L1X_NonBlocking_GetDistance(sonar_vl53l1x.dev, &range_mm)) return; // Read in progress
+      sonar_vl53l1x_publish(range_mm);
+      sonar_vl53l1x.read_state++;
+      /* Falls through. */
+    case 2:
+      // Clear interrupt
+      if (!VL53L1X_NonBlocking_ClearInterrupt(sonar_vl53l1x.dev)) return; // Clear in progress
+      sonar_vl53l1x.read_state = 0;
+      break;
+    default: return;
+  }
+#else // SITL
+  sonar_adc.distance = stateGetPositionEnu_f()->z;
+  Bound(sonar_adc.distance, 0.0f, 5.0f);
+#endif // SITL
 }
-
-/** Read ADC value to update sonar measurement
- */
-void sonar_adc_read(void)
-{
-//#ifndef SITL
-//  sonar_adc.meas = sonar_adc_buf.sum / sonar_adc_buf.av_nb_sample;
-//  sonar_adc.distance = (float)(sonar_adc.meas - sonar_adc.offset) * SONAR_SCALE;
-//#else // SITL
-//  sonar_adc.distance = stateGetPositionEnu_f()->z;
-//  Bound(sonar_adc.distance, 0.1f, 7.0f);
-//#endif // SITL
-//
-//  // Send ABI message
-//  uint32_t now_ts = get_sys_time_usec();
-//  AbiSendMsgAGL(AGL_SONAR_ADC_ID, now_ts, sonar_adc.distance);
-//
-//#ifdef SENSOR_SYNC_SEND_SONAR
-//  // Send Telemetry report
-//  DOWNLINK_SEND_SONAR(DefaultChannel, DefaultDevice, &sonar_adc.meas, &sonar_adc.distance);
-//#endif
-}
-

@@ -27,17 +27,16 @@
 #ifndef SONAR_ADC_H
 #define SONAR_ADC_H
 
-#include "std.h"
+#include "peripherals/vl53l1x_api.h"
 
-struct SonarAdc {
-  uint16_t meas;          ///< Raw ADC value
-  uint16_t offset;        ///< Sonar offset in ADC units
-  float distance;         ///< Distance measured in meters
+struct sonar_vl53l1x_dev {
+  VL53L1_DEV dev;
+  int16_t offset_mm;
+  uint8_t read_state;
 };
+extern struct sonar_vl53l1x_dev sonar_vl53l1x;
 
-extern struct SonarAdc sonar_adc;
-
-extern void sonar_adc_init(void);
-extern void sonar_adc_read(void);
+extern void sonar_vl53l1x_init(void);
+extern void sonar_vl53l1x_read(void);
 
 #endif

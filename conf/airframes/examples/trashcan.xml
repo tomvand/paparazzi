@@ -60,6 +60,7 @@
         </module>
         
         <module name="sonar" type="vl53l1x">
+        	<define name="SENSOR_SYNC_SEND_SONAR" value="TRUE"/>
           <configure name="SONAR_VL53L1X_I2C_DEV" value="softi2c0"/>
           <define name="USE_LED_STRIP"/>
           <define name="SOFTI2C0_SDA_GPIO" value="LED_STRIP_GPIO_PORT"/>
