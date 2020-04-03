@@ -25,14 +25,7 @@ typedef struct {
     uint8_t i2c_state;
     /* State machine for nonblocking functions */
     uint8_t state;
-    union NonBlockingLocals {
-      struct CheckForDataReady {
-        uint8_t IntPol;
-      } checkfordataready;
-      struct ClearInterrupt {
-        uint8_t status;
-      } clearinterrupt;
-    } locals;
+    uint8_t IntPol;
   } nonblocking;
 } VL53L1_Dev_t;
 

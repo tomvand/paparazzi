@@ -86,13 +86,13 @@ bool VL53L1X_NonBlocking_CheckForDataReady(VL53L1_DEV dev, uint8_t *isDataReady)
       // GetInterruptPolarity
       if (!VL53L1_NonBlocking_ReadMulti(dev, GPIO_HV_MUX__CTRL, &Temp, 1)) return false;
       Temp = Temp & 0x10;
-      dev->nonblocking.locals.checkfordataready.IntPol = !(Temp >> 4);
+      dev->nonblocking.IntPol = !(Temp >> 4);
       dev->nonblocking.state++;
       /* Falls through. */
     case 1:
       /* Read in the register to check if a new value is available */
       if (!VL53L1_NonBlocking_ReadMulti(dev, GPIO__TIO_HV_STATUS, &Temp, 1)) return false;
-      if ((Temp & 1) == dev->nonblocking.locals.checkfordataready.IntPol) {
+      if ((Temp & 1) == dev->nonblocking.IntPol) {
         *isDataReady = 1;
       } else {
         *isDataReady = 0;
