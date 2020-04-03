@@ -22,3 +22,35 @@
 /** @file peripherals/vl53l1x_nonblocking.h
  *  @brief Non-blocking runtime functions for the VL53L1X.
  */
+
+#ifndef VL53L1X_NONBLOCKING_H
+#define VL53L1X_NONBLOCKING_H
+
+
+#include "vl53l1x_api.h"
+
+#include <stdbool.h>
+
+
+/**
+ * @brief This function checks if the new ranging data is available by polling the dedicated register.
+ * @param : isDataReady==0 -> not ready; isDataReady==1 -> ready
+ * @return: TRUE upon completion
+ */
+bool VL53L1X_NonBlocking_CheckForDataReady(VL53L1_DEV dev, uint8_t *isDataReady);
+
+/**
+ * @brief This function returns the distance measured by the sensor in mm
+ * @return: TRUE upon completion
+ */
+bool VL53L1X_NonBlocking_GetDistance(VL53L1_DEV dev, uint16_t *distance);
+
+/**
+ * @brief This function clears the interrupt, to be called after a ranging data reading
+ * to arm the interrupt for the next data ready event.
+ * @return: TRUE upon completion
+ */
+bool VL53L1X_NonBlocking_ClearInterrupt(VL53L1_DEV dev);
+
+
+#endif // VL53L1X_NONBLOCKING_H

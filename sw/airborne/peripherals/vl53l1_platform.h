@@ -15,9 +15,25 @@ extern "C"
 {
 #endif
 
+
+
 typedef struct {
   struct i2c_periph *i2c_p;
   struct i2c_transaction i2c_trans;
+  struct NonBlocking {
+    /* I2C Read/write state machine */
+    uint8_t i2c_state;
+    /* State machine for nonblocking functions */
+    uint8_t state;
+    union NonBlockingLocals {
+      struct CheckForDataReady {
+        uint8_t IntPol;
+      } checkfordataready;
+      struct ClearInterrupt {
+        uint8_t status;
+      } clearinterrupt;
+    } locals;
+  } nonblocking;
 } VL53L1_Dev_t;
 
 typedef VL53L1_Dev_t *VL53L1_DEV;

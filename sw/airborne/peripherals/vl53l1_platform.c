@@ -38,25 +38,23 @@
 #include <time.h>
 #include <math.h>
 
+#include <assert.h>
+
 int8_t VL53L1_WriteMulti(VL53L1_DEV dev, uint16_t index, uint8_t *pdata, uint32_t count) {
-  dev->i2c_trans.type = I2CTransTx;
-  dev->i2c_trans.len_w = 2 + count; // index[2] + pdata[count]
+  assert(2 + count <= I2C_BUF_LEN);
   dev->i2c_trans.buf[0] = (index & 0xFF00) >> 8; // MSB first
   dev->i2c_trans.buf[1] = (index & 0x00FF);
   memcpy((uint8_t *) dev->i2c_trans.buf + 2, pdata, count);
-  dev->i2c_trans.len_r = 0;
   return !i2c_blocking_transmit(dev->i2c_p, &dev->i2c_trans,
-      dev->i2c_trans.slave_addr, dev->i2c_trans.len_w);
+      dev->i2c_trans.slave_addr, 2 + count);
 }
 
-int8_t VL53L1_ReadMulti(VL53L1_DEV dev, uint16_t index, uint8_t *pdata, uint32_t count){
-  dev->i2c_trans.type = I2CTransTxRx;
-  dev->i2c_trans.len_w = 2;
+int8_t VL53L1_ReadMulti(VL53L1_DEV dev, uint16_t index, uint8_t *pdata, uint32_t count) {
+  assert(count <= I2C_BUF_LEN);
   dev->i2c_trans.buf[0] = (index & 0xFF00) >> 8; // MSB first
   dev->i2c_trans.buf[1] = (index & 0x00FF);
-  dev->i2c_trans.len_r = count;
 	int8_t ret = !i2c_blocking_transceive(dev->i2c_p, &dev->i2c_trans,
-	    dev->i2c_trans.slave_addr, dev->i2c_trans.len_w, dev->i2c_trans.len_r);
+	    dev->i2c_trans.slave_addr, 2, count);
 	memcpy(pdata, (uint8_t *) dev->i2c_trans.buf, count);
 	return ret;
 }
