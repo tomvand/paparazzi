@@ -32,9 +32,10 @@
 
 #include "subsystems/datalink/downlink.h"
 
-#ifndef SONAR_VL53L1X_I2C_DEV
-#define SONAR_VL53L1X_I2C_DEV i2c1
-#endif
+
+//#ifndef SONAR_VL53L1X_I2C_DEV
+//#define SONAR_VL53L1X_I2C_DEV i2c1
+//#endif
 
 #ifndef SONAR_VL53L1X_I2C_ADDR
 #define SONAR_VL53L1X_I2C_ADDR 0x52
@@ -64,16 +65,16 @@ static void sonar_vl53l1x_publish(uint16_t range_mm) {
 
 void sonar_vl53l1x_init(void) {
   // Set up structs
-  sonar_vl53l1x.dev->i2c_p = &SONAR_VL53L1X_I2C_DEV;
-  sonar_vl53l1x.dev->i2c_trans.slave_addr = SONAR_VL53L1X_I2C_ADDR;
+  sonar_vl53l1x.dev.i2c_p = &SONAR_VL53L1X_I2C_DEV;
+  sonar_vl53l1x.dev.i2c_trans.slave_addr = SONAR_VL53L1X_I2C_ADDR;
   sonar_vl53l1x.offset_mm = SONAR_VL53L1X_OFFSET;
 
   // Initialize sensor
   uint8_t state;
-  while (!VL53L1X_BootState(sonar_vl53l1x.dev, &state)) /* spin */;
-  VL53L1X_SensorInit(sonar_vl53l1x.dev);
+  while (!VL53L1X_BootState(&sonar_vl53l1x.dev, &state)) /* spin */;
+  VL53L1X_SensorInit(&sonar_vl53l1x.dev);
   /* TODO Configuration */
-  VL53L1X_StartRanging(sonar_vl53l1x.dev);
+  VL53L1X_StartRanging(&sonar_vl53l1x.dev);
 }
 
 
@@ -84,18 +85,18 @@ void sonar_vl53l1x_read(void) {
   switch (sonar_vl53l1x.read_state) {
     case 0:
       // Wait for data ready
-      if (!VL53L1X_NonBlocking_CheckForDataReady(sonar_vl53l1x.dev, &isDataReady)) return; // Check in progress
+      if (!VL53L1X_NonBlocking_CheckForDataReady(&sonar_vl53l1x.dev, &isDataReady)) return; // Check in progress
       sonar_vl53l1x.read_state++;
       /* Falls through. */
     case 1:
       // Get ranging data
-      if (!VL53L1X_NonBlocking_GetDistance(sonar_vl53l1x.dev, &range_mm)) return; // Read in progress
+      if (!VL53L1X_NonBlocking_GetDistance(&sonar_vl53l1x.dev, &range_mm)) return; // Read in progress
       sonar_vl53l1x_publish(range_mm);
       sonar_vl53l1x.read_state++;
       /* Falls through. */
     case 2:
       // Clear interrupt
-      if (!VL53L1X_NonBlocking_ClearInterrupt(sonar_vl53l1x.dev)) return; // Clear in progress
+      if (!VL53L1X_NonBlocking_ClearInterrupt(&sonar_vl53l1x.dev)) return; // Clear in progress
       sonar_vl53l1x.read_state = 0;
       break;
     default: return;

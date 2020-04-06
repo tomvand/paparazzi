@@ -15,8 +15,8 @@
     <file name="sonar_vl53l1x.h"/>
   </header>
 
-  <!-- <init fun="sonar_vl53l1x_init()"/> -->
-  <!-- <periodic fun="sonar_vl53l1x_read()" freq="20"/> -->
+  <init fun="sonar_vl53l1x_init()"/>
+  <periodic fun="sonar_vl53l1x_read()" freq="20"/>
 
   <makefile target="ap|sim">
     <file name="sonar_vl53l1x.c"/>

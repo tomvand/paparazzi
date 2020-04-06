@@ -30,7 +30,7 @@
 #include "peripherals/vl53l1x_api.h"
 
 struct sonar_vl53l1x_dev {
-  VL53L1_DEV dev;
+  VL53L1_Dev_t dev;
   int16_t offset_mm;
   uint8_t read_state;
 };
