@@ -32,6 +32,8 @@
 
 #include "subsystems/datalink/downlink.h"
 
+#include "led.h"
+
 
 //#ifndef SONAR_VL53L1X_I2C_DEV
 //#define SONAR_VL53L1X_I2C_DEV i2c1
@@ -71,7 +73,9 @@ void sonar_vl53l1x_init(void) {
 
   // Initialize sensor
   uint8_t state;
-  while (!VL53L1X_BootState(&sonar_vl53l1x.dev, &state)) /* spin */;
+  do {
+    VL53L1X_BootState(&sonar_vl53l1x.dev, &state);
+  } while(!state);
   VL53L1X_SensorInit(&sonar_vl53l1x.dev);
   /* TODO Configuration */
   VL53L1X_StartRanging(&sonar_vl53l1x.dev);
