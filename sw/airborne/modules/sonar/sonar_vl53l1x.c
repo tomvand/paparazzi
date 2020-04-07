@@ -32,35 +32,55 @@
 
 #include "subsystems/datalink/downlink.h"
 
-#include "led.h"
-
-
-//#ifndef SONAR_VL53L1X_I2C_DEV
-//#define SONAR_VL53L1X_I2C_DEV i2c1
-//#endif
 
 #ifndef SONAR_VL53L1X_I2C_ADDR
 #define SONAR_VL53L1X_I2C_ADDR 0x52
 #endif
 
-// Sonar offset in mm
+// Signed distance offset in mm
 #ifndef SONAR_VL53L1X_OFFSET
 #define SONAR_VL53L1X_OFFSET 0
 #endif
+
+
+/* VL53L1X configuration */
+// Time budget for single measurement
+// Allowed values: 15, 20, 33, 50, 100, 200, 500
+// see VL53L1X_SetTimingBudgetInMs
+#ifndef SONAR_VL53L1X_TIMINGBUDGET_MS
+#define SONAR_VL53L1X_TIMINGBUDGET_MS 100
+#endif
+
+// Allowed values: 1 (short, max ~1.3m), 2 (long, max ~4m)
+// see VL53L1X_SetDistanceMode
+#ifndef SONAR_VL53L1X_DISTANCEMODE
+#define SONAR_VL53L1X_DISTANCEMODE 2
+#endif
+
+// Time between measurements
+// Should be larger than or equal to timing budget
+// see VL53L1X_SetInterMeasurementInMs
+#ifndef SONAR_VL53L1X_INTERMEASUREMENT_MS
+#define SONAR_VL53L1X_INTERMEASUREMENT_MS 100
+#endif
+#if SONAR_VL53L1X_INTERMEASUREMENT_MS < SONAR_VL53L1X_TIMINGBUDGET_MS
+#warning SONAR_VL53L1X_INTERMEASUREMENT_MS should be greater than or equal to SONAR_VL53L1X_TIMINGBUDGET_MS
+#endif
+
 
 struct sonar_vl53l1x_dev sonar_vl53l1x;
 
 
 static void sonar_vl53l1x_publish(uint16_t range_mm) {
-  float range_m = range_mm * 1.0e-3f;
+  float range_m_ofs = range_mm * 1.0e-3f + sonar_vl53l1x.offset_mm;
 
   // Send ABI message
   uint32_t now_ts = get_sys_time_usec();
-  AbiSendMsgAGL(AGL_VL53L1X_ID, now_ts, range_m);
+  AbiSendMsgAGL(AGL_VL53L1X_ID, now_ts, range_m_ofs);
 
 #ifdef SENSOR_SYNC_SEND_SONAR
   // Send Telemetry report
-  DOWNLINK_SEND_SONAR(DefaultChannel, DefaultDevice, &range_mm, &range_m);
+  DOWNLINK_SEND_SONAR(DefaultChannel, DefaultDevice, &range_mm, &range_m_ofs);
 #endif
 }
 
@@ -71,14 +91,20 @@ void sonar_vl53l1x_init(void) {
   sonar_vl53l1x.dev.i2c_trans.slave_addr = SONAR_VL53L1X_I2C_ADDR;
   sonar_vl53l1x.offset_mm = SONAR_VL53L1X_OFFSET;
 
-  // Initialize sensor
+  /* Initialize sensor */
+#ifndef SITL
   uint8_t state;
   do {
     VL53L1X_BootState(&sonar_vl53l1x.dev, &state);
   } while(!state);
   VL53L1X_SensorInit(&sonar_vl53l1x.dev);
-  /* TODO Configuration */
+  /* Configure sensor */
+  VL53L1X_SetTimingBudgetInMs(&sonar_vl53l1x.dev, SONAR_VL53L1X_TIMINGBUDGET_MS);
+  VL53L1X_SetDistanceMode(&sonar_vl53l1x.dev, SONAR_VL53L1X_DISTANCEMODE);
+  VL53L1X_SetInterMeasurementInMs(&sonar_vl53l1x.dev, SONAR_VL53L1X_INTERMEASUREMENT_MS);
+  /* Start measurement */
   VL53L1X_StartRanging(&sonar_vl53l1x.dev);
+#endif
 }
 
 
