@@ -72,15 +72,15 @@ struct sonar_vl53l1x_dev sonar_vl53l1x;
 
 
 static void sonar_vl53l1x_publish(uint16_t range_mm) {
-  float range_m_ofs = range_mm * 1.0e-3f + sonar_vl53l1x.offset_mm;
+  float range_ofs_m = (range_mm + sonar_vl53l1x.offset_mm) * 1.0e-3f;
 
   // Send ABI message
   uint32_t now_ts = get_sys_time_usec();
-  AbiSendMsgAGL(AGL_VL53L1X_ID, now_ts, range_m_ofs);
+  AbiSendMsgAGL(AGL_VL53L1X_ID, now_ts, range_ofs_m);
 
 #ifdef SENSOR_SYNC_SEND_SONAR
   // Send Telemetry report
-  DOWNLINK_SEND_SONAR(DefaultChannel, DefaultDevice, &range_mm, &range_m_ofs);
+  DOWNLINK_SEND_SONAR(DefaultChannel, DefaultDevice, &range_mm, &range_ofs_m);
 #endif
 }
 
