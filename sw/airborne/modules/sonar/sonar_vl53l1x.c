@@ -60,8 +60,9 @@
 // Time between measurements
 // Should be larger than or equal to timing budget
 // see VL53L1X_SetInterMeasurementInMs
+// Note: may be limited by module periodic frequency
 #ifndef SONAR_VL53L1X_INTERMEASUREMENT_MS
-#define SONAR_VL53L1X_INTERMEASUREMENT_MS 100
+#define SONAR_VL53L1X_INTERMEASUREMENT_MS SONAR_VL53L1X_TIMINGBUDGET_MS
 #endif
 #if SONAR_VL53L1X_INTERMEASUREMENT_MS < SONAR_VL53L1X_TIMINGBUDGET_MS
 #warning SONAR_VL53L1X_INTERMEASUREMENT_MS should be greater than or equal to SONAR_VL53L1X_TIMINGBUDGET_MS
