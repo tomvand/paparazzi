@@ -70,12 +70,14 @@
         <!-- <module name="telemetry" type="transparent_frsky_x"/> -->
         
         <module name="sonar" type="vl53l1x">
-          <define name="USE_SONAR" value="TRUE"/>
+          <define name="SONAR_VL53L1X_TIMINGBUDGET_MS" value="20"/>
+          <define name="SENSOR_SYNC_SEND_SONAR" value="TRUE"/>
           <configure name="SONAR_VL53L1X_I2C_DEV" value="softi2c0"/>
-          <define name="SOFTI2C0_SDA_GPIO" value="SPI_SELECT_SLAVE1_PORT"/>
-          <define name="SOFTI2C0_SDA_PIN" value="SPI_SELECT_SLAVE1_PIN"/>
-          <define name="SOFTI2C0_SCL_GPIO" value="GPIOA"/>
-          <define name="SOFTI2C0_SCL_PIN" value="GPIO0"/>
+          <define name="USE_LED_STRIP"/>
+          <define name="SOFTI2C0_SCL_GPIO" value="LED_STRIP_GPIO_PORT"/>
+          <define name="SOFTI2C0_SCL_PIN" value="LED_STRIP_GPIO_PIN"/>
+          <define name="SOFTI2C0_SDA_GPIO" value="UART1_GPIO_PORT_TX"/>
+          <define name="SOFTI2C0_SDA_PIN" value="UART1_GPIO_TX"/>
         </module>
         
         <module name="imu" type="mpu6000">
