@@ -23,7 +23,11 @@
  * Visual homing
  */
 
+
 #include "modules/visualhoming/visualhoming.h"
+
+#include "subsystems/datalink/downlink.h"
+
 
 void visualhoming_init(void)
 {
@@ -32,8 +36,9 @@ void visualhoming_init(void)
 
 void visualhoming_periodic(void)
 {
-  // your periodic code here.
-  // freq = 1.0 Hz
+  char msg[] = "Hello visual homing!";
+  DOWNLINK_SEND_VISUALHOMING(DefaultChannel, DefaultDevice,
+      sizeof(msg) - 1, msg);
 }
 
 void visualhoming_event(void)
