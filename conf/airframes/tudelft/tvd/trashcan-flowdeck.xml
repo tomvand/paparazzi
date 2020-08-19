@@ -1,4 +1,4 @@
-<!DOCTYPE airframe SYSTEM "../airframe.dtd">
+<!DOCTYPE airframe SYSTEM "../../airframe.dtd">
 <airframe name="Trashcan">
     <description>
 * Airframe for the regular "Trashcan" Quadrotor frame equipped with to validate all onboard functionally.
