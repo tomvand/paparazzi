@@ -197,11 +197,11 @@
 
   <section name="STABILIZATION_ATTITUDE" prefix="STABILIZATION_ATTITUDE_">
     <define name="PHI_PGAIN" value="20" />
-    <define name="PHI_DGAIN" value="2" />
+    <define name="PHI_DGAIN" value="40" />
     <define name="PHI_IGAIN" value="0" />
 
     <define name="THETA_PGAIN" value="20" />
-    <define name="THETA_DGAIN" value="2" />
+    <define name="THETA_DGAIN" value="40" />
     <define name="THETA_IGAIN" value="0" />
 
     <define name="PSI_PGAIN" value="200" />
