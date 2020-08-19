@@ -52,21 +52,23 @@
     <!-- <module name="pidtuner" /> -->
     
     <!-- Flowdeck -->
-    <!-- <define name="USE_SOFTI2C0"/>
+    <define name="USE_SOFTI2C0"/>
     <define name="SOFTI2C0_SCL_GPIO" value="LED_STRIP_GPIO_PORT"/>
     <define name="SOFTI2C0_SCL_PIN" value="LED_STRIP_GPIO_PIN"/>
     <define name="SOFTI2C0_SDA_GPIO" value="SPI_SELECT_SLAVE1_PORT"/>
     <define name="SOFTI2C0_SDA_PIN" value="SPI_SELECT_SLAVE1_PIN"/>
     <module name="gpio_ext" type="pca95xx"/>
     <module name="sonar" type="vl53l1x">
+      <!-- <define name="SENSOR_SYNC_SEND_SONAR" value="TRUE"/> -->
       <configure name="SONAR_VL53L1X_I2C_DEV" value="softi2c0"/>
     </module>
     <module name="opticflow" type="pmw3901">
+      <!-- <define name="SENSOR_SYNC_SEND_OPTICFLOW_PMW3901" value="TRUE"/> -->
       <configure name="OPTICFLOW_PMW3901_SPI_DEV" value="SPI2"/>
       <configure name="OPTICFLOW_PMW3901_SPI_SLAVE_IDX" value="3"/>
       <define name="SPI_SELECT_SLAVE3_PORT" value="GPIOEXT1"/>
       <define name="SPI_SELECT_SLAVE3_PIN" value="GPIOE2"/>
-    </module> -->
+    </module>
     
     <!-- GPS -->
     <module name="gps" type="datalink" /> <!-- using optitrack and natnet2ivy -->
@@ -196,17 +198,17 @@
   </section>
 
   <section name="STABILIZATION_ATTITUDE" prefix="STABILIZATION_ATTITUDE_">
-    <define name="PHI_PGAIN" value="180" />
-    <define name="PHI_DGAIN" value="160" />
-    <define name="PHI_IGAIN" value="20" />
+    <define name="PHI_PGAIN" value="90" />
+    <define name="PHI_DGAIN" value="80" />
+    <define name="PHI_IGAIN" value="10" />
 
-    <define name="THETA_PGAIN" value="180" />
-    <define name="THETA_DGAIN" value="160" />
-    <define name="THETA_IGAIN" value="20" />
+    <define name="THETA_PGAIN" value="90" />
+    <define name="THETA_DGAIN" value="80" />
+    <define name="THETA_IGAIN" value="10" />
 
-    <define name="PSI_PGAIN" value="1040" />
-    <define name="PSI_DGAIN" value="340" />
-    <define name="PSI_IGAIN" value="6" />
+    <define name="PSI_PGAIN" value="520" />
+    <define name="PSI_DGAIN" value="170" />
+    <define name="PSI_IGAIN" value="3" />
 
     <define name="PHI_DDGAIN" value="0" />
     <define name="THETA_DDGAIN" value="0" />
