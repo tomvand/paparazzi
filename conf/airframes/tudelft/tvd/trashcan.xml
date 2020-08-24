@@ -63,16 +63,15 @@
       <define    name="GPIO_EXT_PCA95XX_BLOCKING1" value="TRUE"/>
     </module>
     <module name="sonar" type="vl53l1x">
-      <define name="SENSOR_SYNC_SEND_SONAR" value="TRUE"/>
+      <!-- <define name="SENSOR_SYNC_SEND_SONAR" value="TRUE"/> -->
       <configure name="SONAR_VL53L1X_I2C_DEV" value="softi2c0"/>
     </module>
-    <module name="opticflow" type="pmw3901">
-      <define name="SENSOR_SYNC_SEND_OPTICFLOW_PMW3901" value="TRUE"/>
+    <!-- <module name="opticflow" type="pmw3901">
       <configure name="OPTICFLOW_PMW3901_SPI_DEV" value="SPI2"/>
       <configure name="OPTICFLOW_PMW3901_SPI_SLAVE_IDX" value="3"/>
       <define name="SPI_SELECT_SLAVE3_PORT" value="GPIOEXT1"/>
       <define name="SPI_SELECT_SLAVE3_PIN" value="GPIOE2"/>
-    </module>
+    </module> -->
     
     <module name="sys_mon"/>
     
