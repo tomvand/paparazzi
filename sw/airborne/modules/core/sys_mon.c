@@ -105,7 +105,8 @@ void periodic_sysmon(void)
   sum_time_periodic += periodic_usec;
 
   /* only periodic cycle : periodic_cycle = periodic_usec - sum_time_event; */
-  periodic_cycle = periodic_usec - n_event * min_time_event;
+//  periodic_cycle = periodic_usec - n_event * min_time_event;
+  periodic_cycle = periodic_usec - sum_time_event;
   sum_cycle_periodic += periodic_cycle;
 
   /* remember min and max periodic times */
