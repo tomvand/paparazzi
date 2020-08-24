@@ -74,6 +74,8 @@
       <define name="SPI_SELECT_SLAVE3_PIN" value="GPIOE2"/>
     </module>
     
+    <module name="sys_mon"/>
+    
     <!-- GPS -->
     <module name="gps" type="datalink" /> <!-- using optitrack and natnet2ivy -->
   </firmware>
