@@ -283,22 +283,22 @@ void pmw3901_event(struct pmw3901_t *pmw) {
       pmw->delta_x = 0;
       pmw->delta_y = 0;
       pmw->state++;
-      /* Falls through. */
+      return;
     case PMW3901_READ_DELTAXLOW:
       if (!readRegister_nonblocking(pmw, PMW3901_REG_DELTA_X_L, &temp)) return;
       pmw->delta_x |= temp;
       pmw->state++;
-      /* Falls through. */
+      return;
     case PMW3901_READ_DELTAXHIGH:
       if (!readRegister_nonblocking(pmw, PMW3901_REG_DELTA_X_H, &temp)) return;
       pmw->delta_x |= (temp << 8) & 0xFF00;
       pmw->state++;
-      /* Falls through. */
+      return;
     case PMW3901_READ_DELTAYLOW:
       if (!readRegister_nonblocking(pmw, PMW3901_REG_DELTA_Y_L, &temp)) return;
       pmw->delta_y |= temp;
       pmw->state++;
-          /* Falls through. */
+      return;
     case PMW3901_READ_DELTAYHIGH:
       if (!readRegister_nonblocking(pmw, PMW3901_REG_DELTA_Y_H, &temp)) return;
       pmw->delta_y |= (temp << 8) & 0xFF00;
