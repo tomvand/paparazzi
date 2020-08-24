@@ -62,13 +62,13 @@ static bool readRegister_nonblocking(struct pmw3901_t *pmw, uint8_t addr, uint8_
       pmw->trans.select = SPISelect;
       spi_submit(pmw->periph, &pmw->trans);
       pmw->readwrite_state++;
-      /* Falls through. */
+      return false;
     case 1:
       if (pmw->trans.status == SPITransPending || pmw->trans.status == SPITransRunning) return false;
       // Write addr complete
       pmw->readwrite_timeout = get_sys_time_usec() + 35;
       pmw->readwrite_state++;
-      /* Falls through. */
+      return false;
     case 2:
       if (get_sys_time_usec() < pmw->readwrite_timeout) return false;
       // Addr-read delay passed
@@ -77,7 +77,7 @@ static bool readRegister_nonblocking(struct pmw3901_t *pmw, uint8_t addr, uint8_
       pmw->trans.select = SPIUnselect;
       spi_submit(pmw->periph, &pmw->trans);
       pmw->readwrite_state++;
-      /* Falls through. */
+      return false;
     case 3:
       if (pmw->trans.status == SPITransPending || pmw->trans.status == SPITransRunning) return false;
       // Read complete
