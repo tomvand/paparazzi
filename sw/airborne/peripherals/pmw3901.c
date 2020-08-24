@@ -296,8 +296,12 @@ void pmw3901_event(struct pmw3901_t *pmw) {
       /* Do nothing */
       return;
     case PMW3901_READ_MOTION:
+      if (get_sys_time_usec() < pmw->poll_timeout) return;
       if (!readRegister_nonblocking(pmw, PMW3901_REG_MOTION, &temp)) return;
-      if (!(temp & 0x80)) return;
+      if (!(temp & 0x80)) {
+        pmw->poll_timeout = get_sys_time_usec() + 10000;
+        return;
+      }
       pmw->delta_x = 0;
       pmw->delta_y = 0;
       pmw->state++;
