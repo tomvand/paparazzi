@@ -186,7 +186,7 @@ void opticflow_pmw3901_event(void) {
   if (pmw3901_data_available(&of_pmw.pmw)) {
     int16_t delta_x, delta_y;
     pmw3901_get_data(&of_pmw.pmw, &delta_x, &delta_y);
-    opticflow_pmw3901_publish(delta_x, delta_y, get_sys_time_usec());
+//    opticflow_pmw3901_publish(delta_x, delta_y, get_sys_time_usec());
   }
 }
 
