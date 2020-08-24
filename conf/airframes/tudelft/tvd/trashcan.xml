@@ -52,12 +52,16 @@
     <!-- <module name="pidtuner" /> -->
     
     <!-- Flowdeck -->
-    <define name="USE_SOFTI2C0"/>
     <define name="SOFTI2C0_SCL_GPIO" value="LED_STRIP_GPIO_PORT"/>
     <define name="SOFTI2C0_SCL_PIN" value="LED_STRIP_GPIO_PIN"/>
     <define name="SOFTI2C0_SDA_GPIO" value="SPI_SELECT_SLAVE1_PORT"/>
     <define name="SOFTI2C0_SDA_PIN" value="SPI_SELECT_SLAVE1_PIN"/>
-    <module name="gpio_ext" type="pca95xx"/>
+    <module name="gpio_ext" type="pca95xx">
+      <define    name="GPIO_EXT_PROVIDER1" value="GPIO_EXT_PCA95XX"/>
+      <configure name="GPIO_EXT_PCA95XX_I2C_PERIPH1" value="softi2c0"/>
+      <define    name="GPIO_EXT_PCA95XX_I2C_ADDRESS1" value="0x82"/>
+      <define    name="GPIO_EXT_PCA95XX_BLOCKING1" value="TRUE"/>
+    </module>
     <module name="sonar" type="vl53l1x">
       <!-- <define name="SENSOR_SYNC_SEND_SONAR" value="TRUE"/> -->
       <configure name="SONAR_VL53L1X_I2C_DEV" value="softi2c0"/>
