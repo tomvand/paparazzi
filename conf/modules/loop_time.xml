@@ -1,0 +1,14 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+<module name="loop_time" dir="test">
+  <doc>
+    <description>Measure loop timing, similar to sys_mon but with ap hooks</description>
+  </doc>
+  <header>
+    <file name="loop_time.h"/>
+  </header>
+  <init fun="loop_time_init()"/>
+  <periodic fun="loop_time_report()" freq="1.0" autorun="TRUE"/>
+  <makefile>
+    <file name="loop_time.c"/>
+  </makefile>
+</module>

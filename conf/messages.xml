@@ -314,7 +314,19 @@
       <field name="temp" type="int8" unit="deg"/>
     </message>
 
-    <!-- 38 is free -->
+    <message name="LOOP_TIME" id="37">
+      <field name="periodic_min" type="uint16" unit="us"/>
+      <field name="periodic_avg" type="uint16" unit="us"/>
+      <field name="periodic_max" type="uint16" unit="us"/>
+      <field name="modules_min" type="uint16" unit="us"/>
+      <field name="modules_avg" type="uint16" unit="us"/>
+      <field name="modules_max" type="uint16" unit="us"/>
+      <field name="event_min" type="uint16" unit="us"/>
+      <field name="event_avg" type="uint16" unit="us"/>
+      <field name="event_max" type="uint16" unit="us"/>
+      <field name="modules_freq" type="uint16" unit="Hz"/>
+      <field name="e_per_m" type="uint8"/>
+    </message>
 
     <message name="DRAGSPEED" id="38">
       <description>

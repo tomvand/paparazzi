@@ -30,6 +30,8 @@
 
 #define ABI_C
 
+#include "modules/test/loop_time.h"
+
 #include <inttypes.h>
 #include "mcu.h"
 #include "mcu_periph/sys_time.h"
@@ -201,13 +203,16 @@ void main_init(void)
 
 void handle_periodic_tasks(void)
 {
+  periodic_start();
   if (sys_time_check_and_ack_timer(main_periodic_tid)) {
     main_periodic();
 #if PERIODIC_FREQUENCY == MODULES_FREQUENCY
     /* Use the main periodc freq timer for modules if the freqs are the same
      * This is mainly useful for logging each step.
      */
+    modules_start();
     modules_periodic_task();
+    modules_end();
 #else
   }
   /* separate timer for modules, since it has a different freq than main */
@@ -232,6 +237,7 @@ void handle_periodic_tasks(void)
     baro_periodic();
   }
 #endif
+  periodic_end();
 }
 
 void main_periodic(void)
@@ -335,6 +341,7 @@ void failsafe_check(void)
 
 void main_event(void)
 {
+  event_start();
   /* event functions for mcu peripherals: i2c, usb_serial.. */
   mcu_event();
 
@@ -349,4 +356,5 @@ void main_event(void)
   autopilot_event();
 
   modules_event_task();
+  event_end();
 }
