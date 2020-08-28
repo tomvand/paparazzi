@@ -62,13 +62,13 @@ static bool readRegister_nonblocking(struct pmw3901_t *pmw, uint8_t addr, uint8_
       pmw->trans.select = SPISelect;
       spi_submit(pmw->periph, &pmw->trans);
       pmw->readwrite_state++;
-      /* Falls through. */
+      return false;
     case 1:
       if (pmw->trans.status == SPITransPending || pmw->trans.status == SPITransRunning) return false;
       // Write addr complete
       pmw->readwrite_timeout = get_sys_time_usec() + 35;
       pmw->readwrite_state++;
-      /* Falls through. */
+      return false;
     case 2:
       if (get_sys_time_usec() < pmw->readwrite_timeout) return false;
       // Addr-read delay passed
@@ -77,7 +77,7 @@ static bool readRegister_nonblocking(struct pmw3901_t *pmw, uint8_t addr, uint8_
       pmw->trans.select = SPIUnselect;
       spi_submit(pmw->periph, &pmw->trans);
       pmw->readwrite_state++;
-      /* Falls through. */
+      return false;
     case 3:
       if (pmw->trans.status == SPITransPending || pmw->trans.status == SPITransRunning) return false;
       // Read complete
@@ -278,27 +278,31 @@ void pmw3901_event(struct pmw3901_t *pmw) {
       /* Do nothing */
       return;
     case PMW3901_READ_MOTION:
+      if (get_sys_time_usec() < pmw->poll_timeout) return;
       if (!readRegister_nonblocking(pmw, PMW3901_REG_MOTION, &temp)) return;
-      if (!(temp & 0x80)) return;
+      if (!(temp & 0x80)) {
+        pmw->poll_timeout = get_sys_time_usec() + 3000;
+        return;
+      }
       pmw->delta_x = 0;
       pmw->delta_y = 0;
       pmw->state++;
-      /* Falls through. */
+      return;
     case PMW3901_READ_DELTAXLOW:
       if (!readRegister_nonblocking(pmw, PMW3901_REG_DELTA_X_L, &temp)) return;
       pmw->delta_x |= temp;
       pmw->state++;
-      /* Falls through. */
+      return;
     case PMW3901_READ_DELTAXHIGH:
       if (!readRegister_nonblocking(pmw, PMW3901_REG_DELTA_X_H, &temp)) return;
       pmw->delta_x |= (temp << 8) & 0xFF00;
       pmw->state++;
-      /* Falls through. */
+      return;
     case PMW3901_READ_DELTAYLOW:
       if (!readRegister_nonblocking(pmw, PMW3901_REG_DELTA_Y_L, &temp)) return;
       pmw->delta_y |= temp;
       pmw->state++;
-          /* Falls through. */
+      return;
     case PMW3901_READ_DELTAYHIGH:
       if (!readRegister_nonblocking(pmw, PMW3901_REG_DELTA_Y_H, &temp)) return;
       pmw->delta_y |= (temp << 8) & 0xFF00;

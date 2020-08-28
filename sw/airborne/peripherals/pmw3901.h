@@ -64,7 +64,8 @@ struct pmw3901_t {
   volatile uint8_t spi_output_buf[SPI_BUFFER_SIZE];
   enum pmw3901_state state;
   uint8_t readwrite_state;
-  uint32_t readwrite_timeout;
+  uint32_t readwrite_timeout;  // Timing between SPI read/write operations
+  uint32_t poll_timeout;  // Timing between new data flag polling
   int16_t delta_x;
   int16_t delta_y;
   bool data_available;
