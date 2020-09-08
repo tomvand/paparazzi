@@ -7,4 +7,7 @@
   <channel ctl="LeftStickHorizontal"  function="YAW"           min="988" neutral="1500" max="2012" average="0"/>
   <channel ctl="ModeSwitch"           function="MODE"          min="2012" neutral="1500" max="988" average="0"/>
   <channel ctl="KillSwitch"           function="KILL_SWITCH"   min="2012" neutral="1500" max="988" average="0"/>
+  <channel ctl="CalibSwitch"          function="CALIB"         min="988" neutral="988" max="2012" average="0"/>
+  <channel ctl="Gain1Pot"             function="GAIN1"         min="988" neutral="988" max="2012" average="0"/>
+  <channel ctl="Gain2Pot"             function="GAIN2"         min="988" neutral="988" max="2012" average="0"/>
 </radio>

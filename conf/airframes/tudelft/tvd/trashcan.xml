@@ -73,6 +73,7 @@
       <define name="SPI_SELECT_SLAVE3_PORT" value="GPIOEXT1"/>
       <define name="SPI_SELECT_SLAVE3_PIN" value="GPIOE2"/>
     </module>
+    <module name="pidtuner"/>
     
     <!-- GPS -->
     <module name="gps" type="datalink" /> <!-- using optitrack and natnet2ivy -->
