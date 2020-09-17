@@ -70,6 +70,8 @@
         <module name="telemetry" type="transparent_frsky_x"/>
         
         <!-- Flowdeck -->
+        <define name="USE_GPS" value="FALSE"/>
+        <define name="USE_SONAR" value="TRUE"/>
         <define name="SOFTI2C0_SCL_GPIO" value="LED_STRIP_GPIO_PORT"/>
         <define name="SOFTI2C0_SCL_PIN" value="LED_STRIP_GPIO_PIN"/>
         <define name="SOFTI2C0_SDA_GPIO" value="SPI_SELECT_SLAVE1_PORT"/>
@@ -158,7 +160,7 @@
         </module>
 -->
 
-        <module name="gps" type="datalink"/> <!-- using optitrack and natnet2ivy -->
+        <!-- <module name="gps" type="datalink"/> --> <!-- using optitrack and natnet2ivy -->
 
         <!-- No I2C bus yet... still need to find some good spot for I2C pins... except straigt on MCU solder blobs -->
         <!--

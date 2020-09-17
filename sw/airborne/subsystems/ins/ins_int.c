@@ -215,7 +215,7 @@ void ins_int_init(void)
 
   // Bind to BARO_ABS message
   AbiBindMsgBARO_ABS(INS_INT_BARO_ID, &baro_ev, baro_cb);
-  ins_int.baro_initialized = false;
+  ins_int.baro_initialized = true; // HACK
 
 #if USE_SONAR
   ins_int.update_on_agl = INS_SONAR_UPDATE_ON_AGL;
