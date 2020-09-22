@@ -76,6 +76,9 @@ static void sonar_vl53l1x_publish(uint16_t range_mm)
 {
   float range_ofs_m = (range_mm + sonar_vl53l1x.offset_mm) * 1.0e-3f;
 
+  // Sanity check
+  if (range_ofs_m < 0.0 || range_ofs_m > 4.0) return;
+
   // Send ABI message
   uint32_t now_ts = get_sys_time_usec();
   AbiSendMsgAGL(AGL_VL53L1X_ID, now_ts, range_ofs_m);
