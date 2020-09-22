@@ -181,6 +181,7 @@ void vff_init(float init_z, float init_zdot, float init_accel_bias, float init_o
 void vff_propagate(float accel, float dt)
 {
   if (accel < -4*9.81 || accel > 4*9.81) accel = 0.0;  // Sanity check
+  if (dt > 0.1) return; // Sanity check
 
   /* update state */
   vff.zdotdot = accel + 9.81f - vff.bias;
