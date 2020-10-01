@@ -66,8 +66,8 @@
         </module>
 
         <module name="dfu_command"/>
-        <!-- <module name="telemetry" type="transparent_usb"/> -->
-        <module name="telemetry" type="transparent_frsky_x"/>
+        <module name="telemetry" type="transparent_usb"/>
+        <!-- <module name="telemetry" type="transparent_frsky_x"/> -->
         
         <!-- Flowdeck -->
         <define name="USE_GPS" value="FALSE"/>
@@ -297,8 +297,8 @@
 
     <section name="STABILIZATION_ATTITUDE" prefix="STABILIZATION_ATTITUDE_">
 
-        <define name="SP_MAX_PHI"     value="50." unit="deg"/>
-        <define name="SP_MAX_THETA"   value="50." unit="deg"/>
+        <define name="SP_MAX_PHI"     value="20." unit="deg"/>
+        <define name="SP_MAX_THETA"   value="20." unit="deg"/>
         <define name="SP_MAX_R"       value="90." unit="deg/s"/>
         <define name="DEADBAND_A"     value="2"/>
         <define name="DEADBAND_E"     value="2"/>
