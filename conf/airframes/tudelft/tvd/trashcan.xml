@@ -66,8 +66,8 @@
         </module>
 
         <module name="dfu_command"/>
-        <module name="telemetry" type="transparent_usb"/>
-        <!-- <module name="telemetry" type="transparent_frsky_x"/> -->
+        <!-- <module name="telemetry" type="transparent_usb"/> -->
+        <module name="telemetry" type="transparent_frsky_x"/>
         
         <!-- Flowdeck -->
         <define name="USE_GPS" value="FALSE"/>
@@ -100,6 +100,8 @@
             <define name="IMU_ACCEL_Y_SIGN" value="-1"/>
             <define name="IMU_ACCEL_Z_SIGN" value="-1"/>
         </module>
+        
+        <module name="pidtuner"/>
 
         <!-- not all are tested or tuned -->
        <!-- <module name="stabilization" type="rate"/>--><!-- not working yet..)

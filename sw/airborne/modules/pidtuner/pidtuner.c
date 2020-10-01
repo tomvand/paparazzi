@@ -34,12 +34,17 @@ void pidtuner_periodic(void) {
   float gain2 = radio_control.values[RADIO_GAIN2];
 
   // Gain Kp
-  stabilization_gains.p.x = (gain1 / 9600.0) * 2 * 90;
-  stabilization_gains.p.y = (gain1 / 9600.0) * 2 * 90;
+  stabilization_gains.p.x = (gain1 / 9600.0) * 2 * 185;
+  stabilization_gains.p.y = (gain1 / 9600.0) * 2 * 185;
 
-  // Differential time Td
-  stabilization_gains.d.x = stabilization_gains.p.x * ((gain2 / 9600.0) * 2 * 1.0);
-  stabilization_gains.d.y = stabilization_gains.p.y * ((gain2 / 9600.0) * 2 * 1.0);
+  // Gain Kd
+  stabilization_gains.d.x = (gain2 / 9600.0) * 2 * 70;
+  stabilization_gains.d.y = (gain2 / 9600.0) * 2 * 70;
+
+
+//  // Differential time Td
+//  stabilization_gains.d.x = stabilization_gains.p.x * ((gain2 / 9600.0) * 2 * 1.0);
+//  stabilization_gains.d.y = stabilization_gains.p.y * ((gain2 / 9600.0) * 2 * 1.0);
 
 }
 
