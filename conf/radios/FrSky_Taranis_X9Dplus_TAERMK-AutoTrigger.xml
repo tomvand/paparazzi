@@ -9,5 +9,5 @@
   <channel ctl="KillSwitch"           function="KILL_SWITCH"   min="2012" neutral="1500" max="988" average="0"/>
   <channel ctl="LeftSlider"           function="GAIN1"         min="988" neutral="988" max="2012" average="0"/>
   <channel ctl="RightSlider"          function="GAIN2"         min="988" neutral="988" max="2012" average="0"/>
-  <channel ctl="Trigger"              function="MODE"          min="2012" neutral="1500" max="988" average="0"/>
+  <channel ctl="Trigger"              function="MODE"          min="988" neutral="1500" max="2012" average="0"/>
 </radio>
