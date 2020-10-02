@@ -27,6 +27,7 @@
 
 #include "subsystems/radio_control.h"
 #include "firmwares/rotorcraft/stabilization/stabilization_attitude_quat_int.h"
+#include "firmwares/rotorcraft/guidance/guidance_v.h"
 #include "subsystems/ahrs.h"
 
 void pidtuner_periodic(void) {
@@ -34,12 +35,10 @@ void pidtuner_periodic(void) {
   float gain2 = radio_control.values[RADIO_GAIN2];
 
   // Gain Kp
-  stabilization_gains.p.x = (gain1 / 9600.0) * 2 * 185;
-  stabilization_gains.p.y = (gain1 / 9600.0) * 2 * 185;
+  guidance_v_kp = (gain1 / 9600.0) * 2 * 150;
 
   // Gain Kd
-  stabilization_gains.d.x = (gain2 / 9600.0) * 2 * 70;
-  stabilization_gains.d.y = (gain2 / 9600.0) * 2 * 70;
+  guidance_v_kd = (gain2 / 9600.0) * 2 * 80;
 
 
 //  // Differential time Td
