@@ -5,9 +5,9 @@
   <channel ctl="RightStickHorizontal" function="ROLL"          min="988" neutral="1500" max="2012" average="0"/>
   <channel ctl="RightStickVertical"   function="PITCH"         min="988" neutral="1500" max="2012" average="0"/>
   <channel ctl="LeftStickHorizontal"  function="YAW"           min="988" neutral="1500" max="2012" average="0"/>
-  <channel ctl="ModeSwitch"           function="MODE"          min="2012" neutral="1500" max="988" average="0"/>
+  <channel ctl="ModeSwitch"           function="AUX1"          min="2012" neutral="1500" max="988" average="0"/><!-- Caution mode switch disabled! -->
   <channel ctl="KillSwitch"           function="KILL_SWITCH"   min="2012" neutral="1500" max="988" average="0"/>
   <channel ctl="LeftSlider"           function="GAIN1"         min="988" neutral="988" max="2012" average="0"/>
   <channel ctl="RightSlider"          function="GAIN2"         min="988" neutral="988" max="2012" average="0"/>
-  <channel ctl="Trigger"              function="AUX1"          min="988" neutral="988" max="2012" average="0"/>
+  <channel ctl="Trigger"              function="MODE"          min="2012" neutral="1500" max="988" average="0"/>
 </radio>
