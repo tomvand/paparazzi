@@ -11,7 +11,7 @@
 
 #define UNUSED(x) (void)(x)
 
-// betaflight/src/main/rx/cc2500_frsky_x.c @ e78f976
+// betaflight/src/main/rx/cc2500_frsky_x.c @ e78f976 + #9563
 /*
  * This file is part of Cleanflight and Betaflight.
  *
@@ -382,7 +382,7 @@ rx_spi_received_e frSkyXHandlePacket(uint8_t * const packet, uint8_t * const pro
         FALLTHROUGH;
         // here FS code could be
     case STATE_DATA:
-        if (cc2500getGdo() && (frameReceived == false)){
+        if (cc2500getGdo() && (!frameReceived)){
             uint8_t ccLen = cc2500ReadReg(CC2500_3B_RXBYTES | CC2500_READ_BURST) & 0x7F;
             if (ccLen >= packetLength) {
                 cc2500ReadFifo(packet, packetLength);
@@ -482,6 +482,7 @@ rx_spi_received_e frSkyXHandlePacket(uint8_t * const packet, uint8_t * const pro
         }
         if (frameReceived) {
             ret |= RX_SPI_RECEIVED_DATA;
+            frameReceived = false;
         }
 
         break;
