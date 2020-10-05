@@ -427,8 +427,8 @@
     </section>
 
     <section name="GUIDANCE_V" prefix="GUIDANCE_V_">
-        <define name="HOVER_KP" value="240"/>
-        <define name="HOVER_KD" value="100"/>
+        <define name="HOVER_KP" value="150"/>
+        <define name="HOVER_KD" value="80"/>
         <define name="HOVER_KI" value="20"/>
         <define name="NOMINAL_HOVER_THROTTLE" value="0.33"/>
         <define name="ADAPT_THROTTLE_ENABLED" value="TRUE"/>
@@ -449,7 +449,7 @@
     </section>
 
     <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
-        <define name="MAX_BANK" value="30." unit="deg"/>
+        <define name="MAX_BANK" value="60." unit="deg"/>
         <define name="USE_SPEED_REF" value="TRUE"/>
         <define name="PGAIN" value="650"/>
         <define name="DGAIN" value="350"/>
