@@ -323,11 +323,11 @@
 
         <define name="PHI_PGAIN" value="50"/>
         <define name="PHI_DGAIN" value="40"/>
-        <define name="PHI_IGAIN" value="1"/>
+        <define name="PHI_IGAIN" value="10"/>
 
         <define name="THETA_PGAIN" value="80"/>
         <define name="THETA_DGAIN" value="40"/>
-        <define name="THETA_IGAIN" value="1"/>
+        <define name="THETA_IGAIN" value="10"/>
 
         <define name="PSI_PGAIN" value="200"/>
         <define name="PSI_DGAIN" value="100"/>
