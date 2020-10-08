@@ -66,8 +66,8 @@
         </module>
 
         <module name="dfu_command"/>
-        <!-- <module name="telemetry" type="transparent_usb"/> -->
-        <module name="telemetry" type="transparent_frsky_x"/>
+        <module name="telemetry" type="transparent_usb"/>
+        <!-- <module name="telemetry" type="transparent_frsky_x"/> -->
         
         <!-- Flowdeck -->
         <define name="USE_GPS" value="FALSE"/>
@@ -77,6 +77,7 @@
         <define name="SOFTI2C0_SDA_GPIO" value="SPI_SELECT_SLAVE1_PORT"/>
         <define name="SOFTI2C0_SDA_PIN" value="SPI_SELECT_SLAVE1_PIN"/>
         <module name="sonar" type="vl53l1x">
+          <define name="SENSOR_SYNC_SEND_SONAR" value="TRUE"/>
           <configure name="SONAR_VL53L1X_I2C_DEV" value="softi2c0"/>
         </module>
         <module name="opticflow" type="pmw3901">
@@ -427,9 +428,9 @@
     </section>
 
     <section name="GUIDANCE_V" prefix="GUIDANCE_V_">
-        <define name="HOVER_KP" value="240"/>
-        <define name="HOVER_KD" value="100"/>
-        <define name="HOVER_KI" value="20"/>
+        <define name="HOVER_KP" value="300"/>
+        <define name="HOVER_KD" value="150"/>
+        <define name="HOVER_KI" value="120"/>
         <define name="NOMINAL_HOVER_THROTTLE" value="0.40"/>
         <define name="ADAPT_THROTTLE_ENABLED" value="FALSE"/>
     </section>
@@ -471,7 +472,7 @@
         <define name="MODE_STARTUP" value="AP_MODE_ATTITUDE_DIRECT"/><!-- if GNSS use AP_MODE_NAV ...-->
         <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
         <define name="MODE_AUTO1" value="AP_MODE_ATTITUDE_Z_HOLD"/><!-- for now...-->
-        <define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/> <!-- for dronerrace -->
+        <define name="MODE_AUTO2" value="AP_MODE_ATTITUDE_Z_HOLD"/> <!-- for dronerrace -->
        <!-- <define name="MODE_AUTO2"  value="AP_MODE_NAV"/>--> <!-- If GNSS device is added for autonomous flight -->
         <!--<define name="USE_THROTTLE_FOR_MOTOR_ARMING" value="TRUE"/>-->
         <define name="USE_KILL_SWITCH_FOR_MOTOR_ARMING" value="TRUE"/>
