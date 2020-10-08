@@ -102,7 +102,7 @@
             <define name="IMU_ACCEL_Z_SIGN" value="-1"/>
         </module>
         
-        <!-- <module name="pidtuner"/> -->
+        <module name="pidtuner"/>
 
         <!-- not all are tested or tuned -->
        <!-- <module name="stabilization" type="rate"/>--><!-- not working yet..)
