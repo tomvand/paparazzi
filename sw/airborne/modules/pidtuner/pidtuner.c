@@ -36,10 +36,10 @@ void pidtuner_periodic(void) {
   float gain2 = radio_control.values[RADIO_GAIN2];
 
   // Gain Kp
-  guidance_h.gains.p = (gain1 / 9600.0) * 2 * 650;
+  guidance_v_kp = (gain1 / 9600.0) * 2 * 150;
 
   // Gain Kd
-  guidance_h.gains.d = (gain2 / 9600.0) * 2 * 350;
+  guidance_v_kd = (gain2 / 9600.0) * 2 * 80;
 
 
 //  // Differential time Td
