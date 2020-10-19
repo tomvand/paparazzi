@@ -66,8 +66,8 @@
         </module>
 
         <module name="dfu_command"/>
-        <!-- <module name="telemetry" type="transparent_usb"/> -->
-        <module name="telemetry" type="transparent_frsky_x"/>
+        <module name="telemetry" type="transparent_usb"/>
+        <!-- <module name="telemetry" type="transparent_frsky_x"/> -->
         
         <module name="logger" type="sd_spi_direct">
           <configure name="SDLOGGER_DIRECT_SPI" value="SPI2"/>
