@@ -69,6 +69,14 @@
         <!-- <module name="telemetry" type="transparent_usb"/> -->
         <module name="telemetry" type="transparent_frsky_x"/>
         
+        <module name="logger" type="sd_spi_direct">
+          <configure name="SDLOGGER_DIRECT_SPI" value="SPI2"/>
+          <configure name="SDLOGGER_DIRECT_SPI_SLAVE" value="SPI_SLAVE4"/>
+          <define name="SPI_SELECT_SLAVE4_PORT" value="UART1_GPIO_PORT_RX"/>
+          <define name="SPI_SELECT_SLAVE4_PIN" value="UART1_GPIO_TX"/>
+          <configure name="SDLOGGER_DOWNLINK_DEVICE" value="usb_serial"/>
+        </module>
+        
         <!-- Flowdeck -->
         <define name="USE_GPS" value="FALSE"/>
         <define name="USE_SONAR" value="TRUE"/>
