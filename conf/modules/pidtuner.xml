@@ -1,0 +1,15 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="pidtuner">
+  <doc>
+    <description>tune pid gains via rc</description>
+  </doc>
+  <header>
+    <file name="pidtuner.h"/>
+  </header>
+  <periodic fun="pidtuner_periodic()" freq="50"/>
+  <makefile>
+    <file name="pidtuner.c"/>
+  </makefile>
+</module>
+
