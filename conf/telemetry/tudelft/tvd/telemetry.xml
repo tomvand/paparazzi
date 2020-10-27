@@ -166,6 +166,14 @@
       <message name="ONEEURO_GYRO_SCALED"     period="0.0005"/>
       <message name="ONEEURO_ACCEL_SCALED"    period="0.0005"/>
     </mode>
+    <mode name="ahrs">
+      <message name="AHRS_EULER_INT"          period="0.001"/>
+      <message name="AHRS_GYRO_BIAS_INT"      period="0.01"/>
+      <message name="IMU_ACCEL_SCALED"        period="0.01"/>
+      <message name="IMU_GYRO_SCALED"         period="0.01"/>
+      <message name="ONEEURO_GYRO_SCALED"     period="0.01"/>
+      <message name="ONEEURO_ACCEL_SCALED"    period="0.01"/>
+    </mode>
   </process>
 
 </telemetry>
