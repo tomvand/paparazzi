@@ -1594,8 +1594,18 @@
       <field name="data" type="uint8[]"/>
     </message>
     
-    <!-- 183 is free -->
-    <!-- 184 is free -->
+    <message name="ONEEURO_GYRO_SCALED" id="183">
+      <field name="gp"    type="int32" alt_unit="deg/s" alt_unit_coef="0.0139882"/>
+      <field name="gq"    type="int32" alt_unit="deg/s" alt_unit_coef="0.0139882"/>
+      <field name="gr"    type="int32" alt_unit="deg/s" alt_unit_coef="0.0139882"/>
+    </message>
+
+    <message name="ONEEURO_ACCEL_SCALED" id="184">
+      <field name="ax"    type="int32" alt_unit="m/s2" alt_unit_coef="0.0009766"/>
+      <field name="ay"    type="int32" alt_unit="m/s2" alt_unit_coef="0.0009766"/>
+      <field name="az"    type="int32" alt_unit="m/s2" alt_unit_coef="0.0009766"/>
+    </message>
+    
     <!-- 185 is free -->
     <!-- 186 is free -->
     <!-- 187 is free -->

@@ -96,6 +96,32 @@ static struct OneEuroFilter gyro_1e[3];
 static struct OneEuroFilter accel_1e[3];
 
 /**
+ * Telemetry
+ */
+#if PERIODIC_TELEMETRY
+#include "subsystems/datalink/telemetry.h"
+
+static struct Int32Vect3 telem_accel;
+static struct Int32Rates telem_gyro;
+
+static void send_accel(struct transport_tx *trans, struct link_device *dev) {
+  pprz_msg_send_ONEEURO_ACCEL_SCALED(trans, dev, AC_ID,
+      &telem_accel.x, &telem_accel.y, &telem_accel.z);
+}
+
+static void send_gyro(struct transport_tx *trans, struct link_device *dev) {
+  pprz_msg_send_ONEEURO_GYRO_SCALED(trans, dev, AC_ID,
+      &telem_gyro.p, &telem_gyro.q, &telem_gyro.r);
+}
+
+#define DL_ACCEL(_a) telem_accel = (_a)
+#define DL_GYRO(_g) telem_gyro = (_g)
+#else
+#define DL_ACCEL(_a) {}
+#define DL_GYRO(_g) {}
+#endif
+
+/**
  * ABI bindings
  *
  * by default bind to all IMU raw data and send filtered data
@@ -135,8 +161,10 @@ static void gyro_cb(uint8_t sender_id, uint32_t stamp, struct Int32Rates *gyro)
     struct Int32Rates gyro_i;
     RATES_BFP_OF_REAL(gyro_i, gyro_f);
     AbiSendMsgIMU_GYRO_INT32(IMU_F1E_ID, stamp, &gyro_i);
+    DL_GYRO(gyro_i);
   } else {
     AbiSendMsgIMU_GYRO_INT32(IMU_F1E_ID, stamp, gyro);
+    DL_GYRO(*gyro);
   }
 }
 
@@ -164,8 +192,10 @@ static void accel_cb(uint8_t sender_id, uint32_t stamp, struct Int32Vect3 *accel
     struct Int32Vect3 accel_i;
     ACCELS_BFP_OF_REAL(accel_i, accel_f);
     AbiSendMsgIMU_ACCEL_INT32(IMU_F1E_ID, stamp, &accel_i);
+    DL_ACCEL(accel_i);
   } else {
     AbiSendMsgIMU_ACCEL_INT32(IMU_F1E_ID, stamp, accel);
+    DL_ACCEL(*accel);
   }
 }
 
@@ -208,6 +238,11 @@ void filter_1euro_imu_init(void)
   AbiBindMsgIMU_GYRO_INT32(IMU_F1E_BIND_ID, &gyro_ev, gyro_cb);
   AbiBindMsgIMU_ACCEL_INT32(IMU_F1E_BIND_ID, &accel_ev, accel_cb);
   AbiBindMsgIMU_MAG_INT32(IMU_F1E_BIND_ID, &mag_ev, mag_cb);
+
+#if PERIODIC_TELEMETRY
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_ONEEURO_ACCEL_SCALED, send_accel);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_ONEEURO_GYRO_SCALED, send_gyro);
+#endif
 }
 
 /**

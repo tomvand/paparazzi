@@ -60,6 +60,8 @@
       <message name="IMU_GYRO_SCALED"        period=".075"/>
       <message name="IMU_ACCEL_SCALED"       period=".075"/>
       <message name="IMU_MAG_SCALED"         period=".1"/>
+      <message name="ONEEURO_GYRO_SCALED"    period=".075"/>
+      <message name="ONEEURO_ACCEL_SCALED"   period=".075"/>
     </mode>
 
     <mode name="ahrs">
