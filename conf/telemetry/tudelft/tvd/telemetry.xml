@@ -60,6 +60,8 @@
       <message name="IMU_GYRO_SCALED"        period=".075"/>
       <message name="IMU_ACCEL_SCALED"       period=".075"/>
       <message name="IMU_MAG_SCALED"         period=".1"/>
+      <message name="ONEEURO_GYRO_SCALED"    period=".075"/>
+      <message name="ONEEURO_ACCEL_SCALED"   period=".075"/>
     </mode>
 
     <mode name="ahrs">
@@ -149,18 +151,20 @@
   </process>
   <process name="Logger">
     <mode name="default">
-      <message name="ROTORCRAFT_STATUS"      period="1.2"/>
-      <message name="DL_VALUE"               period="0.5"/>
-      <message name="ALIVE"                  period="2.1"/>
+      <message name="ROTORCRAFT_STATUS"       period="1.2"/>
+      <message name="DL_VALUE"                period="0.5"/>
+      <message name="ALIVE"                   period="2.1"/>
     </mode>
     <mode name="imu">
-      <message name="ROTORCRAFT_STATUS"      period="1.2"/>
-      <message name="DL_VALUE"               period="0.5"/>
-      <message name="ALIVE"                  period="2.1"/>
+      <message name="ROTORCRAFT_STATUS"       period="1.2"/>
+      <message name="DL_VALUE"                period="0.5"/>
+      <message name="ALIVE"                   period="2.1"/>
       <message name="IMU_ACCEL_RAW"           period="0.0005"/>
-      <message name="IMU_ACCEL"               period="0.0005"/>
+      <message name="IMU_ACCEL_SCALED"        period="0.0005"/>
       <message name="IMU_GYRO_RAW"            period="0.0005"/>
-      <message name="IMU_GYRO"                period="0.0005"/>
+      <message name="IMU_GYRO_SCALED"         period="0.0005"/>
+      <message name="ONEEURO_GYRO_SCALED"     period="0.0005"/>
+      <message name="ONEEURO_ACCEL_SCALED"    period="0.0005"/>
     </mode>
   </process>
 
