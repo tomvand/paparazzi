@@ -111,6 +111,14 @@
         <module name="filter" type="1euro_imu"/>
         
         <module name="pidtuner"/>
+        
+        <module name="sys_id" type="chirp">
+          <define name="CHIRP_AXES" value="{COMMAND_ROLL,COMMAND_PITCH,COMMAND_YAW,COMMAND_THRUST}"/>
+          <define name="CHIRP_ENABLED" value="TRUE"/>
+          <define name="CHIRP_USE_NOISE" value="TRUE"/>
+          <define name="CHIRP_EXPONENTIAL" value="TRUE"/>
+          <define name="CHIRP_FADEIN" value="TRUE"/>
+        </module>
 
         <!-- not all are tested or tuned -->
        <!-- <module name="stabilization" type="rate"/>--><!-- not working yet..)
@@ -240,6 +248,7 @@
   </section-->
 
     <command_laws>
+        <call fun="sys_id_chirp_add_values(autopilot_get_motors_on(),FALSE,values)"/>
         <call fun="motor_mixing_run(autopilot_get_motors_on(),FALSE,values)"/>
         <set servo="FL" value="motor_mixing.commands[MOTOR_FRONT_LEFT]"/>
         <set servo="FR" value="motor_mixing.commands[MOTOR_FRONT_RIGHT]"/>

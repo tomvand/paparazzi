@@ -1201,10 +1201,10 @@
     </message>
 
     <message name="ROTORCRAFT_CMD" id="143">
-      <field name="cmd_roll"   type="int32"/>
-      <field name="cmd_pitch"  type="int32"/>
-      <field name="cmd_yaw"    type="int32"/>
-      <field name="cmd_thrust" type="int32"/>
+      <field name="cmd_roll"   type="int16"/>
+      <field name="cmd_pitch"  type="int16"/>
+      <field name="cmd_yaw"    type="int16"/>
+      <field name="cmd_thrust" type="int16"/>
     </message>
 
     <message name="GUIDANCE_H_INT" id="144">
