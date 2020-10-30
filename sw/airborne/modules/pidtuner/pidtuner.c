@@ -64,7 +64,7 @@ static void chirp_init(void) {
 }
 
 
-static void pid_periodic(void) {
+static void __attribute__((unused)) pid_periodic(void) {
   //  float gain1 = radio_control.values[RADIO_GAIN1];
   //  float gain2 = radio_control.values[RADIO_GAIN2];
   //

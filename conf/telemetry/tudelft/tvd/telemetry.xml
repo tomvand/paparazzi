@@ -29,6 +29,7 @@
       <message name="VECTORNAV_INFO"         period="0.5"/>
       <message name="TEMP_ADC"               period="3.0"/>
       <message name="FBW_STATUS"             period="2.0"/>
+      <message name="SONAR"                  period="0.2"/>
     </mode>
 
     <mode name="ppm">
@@ -181,6 +182,9 @@
       <message name="IMU_GYRO_SCALED"         period="0.0005"/>
       <message name="ONEEURO_GYRO_SCALED"     period="0.01"/>
       <message name="ONEEURO_ACCEL_SCALED"    period="0.01"/>
+    </mode>
+    <mode name="ins">
+      <message name="SONAR"                   period="0.01"/>
     </mode>
   </process>
 
