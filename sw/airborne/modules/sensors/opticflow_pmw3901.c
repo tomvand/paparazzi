@@ -58,6 +58,43 @@ PRINT_CONFIG_VAR(OPTICFLOW_PMW3901_AGL_ID)
 #endif
 
 
+#if PERIODIC_TELEMETRY
+#include "subsystems/datalink/telemetry.h"
+
+static struct {
+  union {
+    float f;
+    uint16_t u16;
+  } dummy;
+  float fps;
+  int16_t flow_x_subpix;
+  int16_t flow_y_subpix;
+  int16_t flow_der_x_subpix;
+  int16_t flow_der_y_subpix;
+  float vel_x;
+  float vel_y;
+} telem_buf;
+
+static void send_opticflow(struct transport_tx *trans, struct link_device *dev) {
+  pprz_msg_send_OPTIC_FLOW_EST(trans, dev, AC_ID,
+        &telem_buf.fps,                 /* fps */
+        &telem_buf.dummy.u16,           /* corner_cnt */
+        &telem_buf.dummy.u16,           /* tracked_cnt */
+        &telem_buf.flow_x_subpix,       /* flow_x */
+        &telem_buf.flow_y_subpix,       /* flow_y */
+        &telem_buf.flow_der_x_subpix,   /* flow_der_x */
+        &telem_buf.flow_der_y_subpix,   /* flow_der_y */
+        &telem_buf.vel_x,               /* vel_x */
+        &telem_buf.vel_y,               /* vel_y */
+        &telem_buf.dummy.f,             /* vel_z */
+        &telem_buf.dummy.f,             /* div_size */
+        &telem_buf.dummy.f,             /* surface_roughness */
+        &telem_buf.dummy.f              /* divergence */
+        );
+}
+#endif
+
+
 struct opticflow_pmw3901_t of_pmw;
 
 abi_event agl_ev;
@@ -140,10 +177,11 @@ static void opticflow_pmw3901_publish(int16_t delta_x, int16_t delta_y, uint32_t
   }
 
   /* Send telemetry */
+  float fps = 1.f / dt;
 #if SENSOR_SYNC_SEND_OPTICFLOW_PMW3901
   float dummy_f = 0.f;
   uint16_t dummy_u16 = 0;
-  float fps = 1.f / dt;
+
   DOWNLINK_SEND_OPTIC_FLOW_EST(DefaultChannel, DefaultDevice,
       &fps,                 /* fps */
       &dummy_u16,           /* corner_cnt */
@@ -160,6 +198,16 @@ static void opticflow_pmw3901_publish(int16_t delta_x, int16_t delta_y, uint32_t
       &dummy_f              /* divergence */
       );
 #endif
+#if PERIODIC_TELEMETRY
+  telem_buf.dummy.f = 0;
+  telem_buf.fps = fps;
+  telem_buf.flow_x_subpix = flow_x_subpix;
+  telem_buf.flow_y_subpix = flow_y_subpix;
+  telem_buf.flow_der_x_subpix = flow_der_x_subpix;
+  telem_buf.flow_der_y_subpix = flow_der_y_subpix;
+  telem_buf.vel_x = vel_x;
+  telem_buf.vel_y = vel_y;
+#endif
 }
 
 
@@ -172,6 +220,9 @@ void opticflow_pmw3901_init(void) {
   of_pmw.agl_timeout = OPTICFLOW_PMW3901_AGL_TIMEOUT_US;
 #ifdef OPTICFLOW_PMW3901_RAD_PER_PX
   of_pmw.pmw.rad_per_px = OPTICFLOW_PMW3901_RAD_PER_PX;
+#endif
+#if PERIODIC_TELEMETRY
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_OPTIC_FLOW_EST, send_opticflow);
 #endif
 }
 

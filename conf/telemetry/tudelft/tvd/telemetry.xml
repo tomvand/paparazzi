@@ -185,6 +185,7 @@
     </mode>
     <mode name="ins">
       <message name="SONAR"                   period="0.01"/>
+      <message name="OPTIC_FLOW_EST"          period="0.01"/>
     </mode>
   </process>
 
