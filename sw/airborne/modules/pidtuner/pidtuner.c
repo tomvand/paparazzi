@@ -56,8 +56,8 @@ static void chirp_init(void) {
     chirp_amplitude = 200;
     chirp_noise_stdv_onaxis_ratio = 0.1;
     chirp_noise_stdv_offaxis = 200;
-    sys_id_chirp_fstart_handler(1.0);
     sys_id_chirp_fstop_handler(20.0);
+    sys_id_chirp_fstart_handler(1.0);
     chirp_length_s = 20.0;
     chirp_initialized = true;
   }
