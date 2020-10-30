@@ -76,7 +76,7 @@ void sdlogger_spi_direct_init(void)
 
   /* Set values in the struct to their defaults */
   sdlogger_spi.status = SDLogger_Initializing;
-  sdlogger_spi.next_available_address = 0;
+  sdlogger_spi.next_available_address = 0x00004000;
   sdlogger_spi.last_completed = 0;
   sdlogger_spi.sdcard_buf_idx = 1;
 
@@ -122,8 +122,8 @@ void sdlogger_spi_direct_periodic(void)
   switch (sdlogger_spi.status) {
     case SDLogger_Initializing:
       if (sdcard1.status == SDCard_Idle) {
-        sdcard_spi_read_block(&sdcard1, 0x00002000, &sdlogger_spi_direct_index_received);
-        sdlogger_spi.status = SDLogger_RetreivingIndex;
+//        sdcard_spi_read_block(&sdcard1, 0x00002000, &sdlogger_spi_direct_index_received);
+        sdlogger_spi.status = SDLogger_Ready;  // SDLogger_RetreivingIndex;
       }
       break;
 
