@@ -87,12 +87,12 @@
         <module name="sonar" type="vl53l1x">
           <configure name="SONAR_VL53L1X_I2C_DEV" value="softi2c0"/>
         </module>
-        <!--<module name="opticflow" type="pmw3901">
+        <module name="opticflow" type="pmw3901">
           <configure name="OPTICFLOW_PMW3901_SPI_DEV" value="SPI2"/>
           <configure name="OPTICFLOW_PMW3901_SPI_SLAVE_IDX" value="3"/>
           <define name="SPI_SELECT_SLAVE3_PORT" value="UART1_GPIO_PORT_RX"/>
           <define name="SPI_SELECT_SLAVE3_PIN" value="UART1_GPIO_RX"/>
-        </module>-->
+        </module>
         
         <module name="imu" type="mpu6000">
             <configure name="IMU_MPU_SPI_DEV" value="spi1"/>

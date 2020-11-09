@@ -55,39 +55,57 @@
 static bool readRegister_nonblocking(struct pmw3901_t *pmw, uint8_t addr, uint8_t *value) {
   switch (pmw->readwrite_state) {
     case 0:
-      if (get_sys_time_usec() < pmw->readwrite_timeout) return false;
       pmw->trans.output_buf[0] = addr & 0x7F;  // MSB 0 => read
       pmw->trans.output_length = 1;
-      pmw->trans.input_length = 0;
-      pmw->trans.select = SPISelect;
+      pmw->trans.input_length = 2;  // dummy, value
+      pmw->trans.select = SPISelectUnselect;  // Note: assumes SPI clock is slow enough for 35us delay between address and read.
       spi_submit(pmw->periph, &pmw->trans);
       pmw->readwrite_state++;
       /* Falls through. */
     case 1:
       if (pmw->trans.status == SPITransPending || pmw->trans.status == SPITransRunning) return false;
-      // Write addr complete
-      pmw->readwrite_timeout = get_sys_time_usec() + 35;
-      pmw->readwrite_state++;
-      /* Falls through. */
-    case 2:
-      if (get_sys_time_usec() < pmw->readwrite_timeout) return false;
-      // Addr-read delay passed
-      pmw->trans.output_length = 0;
-      pmw->trans.input_length = 1;
-      pmw->trans.select = SPIUnselect;
-      spi_submit(pmw->periph, &pmw->trans);
-      pmw->readwrite_state++;
-      /* Falls through. */
-    case 3:
-      if (pmw->trans.status == SPITransPending || pmw->trans.status == SPITransRunning) return false;
-      // Read complete
-      pmw->trans.select = SPISelectUnselect;
-      *value = pmw->trans.input_buf[0];
-      pmw->readwrite_timeout = get_sys_time_usec() + 20;
+      // Transaction complete
+      *value = pmw->trans.input_buf[1];
       pmw->readwrite_state = 0;
       return true;
     default: return false;
   }
+
+//  switch (pmw->readwrite_state) {
+//    case 0:
+//      if (get_sys_time_usec() < pmw->readwrite_timeout) return false;
+//      pmw->trans.output_buf[0] = addr & 0x7F;  // MSB 0 => read
+//      pmw->trans.output_length = 1;
+//      pmw->trans.input_length = 0;
+//      pmw->trans.select = SPISelect;
+//      spi_submit(pmw->periph, &pmw->trans);
+//      pmw->readwrite_state++;
+//      /* Falls through. */
+//    case 1:
+//      if (pmw->trans.status == SPITransPending || pmw->trans.status == SPITransRunning) return false;
+//      // Write addr complete
+//      pmw->readwrite_timeout = get_sys_time_usec() + 35;
+//      pmw->readwrite_state++;
+//      /* Falls through. */
+//    case 2:
+//      if (get_sys_time_usec() < pmw->readwrite_timeout) return false;
+//      // Addr-read delay passed
+//      pmw->trans.output_length = 0;
+//      pmw->trans.input_length = 1;
+//      pmw->trans.select = SPIUnselect;
+//      spi_submit(pmw->periph, &pmw->trans);
+//      pmw->readwrite_state++;
+//      /* Falls through. */
+//    case 3:
+//      if (pmw->trans.status == SPITransPending || pmw->trans.status == SPITransRunning) return false;
+//      // Read complete
+//      pmw->trans.select = SPISelectUnselect;
+//      *value = pmw->trans.input_buf[0];
+//      pmw->readwrite_timeout = get_sys_time_usec() + 20;
+//      pmw->readwrite_state = 0;
+//      return true;
+//    default: return false;
+//  }
 }
 
 
