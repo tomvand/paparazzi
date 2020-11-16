@@ -180,6 +180,10 @@ void sdlogger_spi_direct_periodic(void)
           sdlogger_spi.status = SDLogger_LoggingIdle;
         }
       }
+      /* Check if switch is flipped to stop logging */
+      if (sdlogger_spi.do_log == 0) {
+        sdlogger_spi.status = SDLogger_LoggingFinalBlock;
+      }
       break;
 
     case SDLogger_LoggingFinalBlock:
