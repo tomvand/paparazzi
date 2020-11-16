@@ -57,7 +57,7 @@
 static bool readRegister_nonblocking(struct pmw3901_t *pmw, uint8_t addr, uint8_t *value) {
   switch (pmw->readwrite_state) {
     case 0:
-      if (sdcard1.status >= SDCard_SendingCMD25 && sdcard1.status <= SDCard_MultiWriteStopping) return false;
+      if (sdcard1.status != SDCard_Idle) return false;
       pmw->trans.output_buf[0] = addr & 0x7F;  // MSB 0 => read
       pmw->trans.output_length = 1;
       pmw->trans.input_length = 2;  // dummy, value
