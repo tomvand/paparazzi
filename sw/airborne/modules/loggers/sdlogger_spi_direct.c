@@ -131,8 +131,31 @@ void sdlogger_spi_direct_periodic(void)
       if ((sdlogger_spi.do_log == 1) &&
           sdcard1.status == SDCard_Idle) {
         LOGGER_LED_ON;
-        sdcard_spi_multiwrite_start(&sdcard1, sdlogger_spi.next_available_address);
+//        sdcard_spi_multiwrite_start(&sdcard1, sdlogger_spi.next_available_address);
+        sdlogger_spi.write_address = sdlogger_spi.next_available_address;
         sdlogger_spi.status = SDLogger_Logging;
+      }
+      break;
+
+    case SDLogger_LoggingIdle:
+      /* This line is NOT unit-tested because it is an inline function */
+      #if PERIODIC_TELEMETRY
+      periodic_telemetry_send_Logger(DefaultPeriodic,
+                                     &pprzlog_tp.trans_tx,
+                                     &sdlogger_spi.device);
+      #endif
+      /* SD-card should be Idle in this block */
+      if (sdcard1.status == SDCard_MultiWriteIdle) {
+        sdcard_spi_multiwrite_stop(&sdcard1);
+        break;
+      }
+      /* Check if SD Card buffer is full and SD Card is ready for new data */
+      if (sdlogger_spi.sdcard_buf_idx > 512) {
+        sdlogger_spi.status = SDLogger_Logging;
+      }
+      /* Check if switch is flipped to stop logging */
+      if (sdlogger_spi.do_log == 0) {
+        sdlogger_spi.status = SDLogger_LoggingFinalBlock;
       }
       break;
 
@@ -143,18 +166,29 @@ void sdlogger_spi_direct_periodic(void)
                                      &pprzlog_tp.trans_tx,
                                      &sdlogger_spi.device);
       #endif
-      /* Check if SD Card buffer is full and SD Card is ready for new data */
-      if (sdlogger_spi.sdcard_buf_idx > 512 &&
-          sdcard1.status == SDCard_MultiWriteIdle) {
-        sdcard_spi_multiwrite_next(&sdcard1, &sdlogger_spi_direct_multiwrite_written);
+      /* SD-card should be MultiWriteIdle in this block */
+      if (sdcard1.status == SDCard_Idle) {
+        sdcard_spi_multiwrite_start(&sdcard1, sdlogger_spi.write_address);
+        break;
       }
-      /* Check if switch is flipped to stop logging */
-      if (sdlogger_spi.do_log == 0) {
-        sdlogger_spi.status = SDLogger_LoggingFinalBlock;
+      /* Write data until buffer flushed */
+      if (sdcard1.status == SDCard_MultiWriteIdle) {
+        if (sdlogger_spi.sdcard_buf_idx > 512) {
+          sdcard_spi_multiwrite_next(&sdcard1, &sdlogger_spi_direct_multiwrite_written);
+          sdlogger_spi.write_address++;
+        } else {
+          sdlogger_spi.status = SDLogger_LoggingIdle;
+        }
       }
       break;
 
     case SDLogger_LoggingFinalBlock:
+      /* SD-card should be MultiWriteIdle in this block */
+      if (sdcard1.status == SDCard_Idle) {
+        sdcard_spi_multiwrite_start(&sdcard1, sdlogger_spi.write_address);
+        break;
+      }
+      /* Write final block */
       if (sdcard1.status == SDCard_MultiWriteIdle) {
         if (sdlogger_spi.sdcard_buf_idx > 512) {
           sdcard_spi_multiwrite_next(&sdcard1, &sdlogger_spi_direct_multiwrite_written);
@@ -365,7 +399,7 @@ void sdlogger_spi_direct_command(void)
 
 int sdlogger_spi_direct_check_free_space(struct sdlogger_spi_periph *p, long *fd __attribute__((unused)), uint16_t len)
 {
-  if (p->status == SDLogger_Logging) {
+  if (p->status == SDLogger_LoggingIdle || p->status == SDLogger_Logging) {
     /* Calculating free space in both buffers */
     int available = (513 - p->sdcard_buf_idx) + (SDLOGGER_BUFFER_SIZE - p->idx);
     if (available >= len) {

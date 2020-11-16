@@ -1,0 +1,15 @@
+Original flow:
+--------------
+do_log = 1:
+->  sdcard_spi_multiwrite_start()
+
+buf_idx > 512:
+->  sdcard_spi_multiwrite_next()
+
+->  sdcard_spi_multiwrite_stop()
+
+
+
+
+Proposed flow:
+--------------
