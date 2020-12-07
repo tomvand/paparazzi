@@ -186,6 +186,12 @@
     <mode name="ins">
       <message name="SONAR"                   period="0.01"/>
       <message name="OPTIC_FLOW_EST"          period="0.01"/>
+      <message name="INS"                     period="0.01"/>
+      <message name="INS_Z"                   period="0.01"/>
+      <message name="INS_REF"                 period="1.1"/>
+      <message name="VFF_EXTENDED"            period="0.01"/>
+      <message name="HFF"                     period="0.01"/>
+      <message name="INS_EKF2"                period="0.01"/>
     </mode>
   </process>
 
