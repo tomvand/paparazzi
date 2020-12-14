@@ -74,7 +74,7 @@
           <configure name="SDLOGGER_DIRECT_SPI_SLAVE" value="SPI_SLAVE4"/>
           <define name="SPI_SELECT_SLAVE4_PORT" value="UART1_GPIO_PORT_RX"/>
           <define name="SPI_SELECT_SLAVE4_PIN" value="UART1_GPIO_TX"/>
-          <configure name="SDLOGGER_DOWNLINK_DEVICE" value="usb_serial"/>
+          <configure name="SDLOGGER_DOWNLOAD_DEVICE" value="usb_serial"/>
         </module>
         
         <!-- Flowdeck -->
