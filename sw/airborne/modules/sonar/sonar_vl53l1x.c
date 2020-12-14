@@ -69,6 +69,19 @@
 #endif
 
 
+#if PERIODIC_TELEMETRY
+#include "subsystems/datalink/telemetry.h"
+
+static uint16_t t_range_mm;
+static float t_range_ofs_m;
+
+static void send_sonar(struct transport_tx *trans, struct link_device *dev) {
+  pprz_msg_send_SONAR(trans, dev, AC_ID,
+      &t_range_mm, &t_range_ofs_m);
+}
+#endif
+
+
 struct sonar_vl53l1x_dev sonar_vl53l1x;
 
 
@@ -84,6 +97,10 @@ static void sonar_vl53l1x_publish(uint16_t range_mm)
   // Send Telemetry report
   DOWNLINK_SEND_SONAR(DefaultChannel, DefaultDevice, &range_mm, &range_ofs_m);
 #endif
+#if PERIODIC_TELEMETRY
+  t_range_mm = range_mm;
+  t_range_ofs_m = range_ofs_m;
+#endif
 }
 
 
@@ -97,6 +114,10 @@ void sonar_vl53l1x_init(void)
   /* Initialize sensor */
 #ifndef SITL
   VL53L1X_BootDevice(&sonar_vl53l1x.dev, SONAR_VL53L1X_TIMINGBUDGET_MS, SONAR_VL53L1X_DISTANCEMODE, SONAR_VL53L1X_INTERMEASUREMENT_MS);
+#endif
+
+#if PERIODIC_TELEMETRY
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_SONAR, send_sonar);
 #endif
 }
 
