@@ -70,6 +70,7 @@
         <module name="telemetry" type="transparent_frsky_x"/>
         
         <module name="logger" type="sd_spi_direct">
+        	<define name="SDLOGGER_ON_ARM" value="TRUE"/>
           <configure name="SDLOGGER_DIRECT_SPI" value="SPI2"/>
           <configure name="SDLOGGER_DIRECT_SPI_SLAVE" value="SPI_SLAVE4"/>
           <define name="SPI_SELECT_SLAVE4_PORT" value="UART1_GPIO_PORT_RX"/>
@@ -257,7 +258,7 @@
     </command_laws>
 
     <section name="FILTER_1EURO" prefix="FILTER_1EURO_">
-      <define name="ENABLED" value="FALSE"/> <!-- activate or not the filter by default -->
+      <define name="ENABLED" value="TRUE"/> <!-- activate or not the filter by default -->
       <define name="GYRO_MINCUTOFF" value="10."/> <!-- minimum cutoff freq for gyro signal -->
       <define name="GYRO_BETA" value="0.1"/> <!-- adaptation coefficient for gyro signal -->
       <define name="ACCEL_MINCUTOFF" value="0.1"/> <!-- minimum cutoff freq for accel signal -->
