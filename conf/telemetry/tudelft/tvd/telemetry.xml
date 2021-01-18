@@ -155,6 +155,13 @@
       <message name="ENERGY"                  period="0.2"/>
       <message name="ROTORCRAFT_CMD"          period="0.1"/>
     </mode>
+    <mode name="rc">
+      <message name="ENERGY"                   period="0.2"/>
+      <message name="ROTORCRAFT_CMD"           period="0.1"/>
+      <message name="PPM"                      period="0.1"/>
+      <message name="RC"                       period="0.1"/>
+      <message name="ROTORCRAFT_RADIO_CONTROL" period="0.1"/>
+    </mode>
     <mode name="imu">
       <message name="ENERGY"                  period="0.2"/>
       <message name="ROTORCRAFT_CMD"          period="0.1"/>
