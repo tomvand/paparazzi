@@ -116,8 +116,8 @@
         <module name="sys_id" type="chirp">
           <define name="CHIRP_AXES" value="{COMMAND_ROLL,COMMAND_PITCH,COMMAND_YAW,COMMAND_THRUST}"/>
           <define name="CHIRP_ENABLED" value="TRUE"/>
-          <define name="CHIRP_USE_NOISE" value="TRUE"/>
-          <define name="CHIRP_EXPONENTIAL" value="TRUE"/>
+          <define name="CHIRP_USE_NOISE" value="FALSE"/>
+          <define name="CHIRP_EXPONENTIAL" value="FALSE"/>
           <define name="CHIRP_FADEIN" value="TRUE"/>
         </module>
 
