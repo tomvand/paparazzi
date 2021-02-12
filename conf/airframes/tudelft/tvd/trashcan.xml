@@ -109,7 +109,7 @@
             <define name="IMU_ACCEL_Y_SIGN" value="-1"/>
             <define name="IMU_ACCEL_Z_SIGN" value="-1"/>
         </module>
-        <module name="filter" type="1euro_imu"/>
+        <!-- <module name="filter" type="1euro_imu"/> -->
         
         <module name="pidtuner"/>
         
@@ -258,7 +258,7 @@
     </command_laws>
 
     <section name="FILTER_1EURO" prefix="FILTER_1EURO_">
-      <define name="ENABLED" value="TRUE"/> <!-- activate or not the filter by default -->
+      <define name="ENABLED" value="FALSE"/> <!-- activate or not the filter by default -->
       <define name="GYRO_MINCUTOFF" value="10."/> <!-- minimum cutoff freq for gyro signal -->
       <define name="GYRO_BETA" value="0.1"/> <!-- adaptation coefficient for gyro signal -->
       <define name="ACCEL_MINCUTOFF" value="0.1"/> <!-- minimum cutoff freq for accel signal -->
