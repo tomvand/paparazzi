@@ -202,7 +202,8 @@
       <message name="IMU_GYRO_SCALED"         period="0.0005"/>
       <message name="ONEEURO_GYRO_SCALED"     period="0.01"/>
       <message name="ONEEURO_ACCEL_SCALED"    period="0.01"/>
-      <message name="AHRS_EULER"              period="0.0005"/>
+      <message name="STAB_ATTITUDE_INT"       period="0.0005"/>
+      <message name="STAB_ATTITUDE_FLOAT"     period="0.0005"/>
     </mode>
     <mode name="ins">
       <message name="ENERGY"                  period="0.2"/>
