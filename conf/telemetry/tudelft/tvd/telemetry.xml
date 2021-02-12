@@ -187,7 +187,7 @@
     <mode name="ahrs">
       <message name="ENERGY"                  period="0.2"/>
       <message name="ROTORCRAFT_CMD"          period="0.1"/>
-      <message name="AHRS_EULER_INT"          period="0.001"/>
+      <message name="AHRS_EULER"              period="0.001"/>
       <message name="AHRS_GYRO_BIAS_INT"      period="0.01"/>
       <message name="IMU_ACCEL_SCALED"        period="0.01"/>
       <message name="IMU_GYRO_SCALED"         period="0.01"/>
@@ -202,6 +202,7 @@
       <message name="IMU_GYRO_SCALED"         period="0.0005"/>
       <message name="ONEEURO_GYRO_SCALED"     period="0.01"/>
       <message name="ONEEURO_ACCEL_SCALED"    period="0.01"/>
+      <message name="AHRS_EULER"              period="0.0005"/>
     </mode>
     <mode name="ins">
       <message name="ENERGY"                  period="0.2"/>
