@@ -98,8 +98,8 @@
             <define name="IMU_MPU_ACCEL_LOWPASS_FILTER" value="MPU60X0_DLPF_ACC_44HZ"/><!-- FIXME check value. Not sure if used? -->
             <define name="IMU_MPU_SMPLRT_DIV" value="3"/> <!-- for 1khz periodic IMU_MPU_SMPLRT_DIV=7 sr = gr(8) /1+IMU_MPU_SMPLRT_DIV (1+7/8=1khz-->
             
-            <define name="IMU_MPU_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_250"/>
-            <define name="IMU_MPU_ACCEL_RANGE" value="MPU60X0_ACCEL_RANGE_4G"/>
+            <define name="IMU_MPU_GYRO_RANGE" value="MPU60X0_GYRO_RANGE_2000"/>
+            <define name="IMU_MPU_ACCEL_RANGE" value="MPU60X0_ACCEL_RANGE_16G"/>
 
             <!-- define name="ICM20608"/> --> <!-- Not used atm -->
             <!-- To be able (for now) to set AP IMU orientaion -->
