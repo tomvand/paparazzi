@@ -195,13 +195,13 @@
       <message name="ONEEURO_ACCEL_SCALED"    period="0.01"/>
     </mode>
     <mode name="chirp">
-      <message name="ENERGY"                  period="0.2"/>
-      <message name="CHIRP"                   period="0.01"/>
+      <message name="ENERGY"                  period="1.0"/>
+      <message name="CHIRP"                   period="0.1"/>
       <message name="ROTORCRAFT_CMD"          period="0.0005"/>
       <message name="IMU_ACCEL_SCALED"        period="0.0005"/>
       <message name="IMU_GYRO_SCALED"         period="0.0005"/>
-      <message name="ONEEURO_GYRO_SCALED"     period="0.01"/>
-      <message name="ONEEURO_ACCEL_SCALED"    period="0.01"/>
+      <!-- <message name="ONEEURO_GYRO_SCALED"     period="0.01"/> -->
+      <!-- <message name="ONEEURO_ACCEL_SCALED"    period="0.01"/> -->
       <message name="STAB_ATTITUDE_INT"       period="0.0005"/>
       <message name="STAB_ATTITUDE_FLOAT"     period="0.0005"/>
     </mode>
