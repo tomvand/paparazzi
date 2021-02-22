@@ -32,11 +32,13 @@
 #include "subsystems/ahrs.h"
 
 #include "generated/modules.h"
+#include "generated/airframe.h"
 
 #include <stdbool.h>
 
 
-static void chirp_trigger(void) {
+// -----------------------------------------------------------------------------
+static void __attribute__((unused)) chirp_trigger(void) {
   static bool trigger_prev = false;
     bool trigger = radio_control.values[RADIO_AUX1] > (9600 / 2);
     if (trigger && !trigger_prev) {
@@ -47,7 +49,7 @@ static void chirp_trigger(void) {
     trigger_prev = trigger;
 }
 
-static void chirp_init(void) {
+static void __attribute__((unused)) chirp_init(void) {
   static bool chirp_initialized = false;
   if (chirp_initialized) return;
 
@@ -64,21 +66,75 @@ static void chirp_init(void) {
 }
 
 
+// -----------------------------------------------------------------------------
 static void __attribute__((unused)) pid_periodic(void) {
-  //  float gain1 = radio_control.values[RADIO_GAIN1];
-  //  float gain2 = radio_control.values[RADIO_GAIN2];
-  //
-  //  // Gain Kp
-  //  guidance_h.gains.p = (gain1 / 9600.0) * 2 * 650;
-  //
-  //  // Gain Kd
-  //  guidance_h.gains.d = (gain2 / 9600.0) * 2 * 350;
+//    float gain1 = radio_control.values[RADIO_GAIN1];
+//    float gain2 = radio_control.values[RADIO_GAIN2];
+//
+//    // Gain Kp
+//    guidance_h.gains.p = (gain1 / 9600.0) * 2 * 650;
+//
+//    // Gain Kd
+//    guidance_h.gains.d = (gain2 / 9600.0) * 2 * 350;
 }
 
 
+// -----------------------------------------------------------------------------
+static void pidgain_set(void) {
+  // Roll
+  stabilization_gains.p.x = 280;
+  stabilization_gains.i.x = 420;
+  stabilization_gains.d.x = 0;
+  stabilization_gains.dd.x = 2;
+  // Pitch
+  if (radio_control.values[RADIO_GAIN2] > 9600 / 3) {
+    stabilization_gains.p.y = 280;
+    stabilization_gains.i.y = 420;
+    stabilization_gains.d.y = 0;
+    stabilization_gains.dd.y = 3;
+  }
+  // Yaw
+  if (radio_control.values[RADIO_GAIN2] > 9600 / 3 * 2) {
+    stabilization_gains.p.z = 0;
+    stabilization_gains.i.z = 266;
+    stabilization_gains.d.z = 0;
+    stabilization_gains.dd.z = 0;
+  }
+}
+
+static void pidgain_restore(void) {
+  // Roll
+  stabilization_gains.p.x = STABILIZATION_ATTITUDE_PHI_PGAIN;
+  stabilization_gains.i.x = STABILIZATION_ATTITUDE_PHI_IGAIN;
+  stabilization_gains.d.x = STABILIZATION_ATTITUDE_PHI_DGAIN;
+  stabilization_gains.dd.x = STABILIZATION_ATTITUDE_PHI_DDGAIN;
+  // Pitch
+  stabilization_gains.p.y = STABILIZATION_ATTITUDE_THETA_PGAIN;
+  stabilization_gains.i.y = STABILIZATION_ATTITUDE_THETA_IGAIN;
+  stabilization_gains.d.y = STABILIZATION_ATTITUDE_THETA_DGAIN;
+  stabilization_gains.dd.y = STABILIZATION_ATTITUDE_THETA_DDGAIN;
+  // Yaw
+  stabilization_gains.p.z = STABILIZATION_ATTITUDE_PSI_PGAIN;
+  stabilization_gains.i.z = STABILIZATION_ATTITUDE_PSI_IGAIN;
+  stabilization_gains.d.z = STABILIZATION_ATTITUDE_PSI_DGAIN;
+  stabilization_gains.dd.z = STABILIZATION_ATTITUDE_PSI_DDGAIN;
+}
+
+static void pidgain_trigger(void) {
+  static bool trigger_prev = false;
+  bool trigger = radio_control.values[RADIO_AUX1] > (9600 / 2);
+  if (trigger && !trigger_prev) {
+    pidgain_set();
+  } else if (!trigger && trigger_prev) {
+    pidgain_restore();
+  }
+  trigger_prev = trigger;
+}
+
+
+// -----------------------------------------------------------------------------
 void pidtuner_periodic(void) {
-  chirp_init();
-  chirp_trigger();
+  pidgain_trigger();
 }
 
 
