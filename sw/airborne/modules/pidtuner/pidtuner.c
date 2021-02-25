@@ -68,14 +68,10 @@ static void __attribute__((unused)) chirp_init(void) {
 
 // -----------------------------------------------------------------------------
 static void __attribute__((unused)) pid_periodic(void) {
-//    float gain1 = radio_control.values[RADIO_GAIN1];
-//    float gain2 = radio_control.values[RADIO_GAIN2];
-//
-//    // Gain Kp
-//    guidance_h.gains.p = (gain1 / 9600.0) * 2 * 650;
-//
-//    // Gain Kd
-//    guidance_h.gains.d = (gain2 / 9600.0) * 2 * 350;
+    float gain1 = radio_control.values[RADIO_GAIN1];
+    float gain2 = radio_control.values[RADIO_GAIN2];
+
+    stabilization_gains.p.x = 50 + (280 - 50) * gain2 / 9600.0;
 }
 
 
@@ -134,7 +130,7 @@ static void pidgain_trigger(void) {
 
 // -----------------------------------------------------------------------------
 void pidtuner_periodic(void) {
-  pidgain_trigger();
+  pid_periodic();
 }
 
 
