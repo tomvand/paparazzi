@@ -77,7 +77,7 @@ static void __attribute__((unused)) pid_periodic(void) {
 
 
 // -----------------------------------------------------------------------------
-static void pidgain_set(void) {
+static void __attribute__((unused)) pidgain_set(void) {
   // Roll
   stabilization_gains.p.x = 280;
   stabilization_gains.i.x = 420;
@@ -99,7 +99,7 @@ static void pidgain_set(void) {
   }
 }
 
-static void pidgain_restore(void) {
+static void __attribute__((unused)) pidgain_restore(void) {
   // Roll
   stabilization_gains.p.x = STABILIZATION_ATTITUDE_PHI_PGAIN;
   stabilization_gains.i.x = STABILIZATION_ATTITUDE_PHI_IGAIN;
@@ -117,7 +117,7 @@ static void pidgain_restore(void) {
   stabilization_gains.dd.z = STABILIZATION_ATTITUDE_PSI_DDGAIN;
 }
 
-static void pidgain_trigger(void) {
+static void __attribute__((unused)) pidgain_trigger(void) {
   static bool trigger_prev = false;
   bool trigger = radio_control.values[RADIO_AUX1] > (9600 / 2);
   if (trigger && !trigger_prev) {
@@ -131,7 +131,7 @@ static void pidgain_trigger(void) {
 
 // -----------------------------------------------------------------------------
 void pidtuner_periodic(void) {
-  pid_periodic();
+//  pid_periodic();
 }
 
 
