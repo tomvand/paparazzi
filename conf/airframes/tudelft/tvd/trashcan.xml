@@ -355,9 +355,9 @@
         <define name="THETA_DGAIN" value="33"/>
         <define name="THETA_IGAIN" value="14"/>
 
-        <define name="PSI_PGAIN" value="200"/>
-        <define name="PSI_DGAIN" value="100"/>
-        <define name="PSI_IGAIN" value="3"/>
+        <define name="PSI_PGAIN" value="1064"/>
+        <define name="PSI_DGAIN" value="514"/>
+        <define name="PSI_IGAIN" value="10"/>
 
         <define name="PHI_DDGAIN"   value="0"/>
         <define name="THETA_DDGAIN" value="0"/>
