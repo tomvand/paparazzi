@@ -73,9 +73,12 @@ static void __attribute__((unused)) pid_periodic(void) {
   float gain1 = radio_control.values[RADIO_GAIN1] / 9600.0 * 2;
   float gain2 = radio_control.values[RADIO_GAIN2] / 9600.0 * 2;
 
-  stabilization_gains.p.x = 50.0 *   1.0 * gain2 * 3;
-  stabilization_gains.i.x =  5.0 *   1.0 * gain2 * 3;
-  stabilization_gains.d.x = 40.0 * gain1 * gain2 * 3;
+  stabilization_gains.p.x = 180.0 *   1.0 * gain2;
+  stabilization_gains.p.y = 180.0 *   1.0 * gain2;
+  stabilization_gains.i.x =  18.0 *   1.0 * gain2;
+  stabilization_gains.i.y =  18.0 *   1.0 * gain2;
+  stabilization_gains.d.x = 104.0 * gain1 * gain2;
+  stabilization_gains.d.y = 104.0 * gain1 * gain2;
 }
 
 
