@@ -75,13 +75,13 @@ static void __attribute__((unused)) pid_periodic(void) {
 
 //  stabilization_gains.p.x = 180.0 *   1.0 * gain2;
 //  stabilization_gains.p.y = 180.0 *   1.0 * gain2;
-  stabilization_gains.p.z = 200.0 *   1.0 * gain2;
+  stabilization_gains.p.z = 393.0 *   1.0 * gain2;
 //  stabilization_gains.i.x =  18.0 *   1.0 * gain2;
 //  stabilization_gains.i.y =  18.0 *   1.0 * gain2;
-  stabilization_gains.i.z =   3.0 *   1.0 * gain2;
+  stabilization_gains.i.z =   5.0 *   1.0 * gain2;
 //  stabilization_gains.d.x = 104.0 * gain1 * gain2;
 //  stabilization_gains.d.y = 104.0 * gain1 * gain2;
-  stabilization_gains.d.z = 100.0 * gain1 * gain2;
+  stabilization_gains.d.z = 363.0 * gain1 * gain2;
 }
 
 
