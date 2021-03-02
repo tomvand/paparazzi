@@ -143,7 +143,7 @@ static void __attribute__((unused)) pidgain_trigger(void) {
 
 // -----------------------------------------------------------------------------
 void pidtuner_periodic(void) {
-  pid_periodic();
+//  pid_periodic();
 }
 
 

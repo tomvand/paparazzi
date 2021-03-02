@@ -332,12 +332,12 @@
         <define name="DEADBAND_E"     value="2"/>
         <define name="DEADBAND_R"     value="100"/>
 
-        <define name="REF_OMEGA_P"  value="800" unit="deg/s"/>
+        <define name="REF_OMEGA_P"  value="2000" unit="deg/s"/>
         <define name="REF_ZETA_P"   value="0.85"/>
         <define name="REF_MAX_P"    value="400." unit="deg/s"/>
         <define name="REF_MAX_PDOT" value="RadOfDeg(8000.)"/>
 
-        <define name="REF_OMEGA_Q"  value="800" unit="deg/s"/>
+        <define name="REF_OMEGA_Q"  value="2000" unit="deg/s"/>
         <define name="REF_ZETA_Q"   value="0.85"/>
         <define name="REF_MAX_Q"    value="400." unit="deg/s"/>
         <define name="REF_MAX_QDOT" value="RadOfDeg(8000.)"/>
