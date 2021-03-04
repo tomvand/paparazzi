@@ -34,7 +34,24 @@ Code based on gps_datalink.
 #include "math/pprz_geodetic_int.h"
 
 
+static struct {
+  struct EnuCoor_f pos;
+  float heading;
+  uint8_t type;  // For debugging
+} gps_log_buffer;
+
 static struct LtpDef_i ltp_def;
+
+
+#if PERIODIC_TELEMETRY
+static void send_gps_log(struct transport_tx *trans, struct link_device *dev) {
+  pprz_msg_send_GPS_LOG(trans, dev, AC_ID,
+      &gps_log_buffer.pos.x,
+      &gps_log_buffer.pos.y,
+      &gps_log_buffer.pos.z,
+      &gps_log_buffer.heading);
+}
+#endif // PERIODIC_TELEMETRY
 
 
 void gps_log_init(void)
@@ -44,11 +61,16 @@ void gps_log_init(void)
   llh_nav0.lon = NAV_LON0;
   llh_nav0.alt = NAV_ALT0 + NAV_MSL0;
   ltp_def_from_lla_i(&ltp_def, &llh_nav0);
+#if PERIODIC_TELEMETRY
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_GPS_LOG, send_gps_log);
+#endif // PERIODIC_TELEMETRY
 }
 
 
 static void store_gps_log(struct EnuCoor_f *pos, float heading, uint8_t type) {
-
+  gps_log_buffer.pos = *pos;
+  gps_log_buffer.heading = heading;
+  gps_log_buffer.type = type;
 }
 
 
