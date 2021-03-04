@@ -38,6 +38,7 @@ static struct {
   struct EnuCoor_f pos;
   float heading;
   uint8_t type;  // For debugging
+  bool sent;
 } gps_log_buffer;
 
 static struct LtpDef_i ltp_def;
@@ -45,11 +46,14 @@ static struct LtpDef_i ltp_def;
 
 #if PERIODIC_TELEMETRY
 static void send_gps_log(struct transport_tx *trans, struct link_device *dev) {
-  pprz_msg_send_GPS_LOG(trans, dev, AC_ID,
-      &gps_log_buffer.pos.x,
-      &gps_log_buffer.pos.y,
-      &gps_log_buffer.pos.z,
-      &gps_log_buffer.heading);
+  if (!gps_log_buffer.sent) {
+    pprz_msg_send_GPS_LOG(trans, dev, AC_ID,
+        &gps_log_buffer.pos.x,
+        &gps_log_buffer.pos.y,
+        &gps_log_buffer.pos.z,
+        &gps_log_buffer.heading);
+    gps_log_buffer.sent = true;
+  }
 }
 #endif // PERIODIC_TELEMETRY
 
@@ -71,6 +75,7 @@ static void store_gps_log(struct EnuCoor_f *pos, float heading, uint8_t type) {
   gps_log_buffer.pos = *pos;
   gps_log_buffer.heading = heading;
   gps_log_buffer.type = type;
+  gps_log_buffer.sent = false;
 }
 
 
