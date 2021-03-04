@@ -314,7 +314,15 @@
       <field name="temp" type="int8" unit="deg"/>
     </message>
 
-    <!-- 38 is free -->
+    <message name="GPS_LOG" id="37">
+      <description>
+        GPS position in local coordinates for ground-truth logging.
+      </description>
+      <field name="east" type="float" unit="m"/>
+      <field name="north" type="float" unit="m"/>
+      <field name="up" type="float" unit="m"/>
+      <field name="heading" type="float" unit="deg"/>
+    </message>
 
     <message name="DRAGSPEED" id="38">
       <description>
