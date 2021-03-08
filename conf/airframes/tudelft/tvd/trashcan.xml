@@ -133,7 +133,7 @@
         <!-- <module name="stabilization" type="indi_simple" /> -->
         <!-- <module name="stabilization" type="indi" /> -->
 
-        <module name="ins" type="extended"/>
+        <module name="ins" type="hff_extended"/>
 
         <!-- Not yet tested -->
         <!--<module name="osd_max7456">
