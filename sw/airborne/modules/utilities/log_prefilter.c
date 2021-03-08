@@ -26,6 +26,7 @@
 #include "modules/utilities/log_prefilter.h"
 
 #include "generated/modules.h"
+#include "subsystems/datalink/telemetry.h"
 
 #include "state.h"
 #include "subsystems/commands.h"
@@ -63,12 +64,38 @@ static struct {
   filter_t phi_est;
   filter_t theta_est;
   filter_t psi_est;
+  filter_t acc_x;
+  filter_t acc_y;
   filter_t acc_z;
   filter_t cmd_roll;
   filter_t cmd_pitch;
   filter_t cmd_yaw;
   filter_t cmd_thrust;
 } filter;
+
+
+#if PERIODIC_TELEMETRY
+static void send_STATE_FILTERED(struct transport_tx *trans, struct link_device *dev) {
+  int32_t phi_est = get_filter(&filter.phi_est);
+  int32_t theta_est = get_filter(&filter.theta_est);
+  int32_t psi_est = get_filter(&filter.psi_est);
+  int32_t acc_x = get_filter(&filter.acc_x);
+  int32_t acc_y = get_filter(&filter.acc_y);
+  int32_t acc_z = get_filter(&filter.acc_z);
+  pprz_msg_send_STATE_FILTERED(trans, dev, AC_ID,
+      &phi_est, &theta_est, &psi_est,
+      &acc_x, &acc_y, &acc_z);
+}
+
+static void send_CMD_FILTERED(struct transport_tx *trans, struct link_device *dev) {
+  int16_t cmd_roll = (int16_t) get_filter(&filter.cmd_roll);
+  int16_t cmd_pitch = (int16_t) get_filter(&filter.cmd_pitch);
+  int16_t cmd_yaw = (int16_t) get_filter(&filter.cmd_yaw);
+  int16_t cmd_thrust = (int16_t) get_filter(&filter.cmd_thrust);
+  pprz_msg_send_CMD_FILTERED(trans, dev, AC_ID,
+      &cmd_roll, &cmd_pitch, &cmd_yaw, &cmd_thrust);
+}
+#endif
 
 
 void log_prefilter_init(void)
@@ -78,11 +105,17 @@ void log_prefilter_init(void)
   init_filter(&filter.phi_est, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, att->phi);
   init_filter(&filter.theta_est, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, att->theta);
   init_filter(&filter.psi_est, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, att->psi);
+  init_filter(&filter.acc_x, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, accel->x);
+  init_filter(&filter.acc_y, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, accel->y);
   init_filter(&filter.acc_z, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, accel->z);
   init_filter(&filter.cmd_roll, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, commands[COMMAND_ROLL]);
   init_filter(&filter.cmd_pitch, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, commands[COMMAND_PITCH]);
   init_filter(&filter.cmd_yaw, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, commands[COMMAND_YAW]);
   init_filter(&filter.cmd_thrust, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, commands[COMMAND_THRUST]);
+#if PERIODIC_TELEMETRY
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_STATE_FILTERED, send_STATE_FILTERED);
+  register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CMD_FILTERED, send_CMD_FILTERED);
+#endif
 }
 
 void log_prefilter_periodic(void)
@@ -92,6 +125,8 @@ void log_prefilter_periodic(void)
   update_filter(&filter.phi_est, att->phi);
   update_filter(&filter.theta_est, att->theta);
   update_filter(&filter.psi_est, att->psi);
+  update_filter(&filter.acc_x, accel->x);
+  update_filter(&filter.acc_y, accel->y);
   update_filter(&filter.acc_z, accel->z);
   update_filter(&filter.cmd_roll, commands[COMMAND_ROLL]);
   update_filter(&filter.cmd_pitch, commands[COMMAND_PITCH]);
