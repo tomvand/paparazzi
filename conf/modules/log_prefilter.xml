@@ -1,0 +1,14 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+<module name="log_prefilter" dir="utilities">
+  <doc>
+    <description>Low-pass filter IMU and CMD signals before logging at a lower sampling rate.</description>
+  </doc>
+  <header>
+    <file name="log_prefilter.h"/>
+  </header>
+  <init fun="log_prefilter_init()"/>
+  <periodic fun="log_prefilter_periodic()" autorun="TRUE"/><!-- no freq = PERIODIC_FREQUENCY -->
+  <makefile>
+    <file name="log_prefilter.c"/>
+  </makefile>
+</module>

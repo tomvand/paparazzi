@@ -65,6 +65,7 @@
         <module name="telemetry" type="transparent_frsky_x"/>
         
         <module name="gps_log"/>
+        <module name="log_prefilter"/>
         <module name="logger" type="sd_spi_direct">
         	<define name="SDLOGGER_ON_ARM" value="TRUE"/>
           <configure name="SDLOGGER_DIRECT_SPI" value="SPI2"/>
