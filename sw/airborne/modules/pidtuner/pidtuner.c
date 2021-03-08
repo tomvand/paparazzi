@@ -70,8 +70,8 @@ static void __attribute__((unused)) chirp_init(void) {
 static void __attribute__((unused)) pid_periodic(void) {
   // Gain 1 (left):   D action (PD zero)
   // Gain 2 (right):  Control gain
-  float gain1 = radio_control.values[RADIO_GAIN1] / 9600.0 * 2;
-  float gain2 = radio_control.values[RADIO_GAIN2] / 9600.0 * 2;
+  float __attribute__((unused)) gain1 = radio_control.values[RADIO_GAIN1] / 9600.0 * 2;
+  float __attribute__((unused)) gain2 = radio_control.values[RADIO_GAIN2] / 9600.0 * 2;
 
 //  stabilization_gains.p.x = 180.0 *   1.0 * gain2;
 //  stabilization_gains.p.y = 180.0 *   1.0 * gain2;
