@@ -1,0 +1,12 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+<module name="cmd_log" dir="utilities">
+  <doc>
+    <description>Log intermediate values in the command_laws section.</description>
+  </doc>
+  <header>
+    <file name="cmd_log.h"/>
+  </header>
+  <makefile>
+    <file name="cmd_log.c"/>
+  </makefile>
+</module>
