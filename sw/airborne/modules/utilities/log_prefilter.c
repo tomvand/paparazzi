@@ -33,25 +33,28 @@
 
 #include "filters/low_pass_filter.h"
 
+#include <math.h>
+
 
 #ifndef LOG_PREFILTER_CUTOFF_HZ
 #define LOG_PREFILTER_CUTOFF_HZ 30.0
 #endif
+#define LOG_PREFILTER_TAU (1.0 / (2 * M_PI * LOG_PREFILTER_CUTOFF_HZ))
 
 #ifndef LOG_PREFILTER_ORDER
 #define LOG_PREFILTER_ORDER 4
 #endif
 
 #if LOG_PREFILTER_ORDER == 2
-typedef Butterworth2LowPass_int filter_t;
-#define init_filter(...) init_butterworth_2_low_pass_int(__VA_ARGS__)
-#define update_filter(...) update_butterworth_2_low_pass_int(__VA_ARGS__)
-#define get_filter(...) get_butterworth_2_low_pass_int(__VA_ARGS__)
+typedef Butterworth2LowPass filter_t;
+#define init_filter(...) init_butterworth_2_low_pass(__VA_ARGS__)
+#define update_filter(...) update_butterworth_2_low_pass(__VA_ARGS__)
+#define get_filter(...) get_butterworth_2_low_pass(__VA_ARGS__)
 #elif LOG_PREFILTER_ORDER == 4
-typedef Butterworth4LowPass_int filter_t;
-#define init_filter(...) init_butterworth_4_low_pass_int(__VA_ARGS__)
-#define update_filter(...) update_butterworth_4_low_pass_int(__VA_ARGS__)
-#define get_filter(...) get_butterworth_4_low_pass_int(__VA_ARGS__)
+typedef Butterworth4LowPass filter_t;
+#define init_filter(...) init_butterworth_4_low_pass(__VA_ARGS__)
+#define update_filter(...) update_butterworth_4_low_pass(__VA_ARGS__)
+#define get_filter(...) get_butterworth_4_low_pass(__VA_ARGS__)
 #else
 #error "Invalid prefilter order (2, 4 allowed)."
 #endif // LOG_PREFILTER_ORDER
@@ -102,16 +105,16 @@ void log_prefilter_init(void)
 {
   struct Int32Eulers *att = stateGetNedToBodyEulers_i();
   struct Int32Vect3 *accel = stateGetAccelBody_i();
-  init_filter(&filter.phi_est, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, att->phi);
-  init_filter(&filter.theta_est, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, att->theta);
-  init_filter(&filter.psi_est, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, att->psi);
-  init_filter(&filter.acc_x, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, accel->x);
-  init_filter(&filter.acc_y, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, accel->y);
-  init_filter(&filter.acc_z, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, accel->z);
-  init_filter(&filter.cmd_roll, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, cmd_log[COMMAND_ROLL]);
-  init_filter(&filter.cmd_pitch, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, cmd_log[COMMAND_PITCH]);
-  init_filter(&filter.cmd_yaw, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, cmd_log[COMMAND_YAW]);
-  init_filter(&filter.cmd_thrust, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, cmd_log[COMMAND_THRUST]);
+  init_filter(&filter.phi_est, LOG_PREFILTER_TAU, MODULES_PERIOD, att->phi);
+  init_filter(&filter.theta_est, LOG_PREFILTER_TAU, MODULES_PERIOD, att->theta);
+  init_filter(&filter.psi_est, LOG_PREFILTER_TAU, MODULES_PERIOD, att->psi);
+  init_filter(&filter.acc_x, LOG_PREFILTER_TAU, MODULES_PERIOD, accel->x);
+  init_filter(&filter.acc_y, LOG_PREFILTER_TAU, MODULES_PERIOD, accel->y);
+  init_filter(&filter.acc_z, LOG_PREFILTER_TAU, MODULES_PERIOD, accel->z);
+  init_filter(&filter.cmd_roll, LOG_PREFILTER_TAU, MODULES_PERIOD, cmd_log[COMMAND_ROLL]);
+  init_filter(&filter.cmd_pitch, LOG_PREFILTER_TAU, MODULES_PERIOD, cmd_log[COMMAND_PITCH]);
+  init_filter(&filter.cmd_yaw, LOG_PREFILTER_TAU, MODULES_PERIOD, cmd_log[COMMAND_YAW]);
+  init_filter(&filter.cmd_thrust, LOG_PREFILTER_TAU, MODULES_PERIOD, cmd_log[COMMAND_THRUST]);
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_STATE_FILTERED, send_STATE_FILTERED);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CMD_FILTERED, send_CMD_FILTERED);
