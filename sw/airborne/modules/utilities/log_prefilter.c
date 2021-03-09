@@ -128,7 +128,7 @@ void log_prefilter_periodic(void)
   update_filter(&filter.acc_x, accel->x);
   update_filter(&filter.acc_y, accel->y);
   update_filter(&filter.acc_z, accel->z);
-  update_filter(&filter.cmd_roll, commands[COMMAND_ROLL]);
+  update_filter(&filter.cmd_roll, commands[COMMAND_ROLL]);  // XXX wrong signal!
   update_filter(&filter.cmd_pitch, commands[COMMAND_PITCH]);
   update_filter(&filter.cmd_yaw, commands[COMMAND_YAW]);
   update_filter(&filter.cmd_thrust, commands[COMMAND_THRUST]);

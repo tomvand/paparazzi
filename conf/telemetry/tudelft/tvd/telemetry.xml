@@ -197,11 +197,11 @@
     <mode name="chirp">
       <message name="ENERGY"                  period="1.0"/>
       <message name="CHIRP"                   period="0.1"/>
-      <message name="ROTORCRAFT_CMD"          period="0.05"/>
-      <message name="IMU_ACCEL_SCALED"        period="0.05"/>
-      <message name="IMU_GYRO_SCALED"         period="0.05"/>
-      <message name="STATE_FILTERED"          period="0.01"/>
-      <message name="CMD_FILTERED"            period="0.01"/>
+      <message name="ROTORCRAFT_CMD"          period="0.1"/>
+      <message name="IMU_ACCEL_SCALED"        period="0.1"/>
+      <message name="IMU_GYRO_SCALED"         period="0.1"/>
+      <message name="STATE_FILTERED"          period="0.001"/>
+      <message name="CMD_FILTERED"            period="0.001"/>
     </mode>
     <mode name="ins">
       <message name="ENERGY"                  period="0.2"/>
