@@ -3,6 +3,7 @@
   <doc>
     <description>Low-pass filter IMU and CMD signals before logging at a lower sampling rate.</description>
   </doc>
+  <autoload name="cmd_log"/>
   <header>
     <file name="log_prefilter.h"/>
   </header>

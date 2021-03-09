@@ -26,6 +26,7 @@
 #ifndef CMD_LOG_H
 #define CMD_LOG_H
 
+#include "paparazzi.h"
 #include "generated/airframe.h"
 
 

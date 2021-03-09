@@ -29,7 +29,7 @@
 #include "subsystems/datalink/telemetry.h"
 
 #include "state.h"
-#include "subsystems/commands.h"
+#include "cmd_log.h"
 
 #include "filters/low_pass_filter.h"
 
@@ -108,10 +108,10 @@ void log_prefilter_init(void)
   init_filter(&filter.acc_x, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, accel->x);
   init_filter(&filter.acc_y, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, accel->y);
   init_filter(&filter.acc_z, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, accel->z);
-  init_filter(&filter.cmd_roll, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, commands[COMMAND_ROLL]);
-  init_filter(&filter.cmd_pitch, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, commands[COMMAND_PITCH]);
-  init_filter(&filter.cmd_yaw, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, commands[COMMAND_YAW]);
-  init_filter(&filter.cmd_thrust, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, commands[COMMAND_THRUST]);
+  init_filter(&filter.cmd_roll, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, cmd_log[COMMAND_ROLL]);
+  init_filter(&filter.cmd_pitch, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, cmd_log[COMMAND_PITCH]);
+  init_filter(&filter.cmd_yaw, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, cmd_log[COMMAND_YAW]);
+  init_filter(&filter.cmd_thrust, LOG_PREFILTER_CUTOFF_HZ, MODULES_PERIOD, cmd_log[COMMAND_THRUST]);
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_STATE_FILTERED, send_STATE_FILTERED);
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_CMD_FILTERED, send_CMD_FILTERED);
@@ -128,10 +128,10 @@ void log_prefilter_periodic(void)
   update_filter(&filter.acc_x, accel->x);
   update_filter(&filter.acc_y, accel->y);
   update_filter(&filter.acc_z, accel->z);
-  update_filter(&filter.cmd_roll, commands[COMMAND_ROLL]);  // XXX wrong signal!
-  update_filter(&filter.cmd_pitch, commands[COMMAND_PITCH]);
-  update_filter(&filter.cmd_yaw, commands[COMMAND_YAW]);
-  update_filter(&filter.cmd_thrust, commands[COMMAND_THRUST]);
+  update_filter(&filter.cmd_roll, cmd_log[COMMAND_ROLL]);
+  update_filter(&filter.cmd_pitch, cmd_log[COMMAND_PITCH]);
+  update_filter(&filter.cmd_yaw, cmd_log[COMMAND_YAW]);
+  update_filter(&filter.cmd_thrust, cmd_log[COMMAND_THRUST]);
 }
 
 
