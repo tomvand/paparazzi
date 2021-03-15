@@ -55,7 +55,7 @@ static void __attribute__((unused)) chirp_init(void) {
 
   if (chirp_amplitude == 0) {
     // Initialize chirp values
-    chirp_amplitude = 50;
+    chirp_amplitude = 20;
     chirp_noise_stdv_onaxis_ratio = 0.0;
     chirp_noise_stdv_offaxis = 0;
     sys_id_chirp_fstop_handler(30.0);
