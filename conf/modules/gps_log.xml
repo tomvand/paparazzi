@@ -1,0 +1,17 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+<module name="gps_log" dir="utilities">
+  <doc>
+    <description>Receive and parse GPS datalink messages, and transmit telemetry messages (for onboard logging).
+This module does not output any GPS data to ABI, so to the drone it's as if no GPS is received.</description>
+  </doc>
+  <header>
+    <file name="gps_log.h"/>
+  </header>
+  <init fun="gps_log_init()"/>
+  <datalink fun="gps_log_parse_REMOTE_GPS_SMALL(buf)" message="REMOTE_GPS_SMALL"/>
+  <datalink fun="gps_log_parse_REMOTE_GPS_LOCAL(buf)" message="REMOTE_GPS_LOCAL"/>
+  <datalink fun="gps_log_parse_REMOTE_GPS(buf)" message="REMOTE_GPS"/>
+  <makefile>
+    <file name="gps_log.c"/>
+  </makefile>
+</module>

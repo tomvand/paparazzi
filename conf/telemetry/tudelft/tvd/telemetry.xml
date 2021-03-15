@@ -216,6 +216,7 @@
       <message name="VFF_EXTENDED"            period="0.01"/>
       <message name="HFF"                     period="0.01"/>
       <message name="INS_EKF2"                period="0.01"/>
+      <message name="GPS_LOG"                 period="0.1"/>
     </mode>
   </process>
 
