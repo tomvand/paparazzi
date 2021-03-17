@@ -65,6 +65,8 @@
         <module name="telemetry" type="transparent_frsky_x"/>
         
         <module name="gps_log"/>
+        <module name="cmd_log"/>
+        <module name="log_prefilter"/>
         <module name="logger" type="sd_spi_direct">
         	<define name="SDLOGGER_ON_ARM" value="TRUE"/>
           <configure name="SDLOGGER_DIRECT_SPI" value="SPI2"/>
@@ -133,7 +135,7 @@
         <!-- <module name="stabilization" type="indi_simple" /> -->
         <!-- <module name="stabilization" type="indi" /> -->
 
-        <module name="ins" type="extended"/>
+        <module name="ins" type="hff_extended"/>
 
         <!-- Not yet tested -->
         <!--<module name="osd_max7456">
@@ -256,6 +258,7 @@
 
     <command_laws>
         <call fun="sys_id_chirp_add_values(autopilot_get_motors_on(),FALSE,values)"/>
+        <call fun="cmd_log_values(autopilot_get_motors_on(),FALSE,values)"/>
         <call fun="motor_mixing_run(autopilot_get_motors_on(),FALSE,values)"/>
         <set servo="FL" value="motor_mixing.commands[MOTOR_FRONT_LEFT]"/>
         <set servo="FR" value="motor_mixing.commands[MOTOR_FRONT_RIGHT]"/>
