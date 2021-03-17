@@ -647,9 +647,22 @@
       <field name="p" type="float[]">Parameters describing the trajectory</field>
       <field name="phi" type="float[]" unit="m">Error signals</field>
     </message>
-
-    <!-- 76 is free -->
-    <!-- 77 is free -->
+    
+    <message name="STATE_FILTERED" id="76">
+      <field name="est_phi"       type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
+      <field name="est_theta"     type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
+      <field name="est_psi"       type="int32" alt_unit="deg" alt_unit_coef="0.0139882"/>
+      <field name="est_xdd"   type="int32" alt_unit="m/s2" alt_unit_coef="0.0009765"/>
+      <field name="est_ydd"   type="int32" alt_unit="m/s2" alt_unit_coef="0.0009765"/>
+      <field name="est_zdd"   type="int32" alt_unit="m/s2" alt_unit_coef="0.0009766"/>
+    </message>
+    
+    <message name="CMD_FILTERED" id="77">
+      <field name="cmd_roll"   type="int16"/>
+      <field name="cmd_pitch"  type="int16"/>
+      <field name="cmd_yaw"    type="int16"/>
+      <field name="cmd_thrust" type="int16"/>
+    </message>
 
     <!--message for Invariant filter with position-->
     <message name="INV_FILTER" id="78">
