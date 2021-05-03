@@ -29,7 +29,8 @@
 pprz_t cmd_log[COMMANDS_NB];
 
 
-void cmd_log_values(bool motors_on, bool override_on, pprz_t in_cmd[]) {
+void cmd_log_values(bool motors_on __attribute__((unused)),
+    bool override_on __attribute__((unused)), pprz_t in_cmd[]) {
   for (int i = 0; i < COMMANDS_NB; ++i) {
     cmd_log[i] = in_cmd[i];
   }
