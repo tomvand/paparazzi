@@ -216,6 +216,17 @@
       <message name="INS_EKF2"                period="0.01"/>
       <message name="GPS_LOG"                 period="0.1"/>
     </mode>
+    <mode name="guidance_v">
+      <message name="ROTORCRAFT_STATUS"       period="0.2"/>
+      <message name="ENERGY"                  period="0.2"/>
+      <message name="ROTORCRAFT_CMD"          period="0.01"/>
+      <message name="SONAR"                   period="0.01"/>
+      <message name="INS"                     period="0.01"/>
+      <message name="INS_Z"                   period="0.1"/>
+      <message name="INS_REF"                 period="1.1"/>
+      <message name="VFF_EXTENDED"            period="0.01"/>
+      <message name="OPTIC_FLOW_EST"          period="0.2"/>
+    </mode>
   </process>
 
 </telemetry>

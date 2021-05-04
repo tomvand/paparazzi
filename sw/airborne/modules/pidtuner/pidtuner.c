@@ -30,6 +30,7 @@
 #include "firmwares/rotorcraft/guidance/guidance_v.h"
 #include "firmwares/rotorcraft/guidance/guidance_h.h"
 #include "subsystems/ahrs.h"
+#include "mcu_periph/sys_time.h"
 
 #include "generated/modules.h"
 #include "generated/airframe.h"
@@ -38,13 +39,21 @@
 
 
 // -----------------------------------------------------------------------------
+#ifndef CHIRP_START_AMPLITUDE
+#define CHIRP_START_AMPLITUDE 50
+#endif
+
+static float chirp_start_time = 0.0;
+
 static void __attribute__((unused)) chirp_trigger(void) {
   static bool trigger_prev = false;
     bool trigger = radio_control.values[RADIO_AUX1] > (9600 / 2);
     if (trigger && !trigger_prev) {
       sys_id_chirp_activate_handler(1);
+      chirp_start_time = get_sys_time_float();
     } else if (!trigger && trigger_prev) {
       sys_id_chirp_activate_handler(0);
+      chirp_start_time = 0.0;
     }
     trigger_prev = trigger;
 }
@@ -55,13 +64,23 @@ static void __attribute__((unused)) chirp_init(void) {
 
   if (chirp_amplitude == 0) {
     // Initialize chirp values
-    chirp_amplitude = 100;
+    chirp_amplitude = CHIRP_START_AMPLITUDE;
     chirp_noise_stdv_onaxis_ratio = 0.0;
     chirp_noise_stdv_offaxis = 0;
-    sys_id_chirp_fstop_handler(30.0);
+    sys_id_chirp_fstop_handler(75.0);
     sys_id_chirp_fstart_handler(5.0);
     chirp_length_s = 100.0;
     chirp_initialized = true;
+  }
+}
+
+static void __attribute__((unused)) chirp_periodic(void) {
+  if (chirp_active && chirp_start_time != 0.0) {
+    float chirp_frequency = chirp_fstart_hz +
+        (chirp_fstop_hz - chirp_fstart_hz) * (get_sys_time_float() - chirp_start_time) / chirp_length_s;
+    chirp_amplitude = CHIRP_START_AMPLITUDE * chirp_frequency / chirp_fstart_hz;
+  } else {
+    chirp_amplitude = CHIRP_START_AMPLITUDE;
   }
 }
 
@@ -83,8 +102,11 @@ static void __attribute__((unused)) pid_periodic(void) {
 //  stabilization_gains.d.y = 104.0 * gain1 * gain2;
 //  stabilization_gains.d.z = 587.0 * gain1 * gain2;
 
-  att_ref_quat_i.model.omega.p = 800.0 * gain2;
-  att_ref_quat_i.model.omega.q = 800.0 * gain2;
+//  att_ref_quat_i.model.omega.p = 800.0 * gain2;
+//  att_ref_quat_i.model.omega.q = 800.0 * gain2;
+
+//  guidance_v_kd = 100.0 * gain1 * gain2;
+//  guidance_v_kp = 240.0 * gain2;
 }
 
 
@@ -143,10 +165,11 @@ static void __attribute__((unused)) pidgain_trigger(void) {
 
 // -----------------------------------------------------------------------------
 void pidtuner_periodic(void) {
-//  pid_periodic();
+  pid_periodic();
 
-  chirp_init();
-  chirp_trigger();
+//  chirp_init();
+//  chirp_trigger();
+//  chirp_periodic();
 }
 
 
