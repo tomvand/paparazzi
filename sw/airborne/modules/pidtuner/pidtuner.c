@@ -40,7 +40,7 @@
 
 // -----------------------------------------------------------------------------
 #ifndef CHIRP_START_AMPLITUDE
-#define CHIRP_START_AMPLITUDE 50
+#define CHIRP_START_AMPLITUDE 250
 #endif
 
 static float chirp_start_time = 0.0;
