@@ -105,8 +105,8 @@ static void __attribute__((unused)) pid_periodic(void) {
 //  att_ref_quat_i.model.omega.p = 800.0 * gain2;
 //  att_ref_quat_i.model.omega.q = 800.0 * gain2;
 
-  guidance_v_kd = 100.0 * gain1 * gain2;
-  guidance_v_kp = 240.0 * gain2;
+//  guidance_v_kd = 100.0 * gain1 * gain2;
+//  guidance_v_kp = 240.0 * gain2;
 }
 
 
