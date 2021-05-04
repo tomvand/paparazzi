@@ -80,6 +80,7 @@ static void __attribute__((unused)) chirp_periodic(void) {
         (chirp_fstop_hz - chirp_fstart_hz) * (get_sys_time_float() - chirp_start_time) / chirp_length_s;
     float factor = chirp_frequency / chirp_fstart_hz;
     factor = factor * factor * factor;
+    if (factor > 10) factor = 10;
     chirp_amplitude = CHIRP_START_AMPLITUDE * factor;
   } else {
     chirp_amplitude = CHIRP_START_AMPLITUDE;
