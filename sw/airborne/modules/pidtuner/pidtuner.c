@@ -40,7 +40,7 @@
 
 // -----------------------------------------------------------------------------
 #ifndef CHIRP_START_AMPLITUDE
-#define CHIRP_START_AMPLITUDE 50
+#define CHIRP_START_AMPLITUDE 250
 #endif
 
 static float chirp_start_time = 0.0;
@@ -78,7 +78,10 @@ static void __attribute__((unused)) chirp_periodic(void) {
   if (chirp_active && chirp_start_time != 0.0) {
     float chirp_frequency = chirp_fstart_hz +
         (chirp_fstop_hz - chirp_fstart_hz) * (get_sys_time_float() - chirp_start_time) / chirp_length_s;
-    chirp_amplitude = CHIRP_START_AMPLITUDE * chirp_frequency / chirp_fstart_hz;
+    float factor = chirp_frequency / chirp_fstart_hz;
+    factor = factor * factor * factor;
+    if (factor > 5) factor = 5;
+    chirp_amplitude = CHIRP_START_AMPLITUDE * factor;
   } else {
     chirp_amplitude = CHIRP_START_AMPLITUDE;
   }
