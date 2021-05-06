@@ -39,7 +39,7 @@
 #ifndef LOG_PREFILTER_CUTOFF_HZ
 #define LOG_PREFILTER_CUTOFF_HZ 75.0
 #endif
-#define LOG_PREFILTER_TAU (1.0 / (LOG_PREFILTER_CUTOFF_HZ))  // Unit? Removed 2pi
+#define LOG_PREFILTER_TAU (1.0 / (2 * M_PI * LOG_PREFILTER_CUTOFF_HZ))  // unit rad/s??
 
 #ifndef LOG_PREFILTER_ORDER
 #define LOG_PREFILTER_ORDER 4
