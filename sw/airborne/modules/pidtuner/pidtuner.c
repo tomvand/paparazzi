@@ -109,6 +109,9 @@ static void __attribute__((unused)) pid_periodic(void) {
 
 //  guidance_v_kd = 100.0 * gain1 * gain2;
 //  guidance_v_kp = 240.0 * gain2;
+
+  guidance_h.gains.d = 120.0 * gain1 * gain2;
+  guidance_h.gains.p = 190.0 * gain2;
 }
 
 
