@@ -68,7 +68,7 @@ static void __attribute__((unused)) chirp_init(void) {
     chirp_noise_stdv_onaxis_ratio = 0.0;
     chirp_noise_stdv_offaxis = 0;
     sys_id_chirp_fstop_handler(75.0);
-    sys_id_chirp_fstart_handler(5.0);
+    sys_id_chirp_fstart_handler(2.0);
     chirp_length_s = 100.0;
     chirp_initialized = true;
   }
