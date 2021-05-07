@@ -480,8 +480,8 @@
 
     <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
         <define name="MAX_BANK" value="30." unit="deg"/>
-        <define name="PGAIN" value="190"/>
-        <define name="DGAIN" value="120"/>
+        <define name="PGAIN" value="137"/>
+        <define name="DGAIN" value="108"/>
         <define name="AGAIN" value="35"/>
         <define name="IGAIN" value="10"/>
         
