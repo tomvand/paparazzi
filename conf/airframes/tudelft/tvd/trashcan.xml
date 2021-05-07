@@ -460,8 +460,8 @@
         <define name="HOVER_KP" value="230"/>
         <define name="HOVER_KD" value="200"/>
         <define name="HOVER_KI" value="80"/>
-        <define name="NOMINAL_HOVER_THROTTLE" value="0.40"/>
-        <define name="ADAPT_THROTTLE_ENABLED" value="TRUE"/>
+        <define name="NOMINAL_HOVER_THROTTLE" value="0.42"/>
+        <define name="ADAPT_THROTTLE_ENABLED" value="FALSE"/>
     </section>
 
     <section name="INS" prefix="INS_">
