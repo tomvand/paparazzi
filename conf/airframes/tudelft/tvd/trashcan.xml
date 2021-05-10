@@ -496,7 +496,7 @@
     </section>
 
     <section name="MISC">
-        <define name="ARRIVED_AT_WAYPOINT" value="0.2" unit="m"/>
+        <define name="ARRIVED_AT_WAYPOINT" value="0.1" unit="m"/>
     </section>
 
 <!-- ********************** AP ************************** -->
