@@ -509,6 +509,7 @@
         <!--<define name="USE_THROTTLE_FOR_MOTOR_ARMING" value="TRUE"/>-->
         <define name="USE_KILL_SWITCH_FOR_MOTOR_ARMING" value="TRUE"/>
         <define name="NO_RC_THRUST_LIMIT" value="TRUE"/>
+        <define name="NO_GPS_NEEDED_FOR_NAV" value="TRUE"/> <!-- needed to be able to fly the drone in NAV mode without a GPS fix -->
     </section>
 
     <!-- If flying on a 2S1P 300mAh 40/80C LiPo -->
