@@ -457,11 +457,11 @@
     </section>
 
     <section name="GUIDANCE_V" prefix="GUIDANCE_V_">
-        <define name="HOVER_KP" value="470"/>
-        <define name="HOVER_KD" value="390"/>
-        <define name="HOVER_KI" value="20"/>
-        <define name="NOMINAL_HOVER_THROTTLE" value="0.40"/>
-        <define name="ADAPT_THROTTLE_ENABLED" value="TRUE"/>
+        <define name="HOVER_KP" value="460"/>
+        <define name="HOVER_KD" value="525"/>
+        <define name="HOVER_KI" value="80"/>
+        <define name="NOMINAL_HOVER_THROTTLE" value="0.42"/>
+        <define name="ADAPT_THROTTLE_ENABLED" value="FALSE"/>
     </section>
 
     <section name="INS" prefix="INS_">
@@ -480,11 +480,14 @@
 
     <section name="GUIDANCE_H" prefix="GUIDANCE_H_">
         <define name="MAX_BANK" value="30." unit="deg"/>
+        <define name="PGAIN" value="137"/>
+        <define name="DGAIN" value="108"/>
+        <define name="AGAIN" value="35"/>
+        <define name="IGAIN" value="10"/>
+        
         <define name="USE_SPEED_REF" value="TRUE"/>
-        <define name="PGAIN" value="385"/>
-        <define name="DGAIN" value="240"/>
-        <define name="AGAIN" value="70"/>
-        <define name="IGAIN" value="20"/>
+        <define name="REF_MAX_SPEED" value="3.0"/>
+        <define name="REF_ZETA" value="1.0"/>
     </section>
 
     <section name="NAVIGATION" prefix="NAV_">
@@ -493,7 +496,7 @@
     </section>
 
     <section name="MISC">
-        <define name="ARRIVED_AT_WAYPOINT" value="0.2" unit="m"/>
+        <define name="ARRIVED_AT_WAYPOINT" value="0.1" unit="m"/>
     </section>
 
 <!-- ********************** AP ************************** -->
@@ -501,11 +504,12 @@
         <define name="MODE_STARTUP" value="AP_MODE_ATTITUDE_DIRECT"/><!-- if GNSS use AP_MODE_NAV ...-->
         <define name="MODE_MANUAL" value="AP_MODE_ATTITUDE_DIRECT"/>
         <define name="MODE_AUTO1" value="AP_MODE_ATTITUDE_Z_HOLD"/><!-- for now...-->
-        <define name="MODE_AUTO2" value="AP_MODE_HOVER_Z_HOLD"/>
+        <define name="MODE_AUTO2" value="AP_MODE_NAV"/>
        <!-- <define name="MODE_AUTO2"  value="AP_MODE_NAV"/>--> <!-- If GNSS device is added for autonomous flight -->
         <!--<define name="USE_THROTTLE_FOR_MOTOR_ARMING" value="TRUE"/>-->
         <define name="USE_KILL_SWITCH_FOR_MOTOR_ARMING" value="TRUE"/>
         <define name="NO_RC_THRUST_LIMIT" value="TRUE"/>
+        <define name="NO_GPS_NEEDED_FOR_NAV" value="TRUE"/> <!-- needed to be able to fly the drone in NAV mode without a GPS fix -->
     </section>
 
     <!-- If flying on a 2S1P 300mAh 40/80C LiPo -->

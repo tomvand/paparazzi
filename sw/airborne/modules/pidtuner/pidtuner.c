@@ -68,7 +68,7 @@ static void __attribute__((unused)) chirp_init(void) {
     chirp_noise_stdv_onaxis_ratio = 0.0;
     chirp_noise_stdv_offaxis = 0;
     sys_id_chirp_fstop_handler(75.0);
-    sys_id_chirp_fstart_handler(5.0);
+    sys_id_chirp_fstart_handler(2.0);
     chirp_length_s = 100.0;
     chirp_initialized = true;
   }
@@ -79,8 +79,7 @@ static void __attribute__((unused)) chirp_periodic(void) {
     float chirp_frequency = chirp_fstart_hz +
         (chirp_fstop_hz - chirp_fstart_hz) * (get_sys_time_float() - chirp_start_time) / chirp_length_s;
     float factor = chirp_frequency / chirp_fstart_hz;
-    factor = factor * factor * factor;
-    if (factor > 5) factor = 5;
+    factor = factor * factor;
     chirp_amplitude = CHIRP_START_AMPLITUDE * factor;
   } else {
     chirp_amplitude = CHIRP_START_AMPLITUDE;
@@ -108,8 +107,11 @@ static void __attribute__((unused)) pid_periodic(void) {
 //  att_ref_quat_i.model.omega.p = 800.0 * gain2;
 //  att_ref_quat_i.model.omega.q = 800.0 * gain2;
 
-//  guidance_v_kd = 100.0 * gain1 * gain2;
-//  guidance_v_kp = 240.0 * gain2;
+  guidance_v_kd = 200.0 * gain1 * gain2;
+  guidance_v_kp = 230.0 * gain2;
+
+//  guidance_h.gains.d = 120.0 * gain1 * gain2;
+//  guidance_h.gains.p = 190.0 * gain2;
 }
 
 
@@ -168,11 +170,11 @@ static void __attribute__((unused)) pidgain_trigger(void) {
 
 // -----------------------------------------------------------------------------
 void pidtuner_periodic(void) {
-  pid_periodic();
+//  pid_periodic();
 
-//  chirp_init();
-//  chirp_trigger();
-//  chirp_periodic();
+  chirp_init();
+  chirp_trigger();
+  chirp_periodic();
 }
 
 
