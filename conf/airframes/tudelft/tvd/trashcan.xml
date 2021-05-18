@@ -64,6 +64,8 @@
         <!--<module name="telemetry" type="transparent_usb"/>-->
         <module name="telemetry" type="transparent_frsky_x"/>
         
+        <module name="vector_field_generator"/>
+        
         <module name="gps_log"/>
         <module name="cmd_log"/>
         <module name="log_prefilter"/>
