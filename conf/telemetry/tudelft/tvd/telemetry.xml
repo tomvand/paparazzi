@@ -228,7 +228,7 @@
       <message name="OPTIC_FLOW_EST"          period="0.2"/>
     </mode>
     <mode name="nav">
-      <message name="ROTORCRAFT_NAV_STATUS"   period="0.5"/>
+      <message name="ROTORCRAFT_NAV_STATUS"   period="0.05"/>
       <message name="ROTORCRAFT_STATUS"       period="0.5"/>
       <message name="ENERGY"                  period="0.2"/>
       <message name="ROTORCRAFT_CMD"          period="0.1"/>
