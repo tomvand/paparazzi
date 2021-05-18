@@ -65,6 +65,7 @@
         <module name="telemetry" type="transparent_frsky_x"/>
         
         <module name="vector_field_generator"/>
+        <module name="visualhoming"/>
         
         <module name="gps_log"/>
         <module name="cmd_log"/>
