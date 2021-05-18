@@ -8,7 +8,7 @@
   <waypoints>
     <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="TO_TD" x="0.0" y="0.0"/>
-    <waypoint name="HOMING" x="0.0" y="0.0"/>
+    <waypoint name="HOMING_VISUAL" x="0.0" y="0.0"/>
     <waypoint name="START1" x="0.0" y="-2.5"/>
     <waypoint name="START2" x="0.0" y="2.5"/>    
     <waypoint lat="51.990630" lon="4.376823" name="p1"/>

@@ -237,6 +237,7 @@
       <message name="INS"                     period="0.05"/>
       <message name="INS_Z"                   period="0.1"/>
       <message name="INS_REF"                 period="1.1"/>
+      <message name="VISUALHOMING"            period="0.05"/>
     </mode>
   </process>
 

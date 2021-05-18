@@ -1604,7 +1604,16 @@
     </message>
 
     <message name="VISUALHOMING" id="181">
-      <field name="str" type="char[]"/><!-- TODO -->
+      <field name="id" type="int32"/>
+      <field name="tgt_e" type="float"/>
+      <field name="tgt_n" type="float"/>
+      <field name="tgt_u" type="float"/>
+      <field name="vec_e" type="float"/>
+      <field name="vec_n" type="float"/>
+      <field name="vec_u" type="float"/>
+      <field name="ins_e" type="float"/>
+      <field name="ins_n" type="float"/>
+      <field name="ins_u" type="float"/>
     </message>
     
     <message name="IMAGE" id="182">
