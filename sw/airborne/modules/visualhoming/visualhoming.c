@@ -32,8 +32,8 @@
 #include "subsystems/datalink/telemetry.h"
 #include "math/pprz_algebra_int.h"
 
-#ifndef RELATIVE_LOCALIZATION_ID
-#define RELATIVE_LOCALIZATION_ID RELATIVE_LOCALIZATION_VISUALHOMING_ID
+#ifndef RELATIVE_LOCALIZATION_ABI_ID
+#define RELATIVE_LOCALIZATION_ABI_ID RELATIVE_LOCALIZATION_VISUALHOMING_ID
 #endif
 
 #ifndef HOMING_VECTOR_SCALE
@@ -94,7 +94,7 @@ static void relative_localization_cb(uint8_t sender_id __attribute__((unused)), 
 
 void visualhoming_init(void)
 {
-  AbiBindMsgRELATIVE_LOCALIZATION(RELATIVE_LOCALIZATION_ID, &relative_localization_ev, relative_localization_cb);
+  AbiBindMsgRELATIVE_LOCALIZATION(RELATIVE_LOCALIZATION_ABI_ID, &relative_localization_ev, relative_localization_cb);
 #if PERIODIC_TELEMETRY
   register_periodic_telemetry(DefaultPeriodic, PPRZ_MSG_ID_VISUALHOMING, send_visualhoming);
 #endif // PERIODIC_TELEMETRY
@@ -121,7 +121,7 @@ bool NavHoming(void) {
     tgt_i.y = POS_BFP_OF_REAL(homing.target.y);
     tgt_i.z = POS_BFP_OF_REAL(homing.target.z);
     waypoint_move_enu_i(HOMING_WAYPOINT, &tgt_i);
-    // NavGotoWaypoint(HOMING_WAYPOINT);
+//    NavGotoWaypoint(HOMING_WAYPOINT);
     nav_route(&from_i, &tgt_i);
     homing.is_new_data = FALSE;
     // Copy data for telemetry

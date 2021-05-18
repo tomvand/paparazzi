@@ -3,12 +3,15 @@
 <flight_plan alt="0.75" ground_alt="0" lat0="51.990634" lon0="4.376789" max_dist_from_home="20" name="Rotorcraft Optitrack (Delft)" security_height="0.3">
   <header>
 #include "autopilot.h"
+#include "subsystems/ahrs/ahrs_int_cmpl_quat.h"
+
+#define NPS_GAZEBO_WORLD "cyberzoo.world"
 </header>
   <waypoints>
     <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="TO_TD" x="0.0" y="0.0"/>
-    <waypoint name="X1" x="0.0" y="-2.5"/>
-    <waypoint name="X2" x="0.0" y="2.5"/>
+    <waypoint name="X1" x="-2.5" y="0.0"/>
+    <waypoint name="X2" x="2.5" y="0.0"/>
     <waypoint lat="51.990630" lon="4.376823" name="p1"/>
     <waypoint lat="51.990614" lon="4.376779" name="p2"/>
     <waypoint lat="51.990636" lon="4.376759" name="p3"/>
@@ -27,6 +30,9 @@
     </sector>
   </sectors>
   <blocks>
+    <block name="Initialization">
+      <call_once fun="ahrs_icq_realign_heading(0.0)"/>
+    </block>
     <block name="Holding point">
       <call_once fun="NavKillThrottle()"/>
       <attitude pitch="0" roll="0" throttle="0" until="FALSE" vmode="throttle"/>
