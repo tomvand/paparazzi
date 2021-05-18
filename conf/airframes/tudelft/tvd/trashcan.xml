@@ -67,6 +67,7 @@
         <module name="vector_field_generator"/>
         <module name="visualhoming"/>
         
+        <define name="TELEMETRY_MODE_LOGGER" value="TELEMETRY_MODE_Logger_nav"/>
         <module name="gps_log"/>
         <module name="cmd_log"/>
         <module name="log_prefilter"/>
