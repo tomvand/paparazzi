@@ -50,7 +50,9 @@ static struct {
   bool is_new_data;
 } homing;
 
-static void relative_localization_cb(uint8_t sender_id, int32_t id, float x, float y, float z, float vx, float vy, float vz)
+static void relative_localization_cb(uint8_t sender_id __attribute__((unused)), int32_t id __attribute__((unused)),
+    float x, float y, float z,
+    float vx __attribute__((unused)), float vy __attribute__((unused)), float vz __attribute__((unused)))
 {
   homing.vector.x = x;
   homing.vector.y = y;

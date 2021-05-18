@@ -3,13 +3,14 @@
 <flight_plan alt="0.75" ground_alt="0" lat0="51.990634" lon0="4.376789" max_dist_from_home="20" name="Rotorcraft Optitrack (Delft)" security_height="0.3">
   <header>
 #include "autopilot.h"
+#include "modules.h"
 </header>
   <waypoints>
     <waypoint name="HOME" x="0.0" y="0.0"/>
+    <waypoint name="TO_TD" x="0.0" y="0.0"/>
     <waypoint name="HOMING" x="0.0" y="0.0"/>
-    <waypoint name="X1" x="0.0" y="-2.5"/>
-    <waypoint name="X2" x="0.0" y="2.5"/>
-    <waypoint name="TD" x="0.4" y="-1.7"/>
+    <waypoint name="START1" x="0.0" y="-2.5"/>
+    <waypoint name="START2" x="0.0" y="2.5"/>    
     <waypoint lat="51.990630" lon="4.376823" name="p1"/>
     <waypoint lat="51.990614" lon="4.376779" name="p2"/>
     <waypoint lat="51.990636" lon="4.376759" name="p3"/>
@@ -38,31 +39,35 @@
     </block>
     <block name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
       <exception cond="stateGetPositionEnu_f()->z > 0.5" deroute="Standby"/>
-      <stay climb="nav_climb_vspeed" vmode="climb" wp="X1"/>
+      <call_once fun="NavSetWaypointHere(WP_TO_TD)"/>
+      <stay vmode="throttle" throttle="0.5" wp="TO_TD"/>
     </block>
     <block name="Standby" strip_button="Standby" strip_icon="home.png">
-      <stay wp="X1"/>
+      <call_once fun="NavSetWaypointHere(WP_TO_TD)"/>
+      <stay wp="TO_TD"/>
     </block>
     
-    <block name="TO_X2">
-      <go wp="X2"/>
+    <block name="Start 1">
+      <stay wp="START1"/>
     </block>
-    <block name="TO_X1">
-      <go wp="X1"/>
-      <deroute block="TO_X2"/>
+    <block name="Start 2">
+      <stay wp="START2"/>
+    </block>
+    <block name="HOMING">
+      <call fun="NavHoming()"/>
     </block>
 
     <block name="land here" strip_button="Land Here" strip_icon="land-right.png">
-      <call_once fun="NavSetWaypointHere(WP_TD)"/>
+      <call_once fun="NavSetWaypointHere(WP_TO_TD)"/>
     </block>
     <block name="land">
-      <go wp="TD"/>
+      <go wp="TO_TD"/>
     </block>
     <block name="flare">
       <exception cond="NavDetectGround()" deroute="Holding point"/>
       <exception cond="!nav_is_in_flight()" deroute="landed"/>
       <call_once fun="NavStartDetectGround()"/>
-      <stay climb="nav_descend_vspeed" vmode="climb" wp="TD"/>
+      <stay vmode="throttle" throttle="0.3" wp="TO_TD"/>
     </block>
     <block name="landed">
       <call_once fun="NavKillThrottle()"/>
