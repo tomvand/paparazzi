@@ -26,6 +26,7 @@
 #include "modules/visualhoming/visualhoming.h"
 
 #include "generated/flight_plan.h"
+#include "generated/airframe.h"
 #include "firmwares/rotorcraft/navigation.h"
 #include "subsystems/navigation/waypoints.h"
 #include "subsystems/abi.h"
@@ -110,26 +111,30 @@ void visualhoming_periodic(void)
 // Flight plan/navigation functions
 
 bool NavHoming(void) {
-  // Update guidance vector
-  if (homing.is_new_data) {
-    struct EnuCoor_i from_i;
-    from_i.x = POS_BFP_OF_REAL(homing.ins.x);
-    from_i.y = POS_BFP_OF_REAL(homing.ins.y);
-    from_i.z = POS_BFP_OF_REAL(homing.ins.z);
-    struct EnuCoor_i tgt_i;
-    tgt_i.x = POS_BFP_OF_REAL(homing.target.x);
-    tgt_i.y = POS_BFP_OF_REAL(homing.target.y);
-    tgt_i.z = POS_BFP_OF_REAL(homing.target.z);
-    waypoint_move_enu_i(HOMING_WAYPOINT, &tgt_i);
-//    NavGotoWaypoint(HOMING_WAYPOINT);
-    nav_route(&from_i, &tgt_i);
-    homing.is_new_data = FALSE;
-    // Copy data for telemetry
-    telemetry.vector_id = homing.vector_id;
-    telemetry.target = homing.target;
-    telemetry.vector = homing.vector;
-    telemetry.ins = homing.ins;
-    telemetry.is_new_data = TRUE;
+  // Only update when drone is close to visual homing target waypoint
+  // Call NavSetWaypointHere(WP_HOMING_VISUAL) in flight plan before NavHoming!
+  if (get_dist2_to_waypoint(WP_HOMING_VISUAL) < (ARRIVED_AT_WAYPOINT * ARRIVED_AT_WAYPOINT)) {
+    if (homing.is_new_data) {
+      // Update guidance vector
+      struct EnuCoor_i from_i;
+      from_i.x = POS_BFP_OF_REAL(homing.ins.x);
+      from_i.y = POS_BFP_OF_REAL(homing.ins.y);
+      from_i.z = POS_BFP_OF_REAL(homing.ins.z);
+      struct EnuCoor_i tgt_i;
+      tgt_i.x = POS_BFP_OF_REAL(homing.target.x);
+      tgt_i.y = POS_BFP_OF_REAL(homing.target.y);
+      tgt_i.z = POS_BFP_OF_REAL(homing.target.z);
+      waypoint_move_enu_i(HOMING_WAYPOINT, &tgt_i);
+  //    NavGotoWaypoint(HOMING_WAYPOINT);
+      nav_route(&from_i, &tgt_i);
+      homing.is_new_data = FALSE;
+      // Copy data for telemetry
+      telemetry.vector_id = homing.vector_id;
+      telemetry.target = homing.target;
+      telemetry.vector = homing.vector;
+      telemetry.ins = homing.ins;
+      telemetry.is_new_data = TRUE;
+    }
   }
   // TODO Arrival detection
   return TRUE;

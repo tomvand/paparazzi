@@ -59,6 +59,7 @@
       <stay wp="START2"/>
     </block>
     <block name="HOMING">
+      <call_once fun="NavSetWaypointHere(WP_HOMING_VISUAL)"/>
       <call fun="NavHoming()"/>
     </block>
 
