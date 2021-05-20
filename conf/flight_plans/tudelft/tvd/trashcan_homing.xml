@@ -33,7 +33,8 @@
   </sectors>
   <blocks>
     <block name="Initialization">
-      <call_once fun="ahrs_icq_realign_heading(0.0)"/>
+      <while cond="LessThan(NavBlockTime(), 10)"/><!-- Wait for AHRS to align before setting heading -->
+      <call_once fun="ahrs_fc_realign_heading(0.0)"/>
     </block>
     <block name="Holding point">
       <call_once fun="NavKillThrottle()"/>
