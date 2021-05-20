@@ -37,6 +37,10 @@
 #define RELATIVE_LOCALIZATION_ABI_ID RELATIVE_LOCALIZATION_VISUALHOMING_ID
 #endif
 
+#ifndef HOMING_UPDATE_CONTINUOUSLY
+#define HOMING_UPDATE_CONTINUOUSLY FALSE
+#endif
+
 #ifndef HOMING_VECTOR_SCALE
 #define HOMING_VECTOR_SCALE 5.0   // Multiplier from homing vector length to m
 #endif
@@ -113,7 +117,7 @@ void visualhoming_periodic(void)
 bool NavHoming(void) {
   // Only update when drone is close to visual homing target waypoint
   // Call NavSetWaypointHere(WP_HOMING_VISUAL) in flight plan before NavHoming!
-  if (get_dist2_to_waypoint(WP_HOMING_VISUAL) < (ARRIVED_AT_WAYPOINT * ARRIVED_AT_WAYPOINT)) {
+  if (HOMING_UPDATE_CONTINUOUSLY || get_dist2_to_waypoint(WP_HOMING_VISUAL) < (ARRIVED_AT_WAYPOINT * ARRIVED_AT_WAYPOINT)) {
     if (homing.is_new_data) {
       // Update guidance vector
       struct EnuCoor_i from_i;

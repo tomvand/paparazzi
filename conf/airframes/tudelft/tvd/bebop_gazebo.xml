@@ -26,6 +26,7 @@
 
     <module name="vector_field_generator"/>
     <module name="visualhoming"/>
+    <define name="HOMING_UPDATE_CONTINUOUSLY" value="TRUE"/>
   </firmware>
 
   <commands>
