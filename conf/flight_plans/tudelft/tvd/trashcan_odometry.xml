@@ -10,8 +10,8 @@
   <waypoints>
     <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="TO_TD" x="0.0" y="0.0"/>
-    <waypoint name="X1" x="-0.0" y="-2.5"/>
-    <waypoint name="X2" x="0.0" y="2.5"/>
+    <waypoint name="X1" x="-2.5" y="0.0"/>
+    <waypoint name="X2" x="2.5" y="0.0"/>
   </waypoints>
   <blocks>
     <block name="Initialization">

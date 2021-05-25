@@ -13,7 +13,13 @@
     <waypoint name="TO_TD" x="0.0" y="0.0"/>
     <waypoint name="HOMING_VISUAL" x="0.0" y="0.0"/>
     <waypoint name="START1" x="-2.5" y="0.0"/>
-    <waypoint name="START2" x="2.5" y="0.0"/>
+    <waypoint name="START2" x="-2.0" y="2.0"/>
+    <waypoint name="START3" x="0.0" y="2.5"/>
+    <waypoint name="START4" x="2.0" y="2.0"/>
+    <waypoint name="START5" x="2.5" y="0.0"/>
+    <waypoint name="START6" x="2.0" y="-2.0"/>
+    <waypoint name="START7" x="0.0" y="-2.5"/>
+    <waypoint name="START8" x="-2.0" y="-2.0"/>
   </waypoints>
   <blocks>
     <block name="Initialization">
