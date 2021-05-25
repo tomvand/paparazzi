@@ -29,7 +29,7 @@
     <block name="Takeoff" strip_button="Takeoff" strip_icon="takeoff.png">
       <exception cond="stateGetPositionEnu_f()->z > 0.5" deroute="Standby"/>
       <call_once fun="NavSetWaypointHere(WP_TO_TD)"/>
-      <stay vmode="throttle" throttle="GUIDANCE_V_NOMINAL_HOVER_THROTTLE + 0.1" wp="TO_TD"/>
+      <stay vmode="throttle" throttle="GUIDANCE_V_NOMINAL_HOVER_THROTTLE + 0.02" wp="TO_TD"/>
     </block>
     <block name="Standby" strip_button="Standby" strip_icon="home.png">
       <call_once fun="NavSetWaypointHere(WP_TO_TD)"/>
@@ -54,7 +54,7 @@
       <exception cond="NavDetectGround()" deroute="Holding point"/>
       <exception cond="!nav_is_in_flight()" deroute="landed"/>
       <call_once fun="NavStartDetectGround()"/>
-      <stay vmode="throttle" throttle="GUIDANCE_V_NOMINAL_HOVER_THROTTLE - 0.1" wp="TO_TD"/>
+      <stay vmode="throttle" throttle="GUIDANCE_V_NOMINAL_HOVER_THROTTLE - 0.02" wp="TO_TD"/>
     </block>
     <block name="landed">
       <call_once fun="NavKillThrottle()"/>
