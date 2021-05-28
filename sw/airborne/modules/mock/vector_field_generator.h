@@ -18,19 +18,19 @@
  * <http://www.gnu.org/licenses/>.
  */
 
-/** @file "modules/visualhoming/visualhoming.h"
+/** @file "modules/mock/vector_field_generator.h"
  * @author Tom van Dijk <tomvand@users.noreply.github.com>
- * Visual homing
+ * Generate fake vector fields for visual homing development
  */
 
-#ifndef VISUALHOMING_H
-#define VISUALHOMING_H
+#ifndef VECTOR_FIELD_GENERATOR_H
+#define VECTOR_FIELD_GENERATOR_H
 
-#include <stdbool.h>
+#include "state.h"
 
-extern bool NavHoming(void);
+extern void vector_field_generator_set_target(struct EnuCoor_f tgt);
 
-extern void visualhoming_init(void);
-extern void visualhoming_periodic(void);
+extern void vector_field_generator_init(void);
+extern void vector_field_generator_periodic(void);
 
-#endif  // VISUALHOMING_H
+#endif  // VECTOR_FIELD_GENERATOR_H

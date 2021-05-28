@@ -7,8 +7,7 @@
     <file name="visualhoming.h"/>
   </header>
   <init fun="visualhoming_init()"/>
-  <periodic fun="visualhoming_periodic()" freq="1.0" autorun="TRUE"/>
-  <event fun="visualhoming_event()"/>
+  <periodic fun="visualhoming_periodic()" freq="10.0" autorun="TRUE"/>
   <makefile>
     <file name="visualhoming.c"/>
   </makefile>

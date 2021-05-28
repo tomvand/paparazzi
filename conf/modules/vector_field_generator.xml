@@ -1,0 +1,14 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+<module name="vector_field_generator" dir="mock">
+  <doc>
+    <description>Generate fake vector fields for visual homing development</description>
+  </doc>
+  <header>
+    <file name="vector_field_generator.h"/>
+  </header>
+  <init fun="vector_field_generator_init()"/>
+  <periodic fun="vector_field_generator_periodic()" freq="5.0" autorun="TRUE"/>
+  <makefile>
+    <file name="vector_field_generator.c"/>
+  </makefile>
+</module>

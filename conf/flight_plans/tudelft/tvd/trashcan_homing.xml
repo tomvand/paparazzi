@@ -3,15 +3,23 @@
 <flight_plan alt="0.75" ground_alt="0" lat0="51.990634" lon0="4.376789" max_dist_from_home="20" name="Rotorcraft Optitrack (Delft)" security_height="0.3">
   <header>
 #include "autopilot.h"
-#include "subsystems/ahrs/ahrs_int_cmpl_quat.h"
+#include "modules.h"
+#include "airframe.h"
 
 #define NPS_GAZEBO_WORLD "cyberzoo.world"
 </header>
   <waypoints>
     <waypoint name="HOME" x="0.0" y="0.0"/>
     <waypoint name="TO_TD" x="0.0" y="0.0"/>
-    <waypoint name="X1" x="-2.5" y="0.0"/>
-    <waypoint name="X2" x="2.5" y="0.0"/>
+    <waypoint name="HOMING_VISUAL" x="0.0" y="0.0"/>
+    <waypoint name="START1" x="-2.5" y="0.0"/>
+    <waypoint name="START2" x="-2.0" y="2.0"/>
+    <waypoint name="START3" x="0.0" y="2.5"/>
+    <waypoint name="START4" x="2.0" y="2.0"/>
+    <waypoint name="START5" x="2.5" y="0.0"/>
+    <waypoint name="START6" x="2.0" y="-2.0"/>
+    <waypoint name="START7" x="0.0" y="-2.5"/>
+    <waypoint name="START8" x="-2.0" y="-2.0"/>
   </waypoints>
   <blocks>
     <block name="Initialization">
@@ -36,12 +44,15 @@
       <stay wp="TO_TD"/>
     </block>
     
-    <block name="TO_X2">
-      <go wp="X2" hmode="route" from="X1"/>
+    <block name="Start 1">
+      <stay wp="START1"/>
     </block>
-    <block name="TO_X1">
-      <go wp="X1" hmode="route" from="X2"/>
-      <deroute block="TO_X2"/>
+    <block name="Start 2">
+      <stay wp="START2"/>
+    </block>
+    <block name="HOMING">
+      <call_once fun="NavSetWaypointHere(WP_HOMING_VISUAL)"/>
+      <call fun="NavHoming()"/>
     </block>
 
     <block name="land here" strip_button="Land Here" strip_icon="land-right.png">
